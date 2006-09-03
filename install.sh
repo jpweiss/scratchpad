@@ -60,7 +60,8 @@ INCR_CRON_EXISTS=''
 FULL_CRON_EXISTS=''
 CHANGED_FILES=''
 
-TARBALL_EXCLUDES='*/CVS TAGS */research *.tar.* *.t[bg]z *~ */test-results'
+TARBALL_EXCLUDES='*/CVS */.svn TAGS */research *.tar.* '
+TARBALL_EXCLUDES="${TARBALL_EXCLUDES}"'*.t[bg]z *~ */test-results'
 
 
 ############
