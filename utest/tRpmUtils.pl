@@ -65,6 +65,7 @@ use jpwTools;
 my $_SkipModifiedPkgfiles_re
     ='/(?:dev|usr/(?:doc|man|s(?:hare/(?:doc|man)|rc)))';
 my $_MasterIncludeDirs_re='/(?:etc|root)';
+my $_installTime_delta=5;
 
 
 ############
@@ -93,12 +94,12 @@ sub main {
 
     my %optmap=('help' => \$help,
                 'h' => \$help);
-    my @valid_opts=('get_rpm_pkglist',
+    my @valid_opts=('get_pkglist',
                     'get_modified_pkgfiles',
                     'scan_modified_pkgfiles',
                     'get_changed_since_install',
-                    'read_rpmset',
-                    'write_rpmset');
+                    'read_pkgset',
+                    'write_pkgset');
     @valid_opts = sort(@valid_opts, keys(%optmap));
 
     unless ( ($argc > 0) &&
@@ -114,56 +115,57 @@ sub main {
     $rpmUtils::_UnitTest = 1;
     $rpmUtils::_Verbose = 1;
 
-    if (exists $optmap{'get_rpm_pkglist'}) {
+    if (exists $optmap{'get_pkglist'}) {
         my %pkgs=();
-        %pkgs = get_rpm_pkglist;
+        %pkgs = get_pkglist;
         print_hash("Packages", %pkgs);
         exit 0;
     }
 
     if (exists $optmap{'get_modified_pkgfiles'}) {
-        my @diffrpm = ();
+        my @diffpkg = ();
         my %pkgs=();
         my %dirs=( 'none' => 0 );
-        %pkgs = get_rpm_pkglist;
-        @diffrpm = get_modified_pkgfiles(%pkgs, %dirs, 
+        %pkgs = get_pkglist;
+        @diffpkg = get_modified_pkgfiles(%pkgs, %dirs, 
                                          $_SkipModifiedPkgfiles_re);
-        print "( @diffrpm )\n";
+        print "( @diffpkg )\n";
         exit 0;
     }
 
     if (exists $optmap{'scan_modified_pkgfiles'}) {
-        my %diffrpm = ();
+        my %diffpkg = ();
         my %pkgs=();
-        %pkgs = get_rpm_pkglist;
-        %diffrpm = scan_modified_pkgfiles(%pkgs, $_SkipModifiedPkgfiles_re);
-        print_hash("ModifiedPackages", %diffrpm);
+        %pkgs = get_pkglist;
+        %diffpkg = scan_modified_pkgfiles(%pkgs, $_SkipModifiedPkgfiles_re);
+        print_hash("ModifiedPackages", %diffpkg);
         exit 0;
     }
 
     if (exists $optmap{'get_changed_since_install'}) {
-        my %diffrpm = ();
+        my %diffpkg = ();
         my %pkgs=();
         my %dirs=( 'none' => 0 );
         my %files = %dirs;
-        %pkgs = get_rpm_pkglist;
-        %diffrpm = get_changed_since_install(%pkgs, %files, %dirs,
+        %pkgs = get_pkglist;
+        %diffpkg = get_changed_since_install(%pkgs, %files, %dirs,
                                              $_MasterIncludeDirs_re,
-                                             $_SkipModifiedPkgfiles_re);
-        print_hash("ModifiedPackages", %diffrpm);
+                                             $_SkipModifiedPkgfiles_re,
+                                             $_installTime_delta);
+        print_hash("ModifiedPackages", %diffpkg);
         exit 0;
     }
 
-    if (exists $optmap{'write_rpmset'}) {
+    if (exists $optmap{'write_pkgset'}) {
         my %pkgs=();
-        %pkgs = get_rpm_pkglist;
-        write_rpmset "./test.rpms", %pkgs, $_MyName;
+        %pkgs = get_pkglist;
+        write_pkgset "./test.pkgs", %pkgs, $_MyName;
         exit 0;
     }
 
-    if (exists $optmap{'read_rpmset'}) {
+    if (exists $optmap{'read_pkgset'}) {
         my %pkgs=();
-        read_rpmset "./test.rpms", %pkgs;
+        read_pkgset "./test.pkgs", %pkgs;
         print_hash("Packages", %pkgs);
         exit 0;
     }
