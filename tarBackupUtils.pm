@@ -1,6 +1,6 @@
 #!/usr/bin/perl 
 #
-# Copyright (C) 2003-2004 by John P. Weiss
+# Copyright (C) 2003-2008 by John P. Weiss
 #
 # This package is free software; you can redistribute it and/or modify
 # it under the terms of the Artistic License, included as the file
@@ -411,7 +411,7 @@ sub verify_listfile_archive($$$) {
         $omission_set{$name} = 1;
     }
     close IFS;
-    
+
     if ($_Verbose || $_UnitTest) {
         print "Comparing to listing of archive: \"$tarball\".\n";
     }

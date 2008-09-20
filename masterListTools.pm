@@ -1,6 +1,6 @@
 #!/usr/bin/perl 
 #
-# Copyright (C) 2003-2004 by John P. Weiss
+# Copyright (C) 2003-2008 by John P. Weiss
 #
 # This package is free software; you can redistribute it and/or modify
 # it under the terms of the Artistic License, included as the file
@@ -95,13 +95,13 @@ sub myFinder(\%\%$@) {
     #
     # I wanted to.  I really did.  Unfortunately, File::Find must use stat()
     # or lstat() to determine filesystem types.  Those two builtin Perl
-    # functions both return a numeric code for the device # (i.e. filesystem)
-    # type.  RPM works on multiple platforms and # OS's.  I only have a Linux
-    # i386 to play with.  There goes making # this backup script
+    # functions both return a numeric code for the device (i.e. filesystem)
+    # type.  "rpm" & "dpkg" work on multiple platforms and OS's.  I only have
+    # a Linux i386 to play with.  There goes making this backup script
     # platform/OS-independent.
     #
     # GNU find, on the other hand, uses filesystem names and does the
-    # translating for you.  We all know that it runs on many # platforms/OS's.
+    # translating for you.  We all know that it runs on many platforms/OS's.
     # Why should I duplicate the FSF's fine work?
     my $ref_fileset = shift;
     my $ref_dirset = shift;
@@ -253,10 +253,10 @@ sub build_master_lists(\%\%) {
     # later decided that this was a bad idea.
     #
     # This particular form of backup script has a specific purpose.
-    # It identifies any disk content that comes from an RPM package 
+    # It identifies any disk content that comes from an RPM/DEB package 
     # and eliminates it from your list of Things To Backup.  The
     # @_Exclude_Dirs and @_Include_Dirs are sysadmin-fine-tuning,
-    # independent of what came from an RPM package and what didn't.
+    # independent of what came from an RPM/DEB package and what didn't.
     # Why tamper with that core functionality?
     #
     # A second reason has to do with flexibility.  Not everyone will

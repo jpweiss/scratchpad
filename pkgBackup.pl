@@ -1,6 +1,6 @@
 #!/usr/bin/perl 
 #
-# Copyright (C) 2003-2004 by John P. Weiss
+# Copyright (C) 2003-2008 by John P. Weiss
 #
 # This package is free software; you can redistribute it and/or modify
 # it under the terms of the Artistic License, included as the file
@@ -849,7 +849,7 @@ sub main {
         my $writeDate = read_pkgset($_PkgLists_File, %distro_pkgs);
         if ($update_pkg_list) {
             print "Updating package list: ";
-            my %newPkgsSinceDate = get_pkglist($writeDate);
+            %newPkgsSinceDate = get_pkglist($writeDate);
             print_hash_ut(%newPkgsSinceDate, "\%newPkgs");
             # If there are any new packages, merge with the existing list and
             # save.

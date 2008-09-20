@@ -19,6 +19,25 @@
 
 ############
 #
+# Configuration Variables
+#
+# (Adjust for your system as needed.)
+#
+############
+
+
+# Deduced empirically from the size and install time of the "kubuntu-docs"
+# package and the mtime of the file "/usr/share/doc-base/kubuntu-systemdocs". 
+# (The actual est. install rate was 62516/31, from a KUbuntu installation on a
+# virtual machine.)
+# 
+# A faster or slower hard drive may need a different value here.  Ditto for
+# slower CPUs.
+my $_PkgInstall_BytesPerSec = 2000;
+
+
+############
+#
 # Std. Package Boilerplate
 #
 ############
@@ -38,7 +57,7 @@ BEGIN {
     @ISA         = qw(Exporter);
 
     # Default exports.
-    @EXPORT = qw(get_pkglist
+    @EXPORT = qw(get_pkglist 
                  isChangeTypeAlias setChangeTypeAliases
                  isSupportedChangeType
                  get_changed_since_install
@@ -75,7 +94,25 @@ our $_UnitTest; $_UnitTest = 0;
 ############
 
 
-my $_deb_bin="/bin/dpkg";
+my $_deb_bin="/bin/dpkg-query";
+my $_deb_db_path="/var/lib/dpkg";
+my $_deb_db_info_path=$_deb_db_path."/info";
+my $_deb_simple_version_re=qr/\d+\.\d+(?:\.\d+)*/;
+my $_deb_version_re=qr/((?:\d+:)?${_deb_simple_version_re})(\.?\D+.*)/;
+my $_deb_yr_versioned_re=qr/((?:\d+:)?\d{8,}(?!\.))(\D+.*)/;
+my $_deb_odd_version_re=qr/(\d+)([[:alpha:]]?-.+)/;
+my @_deb_info_filesuffixes = ('.conffiles',
+                              '.config',
+                              '.list',
+                              '.md5sums',
+                              '.postinst',
+                              '.postrm',
+                              '.preinst',
+                              '.prerm',
+                              '.shlibs',
+                              '.symbols',
+                              '.templates',
+                              '.triggers');
 my %_UnsupportedChangeTypeSet = ("Unknown" => 1,
                                  #"Other" => 1,
                                  );
@@ -88,16 +125,95 @@ my %_UnsupportedChangeTypeSet = ("Unknown" => 1,
 ############
 
 
-sub process_pkgspec(\%$;$) {
+sub process_pkgspec(\%$;$$) {
     my $ref_pkgset = shift;
     my $spec_txt = shift;
+    my $updatedSince = ((scalar(@_)) ? shift() : -1);
+    my $hasSize = ((scalar(@_)) ? shift() : 0);
 
-    # FIXME:
-    # This should contain whatever it takes to split out the name, version,
-    # release number, and installation timestamp of a *.deb from the lines
-    # retrieved from get_pkglist().
+    # Split apart the data from the lines retrieved by get_pkglist().
+    # '${Package}\t${Version}\t${Revision}\t${Installed-Size}\t${Status}\n'
     # 
-    my @pkgspecs = split("[\t\n]", $spec_txt);
+    chomp $spec_txt;
+    my @dpkg_parts = split("\t", $spec_txt);
+
+    # Ignore anything that isn't a completely installed package.
+    my $pkgStatus = pop(@dpkg_parts);
+    return unless ($pkgStatus =~ m/\binstalled\b/);
+
+    # Our desired pkgspec is a 6 element array containing:
+    # [0]: name
+    # [1]: version
+    # [2]: release
+    # [3]: revision(serial)
+    # [4]: install time
+    # [5]: size
+    # "dpkg" only provides us with some of these.  We need to fill in the
+    # rest.
+    my $pkgName = $dpkg_parts[0];
+    my @pkgspecs = ($pkgName, $dpkg_parts[1], "", 
+                    $dpkg_parts[2], 0, $dpkg_parts[3]);
+
+    # We need to parse the DEB-provided version and break off the version
+    # portion from the release part.
+    # NOTE:
+    # "dpkg" has a '--compare-versions <v1> <op> <v2>' feature.  So we will
+    # use the full version as a key and invoke "dpkg" to perform any
+    # comparisions.
+    my $pkgFullVer = $dpkg_parts[1];
+    unless ($pkgFullVer =~ m/^${_deb_simple_version_re}$/o) {
+        if ( ($pkgFullVer =~ m/^${_deb_version_re}$/o)
+             || ($pkgFullVer =~ m/^${_deb_yr_versioned_re}$/o)
+             || ($pkgFullVer =~ m/^${_deb_odd_version_re}$/o) ) 
+        {
+            $pkgspecs[1] = $1;
+            $pkgspecs[2] = $2;
+        }
+    }
+
+    # We also need to get the installation time from ... someplace.  "dpkg"
+    # doesn't store that information in its "database" (which is just a
+    # directory full of information files.)
+    my $pkgInfoFileBase = $_deb_db_info_path;
+    $pkgInfoFileBase .= "/";
+    $pkgInfoFileBase .= $pkgName;
+    foreach my $suf (@_deb_info_filesuffixes) {
+        my $pkgInfoFile = $pkgInfoFileBase;
+        $pkgInfoFile .= $suf;
+
+        next unless (-e $pkgInfoFile);
+        # Get the "mtime" for this info-file from the DEB package "database".
+        # Don't use "ctime", since it won't (might not) be preserved when
+        # restoring these filesfrom a backup.
+        my @pkgFileStats = stat($pkgInfoFile);
+        my $mtime = $pkgFileStats[9];
+        # Keep the "mtime" from the info-file that was modified last out of
+        # all of them.
+        if ($mtime > $pkgspecs[4]) {
+            $pkgspecs[4] = $mtime;
+        }
+    }
+
+    unless ($pkgspecs[4]) {
+        print ("Package \"", $pkgName, "\"\n\t",
+               "has no known info files in ", $_deb_db_info_path, ".\n\t",
+               "Ignoring...");
+        return;
+    }
+
+    # Add an approximated "install duration", based on the package size, to
+    # the installation time.  This will (hopefully) move the install time
+    # closer to the time that the installation completed.
+    if (exists($dpkg_parts[5])) {
+        my $pkgSize = $dpkg_parts[5];
+        $pkgspecs[4] += int($pkgSize / $_PkgInstall_BytesPerSec);
+        if ($_UnitTest && $_Verbose) {
+            print ($pkgspecs[0], ":\tEstimated Install Duration: ",
+                   int($pkgSize / $_PkgInstall_BytesPerSec), 
+                   "\n");
+        }
+    }
+
     if (scalar(@_)) {
         my $updatedSince = shift;
         return if (($updatedSince > 0) && ($updatedSince > $pkgspecs[4]));
@@ -105,9 +221,7 @@ sub process_pkgspec(\%$;$) {
 
     # We use a hash of hashes of array-refs to handle multiple versions of the
     # same package installed at the same time.
-    my $pkgName = $pkgspecs[0];
-    my $pkgVer = $pkgspecs[1];
-    $ref_pkgset->{$pkgName}->{$pkgVer} = [ @pkgspecs ];
+    $ref_pkgset->{$pkgName}{$pkgFullVer} = \@pkgspecs;
 }
 
 
@@ -118,7 +232,8 @@ sub set_if_older(\%$$$) {
     my $pkgInstallTime = shift;
 
     if ($_UnitTest && $_Verbose) {
-        print "'$filename'; $t_state; $pkgInstallTime\n";
+        print ("'$filename'; $t_state; $pkgInstallTime; delta=",
+               $t_state-$pkgInstallTime,"\n");
     } 
 
     # If this was already set with a time, we'll override it.
@@ -168,21 +283,35 @@ sub get_pkglist(;$) {
     }
 
     my %pkgset = ();
-    # FIXME:
-    # This should contain whatever it takes to retrieve the name, version,
-    # release number, and installation timestamp of a *.deb
+    # There are a few differences between the package information stored by
+    # "rpm" and that stored by "dpkg":
+    #
+    # - The %{Version} of a DEB is actually akin to a combination of the RPM
+    #   "%{VERSION}" and "%{RELEASE}".
+    #   We will, therefore, need to pry apart the version returned by "dpkg".
+    # - DEBs rarely have a Revision.  But this is ok, since RPMs rarely have a
+    #   %{SERIAL}.  We'll use the two similarly.
+    # - There is no %{INSTALLTIME} for DEBs.  We'll need to get that info some
+    #   other way...
+    # - We need to make sure that the ${Status} field matches:
+    #   m/\Ainstalled\Z/.
+    #   "dpkg" retains state information about partially-installed and
+    #   mostly-uninstalled packages.  We want to ignore that.
+    # - Want ${Installed-Size} instead of ${Size}.  The RPM %{SIZE} field
+    #   is the installed size, from what I can tell..
     # 
-    my $fmt='%{NAME}\t%{VERSION}\t%{RELEASE}\t%{SERIAL}\t%{INSTALLTIME}\n';
+    my $fmt='${Package}\t${Version}\t${Revision}\t${Installed-Size}'.
+        '\t${Status}\n';
     if($_UnitTest || $_Verbose) {
         print "Retrieving DEB package list...";
     }
 
-    open(DEB_IN, "$_deb_bin -l \"$fmt\" |");
+    open(DEB_IN, "$_deb_bin --show --showformat=\"$fmt\" |");
     while (<DEB_IN>) {
         process_pkgspec(%pkgset, $_, $updatedSince);
     }
     close DEB_IN;
-    check_syscmd_status "dpkg -l";
+    check_syscmd_status "dpkg-query --show";
 
     if($_UnitTest || $_Verbose) {
         print "\t\tDone.\n";
@@ -191,24 +320,36 @@ sub get_pkglist(;$) {
 }
 
 
-# FIXME:
-# If *.deb packages keep track of ownership & permsissions of their member
-# files, you will not need this function.
+# Note:  DEB packages do NOT keep track of ownership & permsissions of their
+# member files.
 sub isChangeTypeAlias($) {
     my $key = shift;
     return ($key eq "Ownership");
 }
 
 
-# FIXME:
-# If *.deb packages keep track of ownership & permsissions of their member
-# files, you will not need this function.
+# Note:  DEB packages do NOT keep track of ownership & permsissions of their
+# member files.
 sub setChangeTypeAliases(\%) {
     my $ref_changeMap = shift;
     $ref_changeMap->{"Ownership"} = $ref_changeMap->{"Permissions"};
 }
 
 
+# NOTE:
+# "dpkg" has a '--compare-versions <v1> <op> <v2>' feature.  So, there's no
+# need to manually compare the versions.
+#
+# In the dpkg "database" directories, you'll find the files 'info/*.list' and
+# 'info/*.md5sums'.  The former is a simple list of files & directories in the
+# package, one per line.  The latter is a file suitable to run through
+# "md5sum" to check if file contents have changed.  Run it like this:
+#
+#    (pushd /; md5sum -c ${dpkgAdminFile}; popd)
+#
+# The "info/*.md5sums" file contains relative paths, hence the "pushd" to root.
+# Also, the "info/*.md5sums" file does not normally contain the config files
+# or docs.  So we'll need to check for them by hand.
 sub get_changed_since_install(\%\%\%$$$) {
     my $ref_pkgset = shift;
     my $ref_fileset = shift;
@@ -219,10 +360,9 @@ sub get_changed_since_install(\%\%\%$$$) {
 
     my @pkgset = sort(keys(%$ref_pkgset));
     my %modified_files = ();
-    # FIXME:
-    # This should contain whatever it takes to list the file installed by
-    # dpkg.
-    # 
+    # The -L option lists the contents of the package.  It should be cleaner
+    # and more standard than directly examining the "*.list" files from the
+    # DEB admin directory.
     my $deb_cmd = "$_deb_bin -L";
 
     my ($n_dirs, $n_files);
@@ -247,7 +387,7 @@ sub get_changed_since_install(\%\%\%$$$) {
         $skip_re = qr<^$skipModifiedPkgfiles_re>o;
     }
 
-    # Process one package at a time instead of 'deb -a'.
+    # Process one package at a time instead of calling 'dpkg-query -W'.
     if ($_UnitTest || $_Verbose) {
         print "Comparing package contents to actual disk files.\n";
     }
@@ -268,9 +408,15 @@ sub get_changed_since_install(\%\%\%$$$) {
 
     # *Now* iterate over all package names...
     foreach my $ref_pkgspecs (@all_pkgspecs) {
-        my $pkg = @$ref_pkgspecs[0] . "-" . @$ref_pkgspecs[1];
+        # NOTE:
+        # You can only have one version of a DEB package installed at the same
+        # time.  To get around this, DEB packages will embed information in
+        # the package name.  So the version number is never needed here,
+        # (unlike for RPMs).
+        my $pkg = @$ref_pkgspecs[0];
         # Since we're using the package install time as a threshold, we can
-        # get away with just adding the delta to it.
+        # get away with just adding the delta to it.  ($installTime_delta ==
+        # the user-provided "Flex_Pkg_InstallTime" option). 
         my $pkgInstallTime = @$ref_pkgspecs[4] + $installTime_delta;
         if ($_UnitTest || $_Verbose) {
             print "\tchecking package: $pkg\n";
@@ -285,8 +431,11 @@ sub get_changed_since_install(\%\%\%$$$) {
             for ($fn) { s/^\s+//; s/\s+$//; }
 
             # Skip anything that isn't a filename with an absolute path.
+            # Also skip the spurrious "/." path output at the top of every
+            # listing.
             next if ( ($fn eq "") || 
-                      ($fn !~ m<^/>) );
+                      ($fn !~ m<^/>) ||
+                      ($fn eq "/.") );
 
             # Flags used in processing:
             my $isSkippable = ($fn =~ m<$skip_re>);
@@ -319,26 +468,51 @@ sub get_changed_since_install(\%\%\%$$$) {
 
             # Status flags:
             my $isFile = (-f $fn);
-            # Dir flag masks out the "isFile" one.
+            # Dir flag is masked out by the "isFile" one.
             my $isDir = (-d $fn) && !$isFile;
             my $isSymLink = (-l $fn);
             # Symlink flag masks out the other two:
             $isDir = $isDir && !$isSymLink;
             $isFile = $isFile && !$isSymLink;
 
-            # Examine non-skippable package members for age.  N.B.: The syntax
-            # "stat(_)" gets the stats of the file last accessed with one of
-            # the file operators (like "-e").
-            my @fstats = stat(_);
+            # Examine non-skippable package members for age.
+            my @fstats;
+            if ($isSymLink) {
+                @fstats = lstat($fn);
+            } else {
+                @fstats = stat($fn);
+            }
             if (!scalar(@fstats)) {
                 warn "\t\tCannot stat file: $fn.\n";
                 next;
             }
 
+            # mtime/ctime/atime use on Linux:
+            # 
+            # The field st_atime (==fstats[8]) is changed by file accesses,
+            # e.g. by execve, mknod, pipe, utime and read (of more than zero
+            # bytes).
+            #
+            # The field st_mtime (==fstats[9]) is changed by file
+            # modifications, e.g. by mknod, truncate, utime and write (of more
+            # than zero bytes).  Moreover, st_mtime of a directory is changed
+            # by the creation or deletion of files in that directory.  The
+            # st_mtime field is not changed for changes in owner, group, hard
+            # link count, or mode.
+            #
+            # The field st_ctime (==fstats[10] is changed by writing or by
+            # setting inode information (i.e., owner, group, link count, mode,
+            # etc.).  Additionally, the st_ctime of a directory also changes
+            # when a file is created or deleted in that directory.
+
             # Handle dirs first:
             if ($isDir) {
+                # This attempts to fix unwanted behavior:  unmodified
+                # directories in the %mf_Permissions list.  It doesn't catch
+                # every unaltered pkgdirectory, but it gets most.
+                next if ($fstats[9] == $fstats[10]);
                 # Only modifications we track for directories are permission
-                # changes. 
+                # changes.
                 if ($_UnitTest && $_Verbose) { 
                     print "\t\tDir ctime: ";
                 } 
@@ -350,12 +524,12 @@ sub get_changed_since_install(\%\%\%$$$) {
             # Contents modification trumps all others.
             if ($isFile) {
                 if ($_UnitTest && $_Verbose) { 
-                    print "\t\tFile ctime: ";
+                    print "\t\tFile mtime: ";
                 } 
                 unless (set_if_older(%mf_Contents, $fn, 
                                      $fstats[9], $pkgInstallTime)) {
                     if ($_UnitTest && $_Verbose) { 
-                        print "\t\tFile mtime: ";
+                        print "\t\tFile ctime: ";
                     }
                     set_if_older(%mf_Permissions, $fn,
                                  $fstats[10], $pkgInstallTime);
@@ -506,8 +680,9 @@ sub write_pkgset($\%;$) {
     print OFS ("packages\n# you need to reinstall.\n#\n");
     print OFS ("# What follows is the package list used by\n");
     print OFS ("# $myName.  Its format is as follows:\n#\n#\n");
-    print OFS ("# NAME\\tVERSION\\tRELEASE\\tSERIAL\\tINSTALLTIME\n#");
-    print OFS ("\n", '#'x79, "\n\n");
+    print OFS ("# {Package}\\t{Version}\\tVerRelease\\t{Revision}\\t",
+               "InstallTime\\t{Installed-Size}\n");
+    print OFS ("#\n", '#'x79, "\n\n");
 
     # Print the entire hash.  Don't forget that a hash can only contain
     # scalars or references.  Hence the list dereference here.
@@ -548,9 +723,10 @@ debUtils - Package for interacting with installed DEB packages.
 
 =item setChangeTypeAliases(I<%changeMap>)
 
-=item %h = get_changed_since_install(I<%packages, %files, %directories, includedLaterRegexp, skipPkgRegexp, $installTime_delta>)
+=item I<%h> = get_changed_since_install(I<%packages, %files, %directories,
+includedLaterRegexp, skipPkgRegexp, $installTime_delta>)
 
-=item $date = read_pkgset(I<filename, %packages>)
+=item I<$date> = read_pkgset(I<filename, %packages>)
 
 =item write_pkgset(I<filename, %packages>)
 
@@ -589,21 +765,37 @@ array ref containing the following information:
 
 =item ->[1]: The installed package's version number.
 
+Specifically, this is the "normal" part of the version number, the purely
+numeric portion.  It consists of digits separated by '.' (and possibly ':'
+after the first number).
+
 =item ->[2]: The installed package's release number.
 
-=item ->[3]: The installed package's serial number.  This will usually be 
-the string, "(null)".
+This is actually the remainder of the DEB package's complete version number.
+It will typically begin with a '-' or a letter.
+
+=item ->[3]: The installed package's revision.
+
+This will usually be the empty string.
 
 =item ->[4]: The installation date/time, in seconds since the Epoch.
+
+=item ->[5]: The package size.
 
 =back
 
 Note that the first four elements are strings, while the last one is an
 integer.
 
-The installation date/time should describe when the installation B<finished>.
-Your implementation of this package should perform any necessary estimations
-and adjustments to ensure this.
+For DEB packages, there is no recorded installation time.  Instead, we use the
+C<mtime> of a package's info-files (the files that C<dpkg> stores in C</var>
+to keep track of various bits-o-info about each package).  The largest
+C<mtime> is used as the package's installation time.
+
+Since we don't know when these info-files are written (at the start of package
+installation or at the end) C<get_pkglist()> uses the package size to estimate
+how long the package took to install.  This estimated duration is added to the
+recorded install date/time and returned in the last array element.
 
 =item *
 
@@ -623,7 +815,8 @@ I<%changeMap>.  C<get_changed_since_install()> calls this function.
 
 =item *
 
-%h = get_changed_since_install(I<%packages, %files, %directories, includedLaterRegexp, skipPkgRegexp, $installTime_delta>)
+I<%h> = get_changed_since_install(I<%packages, %files, %directories,
+includedLaterRegexp, skipPkgRegexp, $installTime_delta>)
 
 This function uses a package's installation timestamp to find its modified
 member files.  As it loops through each package, it ignores any filename
@@ -689,7 +882,7 @@ C<0> as I<$installTime_delta>.
 
 =item *
 
-$date = read_pkgset(I<filename, %packages>)
+I<$date> = read_pkgset(I<filename, %packages>)
 
 Inverse operations to C<write_pkgset> (below).  Reads a package list from the
 specified I<filename>, storing the results in I<%packages>.  The I<%packages>
@@ -709,6 +902,6 @@ C<get_pkglist>.
 =cut
 
 
-################# 
+#################
 #
 #  End

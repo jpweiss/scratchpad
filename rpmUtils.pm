@@ -131,7 +131,7 @@ sub process_pkgspec(\%$;$$) {
     # same package installed at the same time.
     my $pkgName = $pkgspecs[0];
     my $pkgVer = $pkgspecs[1];
-    $ref_pkgset->{$pkgName}->{$pkgVer} = [ @pkgspecs ];
+    $ref_pkgset->{$pkgName}{$pkgVer} = \@pkgspecs;
 }
 
 
@@ -368,7 +368,7 @@ sub get_changed_since_install(\%\%\%$$$) {
 
             # Status flags:
             my $isFile = (-f $fn);
-            # Dir flag masks out the "isFile" one.
+            # Dir flag is masked out by the "isFile" one.
             my $isDir = (-d $fn) && !$isFile;
             my $isSymLink = (-l $fn);
             # Symlink flag masks out the other two:
@@ -424,12 +424,12 @@ sub get_changed_since_install(\%\%\%$$$) {
             # Contents modification trumps all others.
             if ($isFile) {
                 if ($_UnitTest && $_Verbose) { 
-                    print "\t\tFile ctime: ";
+                    print "\t\tFile mtime: ";
                 } 
                 unless (set_if_older(%mf_Contents, $fn, 
                                      $fstats[9], $pkgInstallTime)) {
                     if ($_UnitTest && $_Verbose) { 
-                        print "\t\tFile mtime: ";
+                        print "\t\tFile ctime: ";
                     }
                     set_if_older(%mf_Permissions, $fn,
                                  $fstats[10], $pkgInstallTime);
@@ -580,8 +580,8 @@ sub write_pkgset($\%;$) {
     print OFS ("packages\n# you need to reinstall.\n#\n");
     print OFS ("# What follows is the package list used by\n");
     print OFS ("# $myName.  Its format is as follows:\n#\n#\n");
-    print OFS ("# NAME\\tVERSION\\tRELEASE\\tSERIAL\\tINSTALLTIME\n#");
-    print OFS ("\n", '#'x79, "\n\n");
+    print OFS ("# NAME\\tVERSION\\tRELEASE\\tSERIAL\\tINSTALLTIME\n");
+    print OFS ("#\n", '#'x79, "\n\n");
 
     # Print the entire hash.  Don't forget that a hash can only contain
     # scalars or references.  Hence the list dereference here.
@@ -622,7 +622,8 @@ rpmUtils - Package for interacting with installed RPM packages.
 
 =item setChangeTypeAliases(I<%changeMap>)
 
-=item I<%h> = get_changed_since_install(I<%packages, %files, %directories, includedLaterRegexp, skipPkgRegexp, $installTime_delta>)
+=item I<%h> = get_changed_since_install(I<%packages, %files, %directories,
+includedLaterRegexp, skipPkgRegexp, $installTime_delta>)
 
 =item I<$date> = read_pkgset(I<filename, %packages>)
 
@@ -665,10 +666,13 @@ array ref containing the following information:
 
 =item ->[2]: The installed package's release number.
 
-=item ->[3]: The installed package's serial number.  This will usually be 
-the string, "(null)".
+=item ->[3]: The installed package's serial number.
+
+This will usually be the string, "(null)".
 
 =item ->[4]: The installation date/time, in seconds since the Epoch.  
+
+=item ->[5]: The package size.
 
 =back
 
@@ -700,7 +704,8 @@ I<%changeMap>.  C<get_changed_since_install()> calls this function.
 
 =item *
 
-I<%h> = get_changed_since_install(I<%packages, %files, %directories, includedLaterRegexp, skipPkgRegexp, $installTime_delta>)
+I<%h> = get_changed_since_install(I<%packages, %files, %directories,
+includedLaterRegexp, skipPkgRegexp, $installTime_delta>)
 
 This function uses a package's installation timestamp to find its modified
 member files.  As it loops through each package, it ignores any filename
