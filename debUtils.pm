@@ -1,6 +1,6 @@
 #!/usr/bin/perl 
 #
-# Copyright (C) 2003-2004 by John P. Weiss
+# Copyright (C) 2003-2008 by John P. Weiss
 #
 # This package is free software; you can redistribute it and/or modify
 # it under the terms of the Artistic License, included as the file
@@ -94,7 +94,7 @@ our $_UnitTest; $_UnitTest = 0;
 ############
 
 
-my $_deb_bin="/bin/dpkg-query";
+my $_deb_bin="/usr/bin/dpkg-query";
 my $_deb_db_path="/var/lib/dpkg";
 my $_deb_db_info_path=$_deb_db_path."/info";
 my $_deb_simple_version_re=qr/\d+\.\d+(?:\.\d+)*/;
@@ -125,6 +125,24 @@ my %_UnsupportedChangeTypeSet = ("Unknown" => 1,
 ############
 
 
+INIT {
+    # Find the first executable instance of "dpkg-query" in the list of
+    # paths.
+    unless (-x $_deb_bin) {
+        foreach my $path ("/bin/", "/sbin/", 
+                          "/usr/bin/", "/usr/sbin/",
+                          "/usr/local/bin/", "/usr/local/sbin/")
+        {
+            $_deb_bin=$path;
+            $_deb_bin.="dpkg-query";
+            if (-x $_deb_bin) {
+                last;
+            }
+        }
+    }
+}
+
+
 sub process_pkgspec(\%$;$$) {
     my $ref_pkgset = shift;
     my $spec_txt = shift;
@@ -151,8 +169,9 @@ sub process_pkgspec(\%$;$$) {
     # "dpkg" only provides us with some of these.  We need to fill in the
     # rest.
     my $pkgName = $dpkg_parts[0];
+    # Note the forced-conversion of "size" to a number.
     my @pkgspecs = ($pkgName, $dpkg_parts[1], "", 
-                    $dpkg_parts[2], 0, $dpkg_parts[3]);
+                    $dpkg_parts[2], 0, $dpkg_parts[3]+0);
 
     # We need to parse the DEB-provided version and break off the version
     # portion from the release part.
@@ -306,7 +325,7 @@ sub get_pkglist(;$) {
         print "Retrieving DEB package list...";
     }
 
-    open(DEB_IN, "$_deb_bin --show --showformat=\"$fmt\" |");
+    open(DEB_IN, "$_deb_bin --showformat='$fmt' --show |");
     while (<DEB_IN>) {
         process_pkgspec(%pkgset, $_, $updatedSince);
     }
@@ -632,7 +651,13 @@ sub read_pkgset($\%) {
     if ( defined($tmp_pkgset{"pkgset"}) &&
          (ref($tmp_pkgset{"pkgset"}) eq "ARRAY") ) {
         foreach (@{$tmp_pkgset{"pkgset"}}) {
-            process_pkgspec(%{$ref_pkgset}, $_);
+            my @pkgSpec = split("\t");
+            my $fullVer = $pkgSpec[1];
+            $fullVer.=  $pkgSpec[2];
+            # Convert the size and time to numbers.
+            $pkgSpec[4] += 0;
+            $pkgSpec[5] += 0;
+            $ref_pkgset->{$pkgSpec[0]}{$fullVer} = \@pkgSpec;
         }
         return $write_date;
     }
@@ -654,7 +679,7 @@ sub write_pkgset($\%;$) {
     if (scalar(@_)) {
         $myName = shift;
     } else {
-        $myName = "rpmUtils::write_pkgset()";
+        $myName = "debUtils::write_pkgset()";
     }
 
     chmod(0660, $filename);

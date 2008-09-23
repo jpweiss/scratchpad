@@ -127,8 +127,8 @@ sub main {
         my %pkgs=();
         my %dirs=( 'none' => 0 );
         %pkgs = get_pkglist;
-        @diffpkg = get_modified_pkgfiles(%pkgs, %dirs, 
-                                         $_SkipModifiedPkgfiles_re);
+        #@diffpkg = get_modified_pkgfiles(%pkgs, %dirs, 
+        #                                 $_SkipModifiedPkgfiles_re);
         print "( @diffpkg )\n";
         exit 0;
     }
@@ -137,7 +137,7 @@ sub main {
         my %diffpkg = ();
         my %pkgs=();
         %pkgs = get_pkglist;
-        %diffpkg = scan_modified_pkgfiles(%pkgs, $_SkipModifiedPkgfiles_re);
+        #%diffpkg = scan_modified_pkgfiles(%pkgs, $_SkipModifiedPkgfiles_re);
         print_hash("ModifiedPackages", %diffpkg);
         exit 0;
     }
@@ -159,13 +159,13 @@ sub main {
     if (exists $optmap{'write_pkgset'}) {
         my %pkgs=();
         %pkgs = get_pkglist;
-        write_pkgset "./test.pkgs", %pkgs, $_MyName;
+        write_pkgset "/tmp/test.pkgs", %pkgs, $_MyName;
         exit 0;
     }
 
     if (exists $optmap{'read_pkgset'}) {
         my %pkgs=();
-        read_pkgset "./test.pkgs", %pkgs;
+        read_pkgset "/tmp/test.pkgs", %pkgs;
         print_hash("Packages", %pkgs);
         exit 0;
     }

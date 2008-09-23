@@ -1,6 +1,6 @@
 #!/usr/bin/perl 
 #
-# Copyright (C) 2002 by John P. Weiss
+# Copyright (C) 2002-2008 by John P. Weiss
 #
 # This package is free software; you can redistribute it and/or modify
 # it under the terms of the Artistic License, included as the file
@@ -45,24 +45,27 @@ BEGIN {
                  asymm_diff circular_shift circular_pop
                  stats stats_gaussian 
                  set_seed random_indices randomize_array random_keys
+                 get_files_from_dirs
                  print_hash print_array print_dump 
                  fprint_hash fprint_array
                  cmpVersionNumberLists
                  create_regexp_group non_overlapping 
                  not_empty set_array_if_nonempty set_scalar_if_nonempty 
-                 read_options);
+                 validate_options read_options);
     # Permissable exports.
     # your exported package globals go here,
     # as well as any optionally exported functions
     @EXPORT_OK = qw($_Verbose $_UnitTest);
 
-    # Tagged groups of exports.
-    %EXPORT_TAGS = qw();
+    # Tagged groups of exports; 'perldoc Exporter' for details.
+    %EXPORT_TAGS = (all => [@EXPORT, @EXPORT_OK]);
 }
 our @EXPORT_OK;
 
 # Other Imported Packages/requirements.
 use Data::Dumper;
+use List::Util qw(shuffle);
+use File::Spec;
 
 
 ############
@@ -101,36 +104,56 @@ sub check_syscmd_status {
     my $lastErrmsg="$!";
     my $exitVal = ($laststat >> 8);
     my $signal = ($laststat & 0x7F);
+    my $abortOnError = 1;
 
     if (ref($_[0]) eq "ARRAY") {
         my %ignore = ();
         @ignore{ @{shift()} } = ();
+        $ignore{0} = 1;
+        my $errMsg="";
         if (exists($ignore{$exitVal})) {
-            print "WARNING: Command \"@_\" exited with status $exitVal.";
+            $errMsg .=
+                "WARNING: Command \"@_\" exited with status $exitVal.\n";
             unless ($lastErrmsg eq '') {
-                print "  Reason: \"$lastErrmsg\".";
+               $errMsg .= "  Reason: \"$lastErrmsg\".\n";
             }
-            print "\n";
+            warn($errMsg);
             return $exitVal;
         }
+    } elsif (ref($_[0]) eq "HASH") {
+        my %flags = %{shift()};
+        if (defined($flags{"warn"})) {
+            if ($flags{"warn"}) {
+                $abortOnError = 0;
+            }            
+        } elsif (defined($flags{"abort"})) {
+            $abortOnError = $flags{"abort"};
+        }
     }
+
 
     if ($laststat == 0) {
         # Everything's A-okay!
         return 0;
     }
-    print "Command \"@_\" failed;\n";
+
+    my $errMsg="Command \"@_\" failed;\n";
     unless ($lastErrmsg eq '') {
-        print "Reason: \"$lastErrmsg\".\n";
+        $errMsg .= "Reason: \"$lastErrmsg\".\n";
     }
     unless ($signal == 0) {
-        print "Exited on signal $signal.  ";
+        $errMsg .= "Exited on signal $signal.  ";
     }
     unless ($exitVal == 0) {
-        print "Exit status: $exitVal.";
+        $errMsg .= "Exit status: $exitVal.";
     }
-    print "\nAborting...\n";
-    exit $laststat;
+    warn($errMsg);
+
+    if ($abortOnError) {
+        print "\nAborting...\n";
+        exit $laststat;
+    } #else
+    return $laststat;
 }
 
 
@@ -140,7 +163,7 @@ sub do_error($$$) {
     my $parseError = shift;
 
     if (($parseError eq "") && ($doError eq "")) {
-        return "Error:  Runtime error evaluating while executing \"".
+        return "Error:  Runtime error evaluating \"".
             $doFile."\".\n";
     } #else
     my $mesg = "";
@@ -190,11 +213,11 @@ sub const_array($$) {
 # the hash contains a key *and* that the key maps to something other than
 # undef], use this idiom:
 #
-#    @set{@elements} = (1 .. scalar(@element));
+#    @set{@elements} = (1 .. scalar(@elements));
 #
 # ...or:
 #
-#    @set{@elements} = grep { 1; } (1 .. scalar(@element));
+#    @set{@elements} = grep { 1; } (1 .. scalar(@elements));
 #
 
 
@@ -396,7 +419,7 @@ sub set_array_if_nonempty(\@\%$) {
 
 
 sub stats(\@;$) {
-    # According to ง8.5 of "Numerical Recipies," a selection algorithm (find
+    # According to ยง8.5 of "Numerical Recipies," a selection algorithm (find
     # the K^th largest value in an array) runs with O(N) time.  Thus,
     # computing the median, dispersion about the median, min, and max take
     # O(4N) (the min & max can be searched for together in a separate loop).
@@ -434,7 +457,7 @@ sub stats(\@;$) {
     my $k_disp_hi;
 
     # We will do as "Numerical Recipies" does (see comment at the start of
-    # ง8.5), and be pedantic for N <= 100.
+    # ยง8.5), and be pedantic for N <= 100.
     if ( ($N <= 100) && (($N % 2) == 0) ) {
         $median += $vals[int($N/2) + 1];
         $median /= 2.0;
@@ -500,7 +523,7 @@ sub stats_gaussian(\@) {
     $avg_dev /= $n;
 
     # Compute the variance using the "Corrected Two-Pass Algorithm," described
-    # in "Numerical Recipies," ง14.1.
+    # in "Numerical Recipies," ยง14.1.
     #$var -= (($sum_anom*$sum_anom)/$n);
     # Note: this doesn't work; you can generate small negative numbers with
     # this.  It looks, also, like the algorithm in NR wasn't entirely correct,
@@ -540,39 +563,125 @@ sub set_seed(;$) {
 
 sub randomize_array(\@) {
     my $ref_targArray = shift;
-    my $n = scalar(@$ref_targArray);
-    for (my $i=0; $i < $n; ++$i) {
-        my $randIdx = int(rand($n));
-        my $tmp = $ref_targArray->[$i];
-        $ref_targArray->[$i] = $ref_targArray->[$randIdx];
-        $ref_targArray->[$randIdx] = $tmp;
-    }
+    @$ref_targArray = shuffle(@$ref_targArray);
+#     my $n = scalar(@$ref_targArray);
+#     for (my $i=0; $i < $n; ++$i) {
+#         my $randIdx = int(rand($n));
+#         my $tmp = $ref_targArray->[$i];
+#         $ref_targArray->[$i] = $ref_targArray->[$randIdx];
+#         $ref_targArray->[$randIdx] = $tmp;
+#     }
 }
 
 
 sub random_indices($;\@) {
     my $n = shift;
-    my $ref_idxs;
+    my $ref_idxs = [];;
     my $returnArray = 1;
     if (scalar(@_)) {
         $ref_idxs = shift;
         $returnArray = 0;
-    } else {
-        $ref_idxs = [];
     }
-    push @$ref_idxs, (0 .. ($n - 1));
-    randomize_array(@$ref_idxs);
+    @$ref_idxs = (0 .. ($n - 1));
     if ($returnArray) {
-        return @$ref_idxs;
-    }
+        return shuffle(@$ref_idxs);
+    } # else
+    randomize_array(@$ref_idxs);
 }
 
 
 sub random_keys(\%) {
     my $ref_hash = shift;
     my @keyList = sort(keys(%$ref_hash));
-    randomize_array(@keyList);
-    return @keyList;
+    return shuffle(@keyList);
+}
+
+
+sub get_files_from_dirs(\%$@) {
+    my $ref_fileMap = shift;
+    my $match_re = shift;
+
+    # Runtime-enforcement of function signature.  Mimicks the compile-time
+    # error message.
+    unless (scalar(@_)) {
+        my ($callerPkg, $callerFile, $callerLine) = caller();
+        die("Not enough arguments for jpwTools::get_files_from_dirs() ",
+            "at ", $callerFile, ", line ", $callerLine, ".\n");
+    }
+
+    my $nErrs = 0;
+    my $homeDir = $ENV{"HOME"};
+
+    foreach my $orig_dir (@_) {
+        # Skip "empty" elements.
+        next if ($orig_dir =~ m/^\s*$/);
+
+        # Cleanup the directories:
+        # - Make canonical & convert to an absolute path (including removal of
+        #   redundant path separators or '.' dirs).
+        # - Convert "~" to the home directory.
+        my $dir = File::Spec->rel2abs(File::Spec->canonpath($orig_dir));
+        $dir =~ s|^~|$homeDir|o;
+        if ($dir =~ m|\.\.|) {
+            # Do a runtime "use":
+            require Cwd;
+            import Cwd qw(abs_path);
+            $dir = abs_path($dir);
+        }
+
+        # Make sure it's a real directory.
+        unless ( (-d $dir) || (-d "$dir/.")) {
+            if ($_Verbose) {
+                print STDERR ("get_files_from_dirs():  Not a directory:\n",
+                              "\t\"", $dir, "\"\n\tIgnoring...\n");
+            }
+            next;
+        }
+
+        unless (opendir(DH, $dir)) {
+            my $errmsg="\"$!\"";
+            if ($_Verbose) {
+                print STDERR ("get_files_from_dirs():  Failed to open ",
+                              "directory:\n\t\"", $dir, "\"\n\tReason:  ",
+                              $errmsg, "\n\tSkipping...\n");
+            }
+            ++$nErrs;
+            next;
+        }
+        for ( my $f=readdir(DH); defined($f); $f=readdir(DH) ) {
+            next if (($f eq "./") || ($f eq ".") || ($f eq ".."));
+            if ($f =~ m/^\./o) {
+                $f =~ s|^\./||;
+            }
+            next unless ( ($match_re eq "") || ($f =~ m/$match_re/) );
+            if ($_Verbose > 2) {
+                print "### $f\n";
+            }
+            my $k = $f;
+            unless ($k =~ m|^[^\\/]|) {
+                $k = File::Spec->catfile($dir, $f);
+            }
+            # Format:
+            # [basename, dirname, extension, basename_stem, type, orig_dir]
+            # 'basename_stem' is 'basename' with 'extension' removed.  'type'
+            # is 0 for regular files, 1 for dirs.  'orig_dir' is the name of
+            # the original directory passed to this function.
+            $ref_fileMap->{$k} = [$f, $dir, '', $f, 0, $orig_dir];
+
+            # Crude filename decomposition:  recognizes only '.' as the
+            # extension separator.
+            if ($ref_fileMap->{$f}[0] =~ m|^(.+)\.([^.]+)$|) {
+                $ref_fileMap->{$f}[2] = $2;
+                $ref_fileMap->{$f}[3] = $1;
+            }
+            if (-d $f) {
+                $ref_fileMap->{$f}[4] = 1;                
+            }
+        }
+        closedir DH;
+    }
+
+    return !$nErrs;
 }
 
 
@@ -687,38 +796,6 @@ sub cmpVersionNumberLists(\@\@) {
 }
 
 
-# TODO: This is now redundant and should be deprecated in the future.
-sub old_print_hash(\%;$) {
-    my $map_ref=shift;
-    my $indent="";
-    if (scalar(@_)) { $indent = shift; }
-
-    print "(\n";
-    foreach my $thekey (sort(keys(%{$map_ref}))) {
-        my $reftype = ref $map_ref->{$thekey};
-        if ($reftype) {
-            if ($reftype eq "ARRAY") {
-                print "$indent  \"$thekey\"\n".
-                    "$indent    => [@{ $map_ref->{$thekey} }]\n";
-            } elsif ($reftype eq "HASH") {
-                print "$indent  \"$thekey\"\n$indent    => ";
-                # WARNING:  Recursive function calls in Perl can go horribly
-                # wrong.  Hence, we use an indirection function to prevent
-                # Perl from mangling the stack.
-                print_hash_recurse($map_ref->{$thekey}, "$indent\t");
-            } elsif ($reftype eq "SCALAR") {
-                print "$indent  \"$thekey\" =-> \"${$map_ref->{$thekey}}\"\n";
-            } else {
-                print "$indent  \"$thekey\" =-> $map_ref->{$thekey}\n";
-            }
-        } else {
-            print "$indent  \"$thekey\" => \"$map_ref->{$thekey}\"\n";
-        }
-    }
-    print "$indent)\n";
-}
-
-
 sub create_regexp_group {
     # Make sure the word list is sorted, unique, and doesn't contain the "".
     my %uniqifier;
@@ -752,13 +829,70 @@ sub non_overlapping {
 }
 
 
+sub validate_options(\%\%;$) {
+    my $ref_options = shift();
+    my $ref_validator = shift();
+    my $filename = shift();
+
+    my @validation_stack = ();
+    while (my ($k, $v) = each(%$ref_validator)) {
+        next unless(defined($ref_options->{$k}));
+        if (ref($v) eq "HASH") {
+            while (my ($k2, $v2) = each(%$v)) {
+                next unless(defined($ref_options->{$k}{$k2}));
+                push(@validation_stack, [$k.".".$k2, 
+                                         ref($ref_options->{$k}{$k2}), 
+                                         $v2]);
+            }
+        } else {
+            push(@validation_stack, [$k, ref($ref_options->{$k}), $v]);
+        }
+    }
+
+    my $is_valid=1;
+    while (scalar(@validation_stack)) {
+        my ($k, $ovt, $vt) = @{pop(@validation_stack)};
+
+        if ($ovt ne $vt) {
+            if ($is_valid) {
+                # Print out the header on the first error.
+                if ($filename eq "") {
+                    print "Error in configuration file:\n";
+                } else {
+                    print "Error in file \"$filename\":\n";
+                }
+            }
+            print "\tParameter \"$k\" must be ";
+            if ($vt eq "") { 
+                print "scalar"; 
+            } elsif ($vt eq "ARRAY") {
+                print "an array";
+            } else { 
+                print "a ", lc($vt);
+            }
+            print " (not ";
+            if ($ovt eq "") { 
+                print "scalar).\n"; 
+            } elsif ($ovt eq "ARRAY") {
+                print "an array).\n";
+            } else { 
+                print "a ", lc($ovt), ").\n";
+            }
+            $is_valid = 0;
+        }
+    }
+
+    die "Aborting." unless($is_valid);
+}
+
+
 sub read_options($;\%) {
     my $filename = shift;
     my %options=();
     my $array_option="";
-    my $validations_mapref = {};
+    my $ref_validator = {};
     if (scalar(@_)) {
-        $validations_mapref = shift;
+        $ref_validator = shift;
     }
 
     open(IN_FS, "$filename")
@@ -812,29 +946,19 @@ sub read_options($;\%) {
     }
     close IN_FS;
 
-    my $is_valid=1;
-    while(my ($k, $v) = each(%$validations_mapref)) {
-        if (defined($options{$k})) {
-            if (ref($options{$k}) ne $v) {
-                if ($is_valid) {
-                    # Print out the header on the first error.
-                    print "Error in file \"$filename\":\n";
-                }
-                print "\tParameter \"$k\" must be ";
-                if ($v eq "") { 
-                    print "scalar.\n"; 
-                } else { 
-                    print "an ", lc($v), ".\n";
-                }
-                $is_valid = 0;
-            }
-        }
+    # Break apart our hash options.
+    # Note: We only handle one-level deep.  The value must be either a scalar
+    # or a hash.  Anything more complex must be split apart by the caller.
+    foreach my $raw_hashopt (grep(/\./, keys(%options))) {
+        $raw_hashopt =~ m/^([^.]+)\.(.*)$/;
+        my $hashopt = $1;
+        my $subopt= $2;
+        $options{$hashopt}{$subopt} = $options{$raw_hashopt};
+        delete $options{$raw_hashopt};
     }
 
-    unless($is_valid) { 
-        print "Aborting.";
-        exit 1; 
-    }
+    # And lastly, validate the options.
+    validate_options(%options, %$ref_validator, $filename);
 
     return %options;
 }
@@ -1137,7 +1261,7 @@ jpwTools - Package containing John's Perl Tools.
 
 =item datetime_now 
 
-=item check_syscmd_status I<args...>
+=item check_syscmd_status [I<ctrlRef>, ] I<cmd>
 
 =item do_error(I<filename>, $!, $@)
 
@@ -1163,7 +1287,7 @@ jpwTools - Package containing John's Perl Tools.
 
 =item asymm_diff I<\@list, \%hash>
 
-=item asymm_diff I<\@hash, \%list>
+=item asymm_diff I<\%hash, \@list>
 
 =item asymm_diff I<\%hash1, \%hash2>
 
@@ -1171,15 +1295,25 @@ jpwTools - Package containing John's Perl Tools.
 
 =item stats_gaussian I<@list>
 
+=item set_seed [I<seed>]
+
+=item randomize_array I<@list>
+
+=item random_indices I<nIndices>, [I<@list>]
+
+=item random_keys I<%hash>
+
+=item get_files_from_dirs I<%hash>, I<match_regexp>, I<dir> [, I<dir> ...]
+
 =item print_hash I<name>, I<%hash> [, I<regexp, sub> ...]
 
-=item print_array I<name>, I<%hash> [, I<regexp, sub> ...]
+=item print_array I<name>, I<@list> [, I<regexp, sub> ...]
 
 =item fprint_hash I<fh_ref>, I<name>, I<%hash> [, I<regexp, sub> ...]
 
-=item fprint_array I<fh_ref>, I<name>, I<%hash> [, I<regexp, sub> ...]
+=item fprint_array I<fh_ref>, I<name>, I<@list> [, I<regexp, sub> ...]
 
-=item print_dump [I<fh_ref>, ]  [I<name>, ] I<%hash> [, I<regexp, sub> ...]
+=item print_dump [I<fh_ref>, ]  [I<name>, ] I<$ref> [, I<regexp, sub> ...]
 
 =item create_regexp_group I<@words>
 
@@ -1191,7 +1325,9 @@ jpwTools - Package containing John's Perl Tools.
 
 =item non_overlapping I<@prefixes>
 
-=item read_options I<option_filename>
+=item read_options I<option_filename> [, I<%validator>]
+
+=item validate_options I<%option_map>, I<%validator> [, I<filename>]
 
 =back
 
@@ -1215,11 +1351,42 @@ of the form: C<(year, month, day, hour24, min, sec)>.
 
 =item * 
 
-check_syscmd_status I<args...>
+check_syscmd_status [I<ctrlRef>, ] I<cmd>...
 
 Checks \$\?, the status of the last system command run.  If the status is
 nonzero, it prints out the specified args as part of an error message, then
-aborts the program. 
+aborts the program.
+
+You should call this function immediately after your call to C<system>.
+
+I<cmd> is one or more strings containing the command you executed with the
+C<system> call.  It will usually be the same args you just passed to
+C<system>.
+
+The first arg may, optionally, be a reference to an array or a hash, used to
+control whether or not C<check_syscmd_status> aborts the program.
+
+When called with an array reference, the array should contain a list of one or
+more exit values to ignore.  If the command run using C<system> exited with
+one of these values, then C<check_syscmd_status> will only issue a warning and
+return, instead of aborting.
+
+If I<ctrlRef> is a hash, it may contain one of the following keys:
+
+=over 1
+
+=item C<warn>
+
+If the value of this key evaluates to true, C<check_syscmd_status> will return
+the command's exit value instead of aborting the program.  Any value that
+evaluates to false is ignored.
+
+=item C<abort>
+
+The value of this flag directly controls whether or not C<check_syscmd_status>
+aborts on error.
+
+=back
 
 =item *
 
@@ -1425,7 +1592,7 @@ computing central tendency and dispersion.
 
 stats_gaussian I<@list>
 
-Computes the "Gaussian statistics" of I<@list>, a la ง14 of "Numerical
+Computes the "Gaussian statistics" of I<@list>, a la ยง14 of "Numerical
 Recipies."  Returns an array containing:
 
 C<(mean, variance, skew, kurtosis, StdDeviation, AvgDeviation)>
@@ -1444,6 +1611,86 @@ distributions, the mean and variance will not be meaningful values.
 
 =item *
 
+set_seed [I<seed>]
+
+Sets the seed of Perl's internal PRNG in a reproducable way, returning the
+seed that it used.
+
+When passed a I<seed>, C<set_seed()> behaves the same as L<srand()>. When
+called without args, C<set_seed()> "bootstraps" a seed for itself by first
+calling L<srand()> with no args, then invoking L<rand()> to create the seed it
+uses.  This isn't great, from the standpoint of PRNG generation, and it's
+terrible for cryptographic uses.  However, when you need/want to autogenerate
+a seed but save that seed for future reuse (e.g. for Monte Carlo simulation),
+it'll do.
+
+=item *
+
+randomize_array I<@list>
+
+Shuffles the contents of I<@list>, leaving it in a random order.
+
+DEPRECATED.  Use L<shuffle()> from L<List::Util> instead (which this function
+now uses internally).
+
+=item *
+
+random_indices I<nIndices>, [I<@list>]
+
+Generates indices from C<0> to I<nIndices>C< - 1> in a random (read: shuffled)
+order.  If the optional I<@list> argument is specified, the indices are stored
+in it, erasing any existing elements.  Otherwise, C<random_indices()> returns
+the list of randomly-ordered indices.
+
+This function invokes L<shuffle()> from L<List::Util>.
+
+=item *
+
+random_keys I<%hash>
+
+Returns the keys of I<%hash> in a random (read: shuffled) order.
+
+This function invokes L<shuffle()> from L<List::Util>.
+
+=item *
+
+get_files_from_dirs I<%fileMap>, I<match_regexp>, I<dir> [, I<dir> ...]
+
+Searches through the specified list of directories (the I<dir> passed to this
+function) for all files/subdirectories matching I<match_regexp>.  The results
+are stored in I<%fileMap> in the format described below.
+
+If I<match_regexp> is the empty string, C<get_files_from_dirs()> returns all
+files.  (The files "." and ".." are, however, always omitted.)
+
+The I<dir> arguments are normalized and cleaned up using the L<File::Spec>
+package.  Any paths containing "/../" path elements are resolved using the
+L<Cwd> package (which is only loaded, dynamically, at runtime, if necessary).
+Symlinks combined with "/../" subpaths will, therefore, be resolved to the
+actual directory.
+
+The results are returned in I<%fileMap>, which is keyed by the filename's full
+absolute path.  Each value is an array reference containing the following:
+
+=over 4
+
+[I<fileBasename>,
+ I<fileDirnameAbspath>,
+ I<fileExtension>,
+ I<fileBasenameStem>,
+ I<isDirectory>,
+ I<originalDirectory>]
+
+=back
+
+The names for each element are fairly self-explanatory.  I<isDirectory> is a
+boolean flag.  I<fileBasenameStem> is basically I<fileBasename> with
+I<fileExtension> removed.  I<originalDirectory> contains one of the I<dir>
+strings passed as an argument, specifically the one that resolves to the
+file's parent.
+
+=item *
+
 fprint_hash I<fh_ref>, I<name>, I<%hash> [, I<regexp, sub> ...]
 
 Convenience wrapper around 
@@ -1452,7 +1699,7 @@ empty string, in which case L<print_dump()|/"print_dump"> is called without it.
 
 =item *
 
-fprint_array I<fh_ref>, I<name>, I<%hash> [, I<regexp, sub> ...]
+fprint_array I<fh_ref>, I<name>, I<@list> [, I<regexp, sub> ...]
 
 Convenience wrapper around 
 C<print_dump(I<fh_ref>, [I<name>,] I<\@list> [, ...])>.  I<name> can be the
@@ -1462,13 +1709,13 @@ empty string, in which case L<print_dump()|/"print_dump"> is called without it.
 
 print_hash I<name>, I<%hash> [, I<regexp, sub> ...]
 
-Equivalent to C<fprint_hash(\*STDOUT, I<name>, I<\%hash> [, ...])>.
+Equivalent to C<fprint_hash(\*STDOUT, I<name>, I<%hash> [, ...])>.
 
 =item *
 
 print_array I<name>, I<@list> [, I<regexp, sub> ...]
 
-Equivalent to C<fprint_array(\*STDOUT, I<name>, I<\@list> [, ...])>.
+Equivalent to C<fprint_array(\*STDOUT, I<name>, I<@list> [, ...])>.
 
 =item * 
 
@@ -1563,10 +1810,9 @@ set_scalar_if_nonempty I<@listvar>, I<%map>, I<key>
 If C<$%I<map>{I<key>}> is non-empty (as determined by C<not_empty()>),
 sets I<$scalarvar> to its value.
 
-
 =item *
 
-read_options I<option_filename>
+read_options I<option_filename> [, I<%validator>]
 
 Reads the file named I<option_filename> for options, returning them in a
 hash.  This is a very powerful routine, permitting you to create B<safe>
@@ -1596,7 +1842,7 @@ by the one of delimiter characters ':' or '='.
 
 =item - 
 
-Option names can contain any character except ':' and '='.
+Option names can contain any character except '.', ':' and '='.
 
 =item - 
 
@@ -1640,13 +1886,90 @@ nor end with whitespace characters.  They are stripped off.
 The options are returned in a hash map, keyed by name.   Array
 options are stored as references to anonymous Perl arrays.
 
+=item - 
+
+Options can be grouped into sections:
+
+=over 2
+
+=item *
+
+Sections are just a prefix on the option name, separated by a '.' character.
+For example:
+
+C<first.wifi_interface = I<value>>
+
+Sets the option C<wifi_interface> in the section C<first> to I<value>.
+
+=item *
+
+The same rules that apply to option names apply to section names, as well.
+
+=item *
+
+Sections are elements of the hash map returned by this function, keyed by
+section name.
+
+=item *
+
+The options in a sections are returned in an anonymous Perl hash map, keyed by
+the option name and obeying the same rules as regular options.
+
+In other words, sections turn the return value into a 2-D Perl hash map.
+Regular options and sections are accessed by the first key.  The second key
+accesses options within a section.
+
+=item *
+
+Sections cannot be nested.  Any '.' characters after the one following the
+section name are ignored.  If you wish to use sub-sub-sections and more
+complex structures, you're on your own.
+
 =back
+
+=back
+
+Before returning, C<read_options()> will call C<validate_options()> using 
+the optional hash argument, I<%validator>.  See
+L<validate_options()|DESCRIPTION/"validate_options"> for a description of what
+the I<%validator> argument should look like.
+
+=item *
+
+validate_options I<%option_map>, I<%validator> [, I<filename>]
+
+Checks the options in I<%option_map> for type-consistency.  I<%option_map>
+should be the hash read from a configuration file by
+L<read_options()|DESCRIPTION/"read_options">.
+
+The keys of the I<%validator> map correspond to the names of the (regular)
+options in I<%option_map>.  Any key of I<%validator> that isn't one
+of the returned (regular) options --- and vice-versa --- is ignored.  Each
+value is a string like that returned by the perl builtin, L<ref()>.  If the
+reference-type of any option from I<option_filename> doesn't match the
+expected type, the program aborts (via L<die()>).
+
+You can also validate sections by using the section name as a key in
+I<%validator>.  The corresponding value is a reference to an anonymous Perl
+hash.  That anonymous Perl hash is, in turn, a validator hash-map, with the
+same format as described above.  Or, it can be an empty hash, in which case,
+C<validate_options()> only validates that a section name wasn't incorrectly
+used as a regular option.
+
+This file has been split out of L<read_options()|DESCRIPTION/"read_options">
+so that one can validate a configuration file in stages.  This is especially
+useful when some setting in the file determine the nature and presence of
+other settings.
+
+The optional argument I<filename> is used for pretty-printing error messages
+(if any errors are present).  It should be the name of the configuration file
+being validated.
 
 =back 
 
 =cut
 
 #################
-#
-#  End
-
+# Local Variables:
+# coding: utf-8-unix
+# End:
