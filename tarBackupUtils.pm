@@ -120,7 +120,7 @@ sub write_backup_dates($$;@) {
     my @allIncrementals=@_;
 
     # Must always have a "lastFull".
-    unless ($lastFull ne "") {
+    if ($lastFull eq "") {
         print STDERR ("Call to write_backup_dates():  ",
                       "no date/time specified for last\n",
                       "full backup.\nNo changes made to \"$statefile\".\n");
@@ -364,10 +364,10 @@ sub do_incremental_filelist_backup($$$) {
 
     # Determine the date after which we backup files.
     my $incremental_arg = "--newer=";
-    if (not_empty($backup_state{"Last.Incremental"})) {
-        $incremental_arg .= $backup_state{"Last.Incremental"};
+    if (not_empty($backup_state{"Last"}{"Incremental"})) {
+        $incremental_arg .= $backup_state{"Last"}{"Incremental"};
     } else {
-        $incremental_arg .= $backup_state{"Last.Full"};
+        $incremental_arg .= $backup_state{"Last"}{"Full"};
     }
 
     # Run the backup.
@@ -376,9 +376,9 @@ sub do_incremental_filelist_backup($$$) {
     # Write the full backup date to the state-file, using "today" for the new
     # "latest incremental backup" time.
     write_backup_dates($statefile, 
-                       $backup_state{"Last.Full"},
+                       $backup_state{"Last"}{"Full"},
                        $today, 
-                       @{$backup_state{"All.Incremental"}});
+                       @{$backup_state{"All"}{"Incremental"}});
 }
 
 
