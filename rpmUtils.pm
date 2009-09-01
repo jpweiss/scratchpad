@@ -391,7 +391,9 @@ sub get_changed_since_install(\%\%\%$$$) {
             # 
             # The field st_atime (==fstats[8]) is changed by file accesses,
             # e.g. by execve, mknod, pipe, utime and read (of more than zero
-            # bytes).
+            # bytes).  Guaranteed to change, it's not very useful for making a
+            # decision about backing up.
+
             #
             # The field st_mtime (==fstats[9]) is changed by file
             # modifications, e.g. by mknod, truncate, utime and write (of more

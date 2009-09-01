@@ -357,14 +357,14 @@ sub setChangeTypeAliases(\%) {
 
 # NOTE:
 # "dpkg" has a '--compare-versions <v1> <op> <v2>' feature.  So, there's no
-# need to manually compare the versions.
+# need to manually compare the version numbers.
 #
 # In the dpkg "database" directories, you'll find the files 'info/*.list' and
 # 'info/*.md5sums'.  The former is a simple list of files & directories in the
 # package, one per line.  The latter is a file suitable to run through
 # "md5sum" to check if file contents have changed.  Run it like this:
 #
-#    (pushd /; md5sum -c ${dpkgAdminFile}; popd)
+#    (pushd /; md5sum -c ${dpkgAdminDir}info/foo.md5sums; popd)
 #
 # The "info/*.md5sums" file contains relative paths, hence the "pushd" to root.
 # Also, the "info/*.md5sums" file does not normally contain the config files
@@ -510,7 +510,8 @@ sub get_changed_since_install(\%\%\%$$$) {
             # 
             # The field st_atime (==fstats[8]) is changed by file accesses,
             # e.g. by execve, mknod, pipe, utime and read (of more than zero
-            # bytes).
+            # bytes).  Guaranteed to change, it's not very useful for making a
+            # decision about backing up.
             #
             # The field st_mtime (==fstats[9]) is changed by file
             # modifications, e.g. by mknod, truncate, utime and write (of more
