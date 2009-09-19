@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Copyright (C) 2003-2004 by John P. Weiss
+# Copyright (C) 2003-2009 by John P. Weiss
 #
 # This package is free software; you can redistribute it and/or modify
 # it under the terms of the Artistic License, included as the file
@@ -24,7 +24,7 @@
 ############
 
 
-MYVERSION='1_0_0'
+MYVERSION='1_9_3'
 
 BIN_DIR=${PWD}
 
@@ -52,6 +52,7 @@ DEFL_AR_DIR=''
 DEFL_AR_PREFIX=''
 DEFL_WRK_DIR=''
 BAD_PUNCT=$'[]{}|<>!@$%^&*?()=~"`;#\'\\'
+# ' # Fixes Emacs font-lock
 CTRLCHAR1=$'\001\002\003\004\005\006\a\b\016\017'
 CTRLCHAR2=$'\020\021\022\023\024\025\026\027\030\031\032\033\034\035\036'
 CTRLCHARS="${CTRLCHAR1}${CTRLCHAR1}"
