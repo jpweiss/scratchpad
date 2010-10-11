@@ -1,0 +1,25 @@
+* X Error Crash
+  The following error causes the program to exit(1):
+
+    $ X Error of failed request:  BadValue 
+          (integer parameter out of range for operation)
+      Major opcode of failed request:  144 (XTEST)
+      Minor opcode of failed request:  2 (X_XTestFakeInput)
+      Value in failed request:  0x0
+      Serial number of failed request:  2968
+      Current serial number in output stream:  2969
+
+  Fix it.  Or, at the very least, prevent it from crashing the program.
+
+* Missing Options:
+  - Log File (--log,-l)
+  - No Daemonizing (--dbg)
+
+* Missing Features:
+  - Daemonization
+  - Makefile/autoconf
+
+* Other Tasks:
+  - Split source into multiple files?
+  - Doxycomments
+  - .deb/.rpm installation pkgs.
