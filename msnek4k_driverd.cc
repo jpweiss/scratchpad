@@ -21,14 +21,11 @@ msnek4k_driverd_cc__="RCS $Id$";
 // Includes
 //
 #include <iostream>
-#include <fstream> // Required for reading config files.
-#include <sstream> // Required by --help-config.
 #include <string>
 #include <vector>
 #include <stdexcept>
 
 #include <sys/time.h> // Required for keypress/release parsing.
-#include <stdint.h>   // For size-specific int types.
 
 // For Unix I/O
 #include <unistd.h>
@@ -44,7 +41,7 @@ msnek4k_driverd_cc__="RCS $Id$";
 
 #include <tr1/array>
 // Requires '-lboost_program_options-mt'
-#include <boost/program_options.hpp>
+#include "ProgramOptions_Base.h"
 
 
 
@@ -77,33 +74,9 @@ using std::flush;
 //
 
 
-class ProgramOptions
+class ProgramOptions : public jpwTools::boost_helpers::ProgramOptions_Base
 {
-    // The boost::program_options library always indents the documentation
-    // strings by a minimum amount.  This messes up the display of
-    // m__cfgfileDocDetails.
-    //
-    // To fix this problem, we will unindent by a fixed amount.
-    static const unsigned m__B_PO_MIN_LEFT_MARGIN=20;
-
-    // Internal Member Variables
-    // No User Serviceable Parts
-    string m__progName;
-    bool m__showHelp;
-    bool m__showHelpConfig;
-    string m__cfgfile;
-    char m__docDetails_FakeOption[2];
-    boost::program_options::positional_options_description m__posnParams;
-    boost::program_options::options_description m__posnParamOpts;
-    boost::program_options::variables_map m__opts;
-    unsigned m__lineLen;
-    boost::program_options::options_description m__cmdlineOpts;
-    boost::program_options::options_description m__hiddenCmdlineOpts;
-    boost::program_options::options_description m__sharedOpts;
-    boost::program_options::options_description m__envvarOpts;
-    boost::program_options::options_description m__cfgfileOpts;
-    boost::program_options::options_description m__cfgfileDocDetails;
-
+    typedef jpwTools::boost_helpers::ProgramOptions_Base Base_t;
 public:
     struct KbdMapping
     {
@@ -135,101 +108,14 @@ public:
     //
     // ...arg in the 'add_options()' call when defining your options.
     //
-    explicit ProgramOptions(const string& programName, int lineLength=78)
-        : m__progName(programName)
-        , m__showHelp(false)
-        , m__showHelpConfig(false)
-        , m__cfgfile()
-        , m__docDetails_FakeOption()
-        , m__opts()
-        , m__lineLen(lineLength)
-        , m__posnParams()
-        , m__posnParamOpts("Positional Parameters", m__lineLen)
-        , m__cmdlineOpts(m__lineLen)
-        , m__hiddenCmdlineOpts("Hidden Options", m__lineLen)
-        , m__sharedOpts(m__lineLen)
-        , m__envvarOpts(m__lineLen)
-        , m__cfgfileOpts("Configuration File Variables", m__lineLen)
-          // The extra offset of 6, below, accounts for (A) the space added by
-          // boost::program_options for the fake option; (B) the "# " prefix,
-          // if the user requested it.
-        , m__cfgfileDocDetails("Details",
-                               m__lineLen + m__B_PO_MIN_LEFT_MARGIN - 6)
-    {
-        m__docDetails_FakeOption[0] = 0x21;
-        m__docDetails_FakeOption[2] = 0;
-    }
+    explicit ProgramOptions(const string& programName)
+        : Base_t(programName)
+    {}
 
     // Complete the body of this function (see below).
-    void defineCommandlineOptions();
+    void defineOptionsAndVariables();
 
-    // Complete the body of this function (see below).
-    void defineCfgfileOptions();
-
-    // Complete the body of this function (see below).
-    bool validateParsedOptions();
-
-    void parse(int argc, char* argv[]);
-
-    const boost::program_options::variable_value&
-    operator[](const string& varName) const
-    {
-        return m__opts[varName];
-    }
-
-private:
-    typedef boost::program_options::options_description b_po_opt_descr_t;
-    typedef boost::program_options::value_semantic b_po_value_semantic_t;
-
-    // Enhanced help output for configuration files.
-    void showConfigHelp(const b_po_opt_descr_t& config_descr);
-
-    // Add the named positional parameter.
-    //
-    void addPosnParam(const char* paramName,
-                      const char* paramDocstring,
-                      int max_count=1)
-    {
-        m__posnParams.add(paramName, max_count);
-        m__posnParamOpts.add_options()
-            (paramName, paramDocstring);
-    }
-
-    // Add the named positional parameter.
-    //
-    void addPosnParam(const char* paramName,
-                      const b_po_value_semantic_t* value_obj,
-                      const char* paramDocstring,
-                      int max_count=1)
-    {
-        m__posnParams.add(paramName, max_count);
-        m__posnParamOpts.add_options()
-            (paramName, value_obj, paramDocstring);
-    }
-
-    // Enhanced help output for configuration files.
-    void addConfigHelpDetails(const char* docstr)
-    {
-        m__cfgfileDocDetails.add_options()
-            (m__docDetails_FakeOption, docstr);
-        ++m__docDetails_FakeOption[0];
-    }
-
-    // Check that \a val is only 8 bits.  \a varName is the config variable
-    // that's set to \val.
-    //
-    // Unfortunately, boost::program_options will not accept an integer value
-    // for \c char or \c unsigned \c char.
-    void require8BitSize(uint16_t val, const char* varName)
-    {
-        using namespace boost::program_options;
-        if(!val || (val & 0xFF00)) {
-            string errmsg("Value out of range:  \"");
-            errmsg += varName;
-            errmsg += "\" must be a number between 1 and 255, inclusive.";
-            throw invalid_option_value(errmsg);
-        }
-    }
+    virtual bool validateParsedOptions(b_po_varmap_t& varMap);
 };
 
 
@@ -256,15 +142,15 @@ struct DisplayMapper
 //
 
 
-// Define your commandline options in this function.
-//
-// The options "--help", "--verbose", "--config", and "--help-config" will
-// be defined for you.  No need to put them in here.
-void ProgramOptions::defineCommandlineOptions()
+void ProgramOptions::defineOptionsAndVariables()
 {
     using namespace boost::program_options;
 
-    m__cmdlineOpts.add_options()
+    //
+    // Commandline-only Options
+    //
+
+    addOpts()
         ("zoom-up,U",
          value<uint16_t>(&(zoomUp.x11Keycode)),
          "The X11 keycode to generate when the Zoom jog is pressed up.\n"
@@ -284,21 +170,12 @@ void ProgramOptions::defineCommandlineOptions()
          "variable."
          )
         ;
-}
 
+    //
+    // The Configuration File Variables:
+    //
 
-// Define your configuration file variables in this function.
-//
-// If your program doesn't use a configfile, just delete everything in the
-// body of this function.
-//
-void ProgramOptions::defineCfgfileOptions()
-{
-    using namespace boost::program_options;
-
-    // Define the Configuration File Variables:
-
-    m__cfgfileOpts.add_options()
+    addCfgVars()
         ("ZoomUp.scancode",
          value<uint16_t>(&(zoomUp.scancode))->default_value(0x1A2),
          "The raw keyboard scancode returned when the Zoom jog is "
@@ -341,29 +218,39 @@ void ProgramOptions::defineCfgfileOptions()
          "The X11 keycode to map the Spell key to.")
         ;
 
-    // Define the Configuration File Variables that can also be passed as
-    // Commandline Options:
+    //
+    // Configuration File Variables that can also be passed as Commandline
+    // Options:
+    //
 
+    // Environment variable:  DISPLAY.  Will be added to the shared options.
+    addEnvvars(Base_t::SHARED)
+        ("display,d", value<string>(),
+         "The X11 display to run on.  Overrides the DISPLAY environment "
+         "variable.\n"
+         "This option is required if DISPLAY is not set.");
+
+    // The keyboard device.
     string deflDev_tmp("/dev/input/by-id/usb-Microsoft_Natural");
     deflDev_tmp += "\xC2\xAE"; // Unicode character '®' in UTF-8
-    deflDev_tmp += "_Ergonomic_Keyboard_4000-event-if01";
+    deflDev_tmp += "_Ergonomic_Keyboard_4000-event-kbd";
     // Note:  The uber-long default value confuses the
     // boost::program_options engine, destroying the auto-formatting.  So, put
     // it in its own subgroup, then document it elsewhere, via a hidden
     // option.
-    options_description kbdDev_descr_wrapper(m__lineLen);
+    options_description kbdDev_descr_wrapper(usageLineLength());
     kbdDev_descr_wrapper.add_options()
         ("kbd-dev,k",
          value<string>(&kbdDriverDev)->default_value(deflDev_tmp.c_str()),
          "The full pathname of the keyboard device."
          )
         ;
-    m__sharedOpts.add(kbdDev_descr_wrapper);
+    addCfgVars(kbdDev_descr_wrapper, Base_t::SHARED);
 
     // Again, because of the overly-long default for kbdDriverDev, we need
     // to use a special option group, or the doc strings for the following
     // won't properly line-wrap.
-    options_description otherShared_wrapper(m__lineLen);
+    options_description otherShared_wrapper(usageLineLength());
     otherShared_wrapper.add_options()
         ("Zoom.isMouseButton,b", bool_switch()->default_value(false),
          "Equivalent to setting both the \"ZoomUp.isMouseButton\" and "
@@ -375,18 +262,12 @@ void ProgramOptions::defineCfgfileOptions()
          "if \"Zoom.isMouseButton\" isn't also set to true."
          )
         ;
-    m__sharedOpts.add(otherShared_wrapper);
+    addCfgVars(otherShared_wrapper, Base_t::SHARED);
 
-    // Environment variable:  DISPLAY.  Will be added to the shared options.
-    m__envvarOpts.add_options()
-        ("display,d", value<string>(),
-         "The X11 display to run on.  Overrides the DISPLAY environment "
-         "variable.\n"
-         "This option is required if DISPLAY is not set.");
-    m__sharedOpts.add(m__envvarOpts);
-
+    //
     // Define the additional/verbose/enhanced configuration file
     // documentation:
+    //
 
     const char* kbd_dev_doc =
         "\n"
@@ -469,14 +350,14 @@ void ProgramOptions::defineCfgfileOptions()
 // complicated processing, such as cross-option dependencies, should go in
 // this member function.
 //
-bool ProgramOptions::validateParsedOptions()
+bool ProgramOptions::validateParsedOptions(b_po_varmap_t& varMap)
 {
     // Handle Zoom.isMouseButton and Zoom.isMouseWheel:
-    if(m__opts["Zoom.isMouseButton"].as<bool>()) {
+    if(varMap["Zoom.isMouseButton"].as<bool>()) {
         zoomDown.isMouseButton = zoomUp.isMouseButton = true;
     }
 
-    if(m__opts["Zoom.isMouseWheel"].as<bool>()) {
+    if(varMap["Zoom.isMouseWheel"].as<bool>()) {
         zoomDown.isMouseWheel = zoomUp.isMouseWheel = true;
     }
 
@@ -484,280 +365,8 @@ bool ProgramOptions::validateParsedOptions()
     require8BitSize(spell.x11Keycode, "Spell.x11Keycode");
     require8BitSize(zoomUp.x11Keycode, "ZoomUp.x11Keycode");
     require8BitSize(zoomDown.x11Keycode, "ZoomDown.x11Keycode");
-}
 
-
-// No User Servicable Parts in this fn.
-//
-void ProgramOptions::showConfigHelp(const b_po_opt_descr_t& config_descr)
-{
-    const char* prefix("");
-    bool verbose = m__opts["verbose"].as<int>();
-
-    if(verbose) {
-        prefix = "# ";
-    }
-
-    cout << prefix << m__progName << " - Configuration File:"
-         << endl << prefix << endl << prefix
-         << "Settings in the configuration file are of the form:"
-         << endl << prefix << endl << prefix
-         << "    settingName=value"
-         << endl << prefix <<  endl << prefix
-         << "Multiple settings can be grouped into sections.  "
-         << "Each option in a group"
-         << endl << prefix
-         << "has the form \"sectionName.settingName\", and appears in "
-         << "the configuration "
-         << endl << prefix
-         << "file as follows:"
-         << endl << prefix << endl << prefix
-         << "    [sectionName]"
-         << endl << prefix
-         << "    settingName=value"
-         << endl << prefix << endl << prefix
-         << "The comment delimiter is '#' and may appear anywhere "
-         << "on a line."
-         << endl << prefix
-         << endl;
-
-    // Unfortunately, boost::program_options doesn't provide a means of
-    // printing out the configuration file variables as anything other
-    // than options.  So, we'll fake it by printing to a stringstream and
-    // editing each line before printing it out.
-    std::stringstream configDoc_sst;
-    configDoc_sst << config_descr << endl;
-
-    string::size_type unindent(0);
-    while(configDoc_sst) {
-        string line;
-        getline(configDoc_sst, line);
-
-        // Look for lines beginning with an option name.  Ignore any lines
-        // with a margin more than 1/3 of the size of the line.
-        string::size_type leftMargin = line.find_first_not_of(' ');
-        if( (leftMargin == string::npos) ||
-            (leftMargin > line.length()/3) )
-        {
-            leftMargin = 0;
-        }
-
-        if(line.find("--") == leftMargin) {
-            // Erase a leading '--'
-            line[leftMargin] = ' ';
-            line[leftMargin + 1] = ' ';
-            unindent = 2;
-        } else if( (line.find(" [ --") == (leftMargin+2)) &&
-                   (line[leftMargin] == '-') &&
-                   (line[leftMargin+1] != '-') )
-        {
-            // Erase the short option and remove the '['...']' surrounding
-            // the long name.
-            line.replace(leftMargin, 7, 7, ' ');
-            string::size_type bracketPos = line.find(']', leftMargin);
-            if(bracketPos != string::npos) {
-                line.erase(bracketPos-1, 2);
-                line.insert(0, 2, ' ');
-            }
-            unindent = 9;
-        } else if(leftMargin = 0) {
-            unindent = 0;
-        }
-
-        // Remove excess indentation, if any.
-        if(unindent && (line.length() > unindent)) {
-            line.erase(0, unindent);
-        }
-
-        cout << prefix << line << endl;
-    }
-
-    // Stop if there's no additional documentation.
-    if (m__cfgfileDocDetails.options().empty()) {
-        exit(0);
-    } // else:
-
-    configDoc_sst.clear();
-    configDoc_sst << m__cfgfileDocDetails << endl;
-    unindent = m__B_PO_MIN_LEFT_MARGIN;
-    if(verbose) {
-        unindent += 2;
-    }
-    while(configDoc_sst) {
-        string line;
-        getline(configDoc_sst, line);
-
-        string::size_type leftMargin = line.find_first_not_of(' ');
-        if(leftMargin == string::npos) {
-            leftMargin = 0;
-        }
-        if(line.find("--") == leftMargin) {
-            // Trim off the fake option.
-            leftMargin = unindent;
-        }
-        // Ignore lines that haven't been indented.
-        if (unindent <= leftMargin) {
-            line.erase(0, unindent);
-        }
-
-        cout << prefix << line << endl;
-    }
-    cout << endl << endl;
-
-
-    if(verbose) {
-        cout << endl;
-        boost::any defaultVal;
-        for(unsigned ui=0; ui < config_descr.options().size(); ++ui) {
-            cout << '#'
-                 << config_descr.options()[ui]->long_name()
-                 << " = ";
-            if(config_descr.options()[ui]
-               ->semantic()->apply_default(defaultVal))
-            {
-                // Ugh!  boost:any isn't OutputStreamable.  Need to resort to
-                // nasty typeid-checking.
-                if(defaultVal.type() == typeid(bool)) {
-                    cout << boost::any_cast<bool>(defaultVal);
-                } else if(defaultVal.type() == typeid(uint16_t)) {
-                    cout << boost::any_cast<uint16_t>(defaultVal);
-                } else if(defaultVal.type() == typeid(string)) {
-                    cout << boost::any_cast<string>(defaultVal);
-                }
-            }
-            cout << endl << endl;
-        }
-    } else {
-        cout << "(To print this message as a sample configuration file, "
-             << "rerun this program"
-             << endl
-             << " with both the \"--help-config\" and \"-v\" options.)"
-             << endl;
-    }
-
-    exit(0);
-}
-
-
-// No User Servicable Parts in this fn.
-//
-void ProgramOptions::parse(int argc, char* argv[])
-{
-    using namespace boost::program_options;
-
-    defineCommandlineOptions();
-    defineCfgfileOptions();
-
-    options_description cmdline_descr;
-    options_description cmdline_documented_descr("Options");
-    options_description config_descr;
-
-    string deflCfgFile("/etc/");
-    deflCfgFile += m__progName;
-    deflCfgFile += ".conf";
-
-    // Define the default/std. commandline options
-    cmdline_documented_descr.add_options()
-        ("help,h", bool_switch(&m__showHelp), "This message.")
-        ("verbose,v",
-         value<int>()->implicit_value(1)->default_value(0),
-         "Make this program more verbose.")
-        ("config",
-         value<string>(&m__cfgfile)->default_value(deflCfgFile.c_str()),
-         "Configuration file, containing additional options.")
-        ;
-    if(!m__cfgfileOpts.options().empty()) {
-        cmdline_documented_descr.add_options()
-            ("help-config", bool_switch(&m__showHelpConfig),
-             "Additional information about the configuration file.")
-            ;
-    }
-
-    // Set up the local 'options_description' vars from the members.
-
-    // Comandline:
-    cmdline_documented_descr.add(m__cmdlineOpts);
-    if(!m__sharedOpts.options().empty()) {
-        cmdline_documented_descr.add(m__sharedOpts);
-    }
-    if(!m__posnParamOpts.options().empty()) {
-        cmdline_documented_descr.add(m__posnParamOpts);
-    }
-
-    cmdline_descr.add(cmdline_documented_descr);
-    cmdline_descr.add(m__hiddenCmdlineOpts);
-
-    // Config File:
-    if(!m__sharedOpts.options().empty()) {
-        config_descr.add(m__sharedOpts);
-    }
-    if(!m__cfgfileOpts.options().empty()) {
-        config_descr.add(m__cfgfileOpts);
-    }
-
-    // Parse the Commandline:
-    command_line_parser theParser(argc, argv);
-    theParser.options(cmdline_descr);
-    if(!m__posnParamOpts.options().empty()) {
-        theParser.positional(m__posnParams);
-    }
-    store(theParser.run(), m__opts);
-
-    // Read the Config File (if any):
-    if(!config_descr.options().empty()) {
-        // Unfortunately, m__cfgfile is still empty at this point.  Calling
-        // notify() fixes that.
-        notify(m__opts);
-
-        // The --help* options override reading the configfile.
-        if(m__showHelp || m__showHelpConfig) {
-            m__cfgfile.erase();
-        }
-    }
-    if(!config_descr.options().empty() && !m__cfgfile.empty()) {
-        std::ifstream cfg_ifs(m__cfgfile.c_str());
-        if(!cfg_ifs) {
-            string errmsg("Invalid/unknown configuration file: \"");
-            errmsg += m__cfgfile;
-            errmsg += '"';
-            throw invalid_option_value(errmsg);
-        }
-        try {
-            store(parse_config_file(cfg_ifs, config_descr), m__opts);
-            cfg_ifs.close();
-        } catch(std::ios_base::failure& ex) {
-            string errmsg("Failed to read configuration file: \"");
-            errmsg += m__cfgfile;
-            errmsg += "\"\nReason:\n\t\"";
-            errmsg += ex.what();
-            errmsg += '"';
-            throw invalid_option_value(errmsg);
-        }
-    }
-
-    // Read the environment vars:
-    store(parse_environment(m__envvarOpts, DisplayMapper()), m__opts);
-
-    // Finish up.
-    notify(m__opts);
-
-    // Print out the help message(s), as needed:
-
-    if(m__showHelp)
-    {
-        cout << "usage: " << m__progName
-             << " [options] [posn params]"
-             << endl << endl
-             << cmdline_documented_descr
-             << endl;
-        exit(0);
-    }
-
-    if(m__showHelpConfig) {
-        showConfigHelp(config_descr);
-    }
-
-    validateParsedOptions();
+    return true;
 }
 
 
@@ -773,8 +382,6 @@ struct UnixInputFd
     explicit UnixInputFd(const string& filename)
         : m__fd(-1)
     {
-        FD_ZERO(&m__readSet);
-
         m__fd = open(filename.c_str(), O_RDONLY);
         if(m__fd == -1) {
             string errmsg("Failed to open file for reading:\n\t\"");
@@ -783,8 +390,6 @@ struct UnixInputFd
             errmsg += strerror(errno);
             throw std::ios_base::failure(errmsg);
         }
-
-        FD_SET(m__fd, &m__readSet);
     }
 
     template<typename T>
@@ -795,7 +400,6 @@ struct UnixInputFd
 
 private:
     int m__fd;
-    fd_set m__readSet;
 };
 
 
@@ -922,15 +526,15 @@ bool operator!=(KbdInputEvent::event_type t, const KbdInputEvent& kbd)
 { return kbd.operator!=(t); }
 
 
-void processKbdEvent(const KbdInputEvent& kbdEvent,
+bool processKbdEvent(const KbdInputEvent& kbdEvent,
                      X11Display& theDisplay,
                      const ProgramOptions& opts)
 {
     if(kbdEvent != KbdInputEvent::KEY) {
-        return;
+        return true;
     }
 
-    bool verbose = opts["verbose"].as<int>();
+    int verbose = opts["verbose"].as<int>();
 
     ProgramOptions::KbdMapping mapping;
 
@@ -946,7 +550,7 @@ void processKbdEvent(const KbdInputEvent& kbdEvent,
              << (kbdEvent.evValue ? "Pressed" : "Released")
              << ":  unknown scancode==0x"
              << std::hex << kbdEvent.evCode << endl;
-        return;
+        return true;
     }
 
     if(verbose > 1) {
@@ -964,27 +568,32 @@ void processKbdEvent(const KbdInputEvent& kbdEvent,
     // kbdEvent.evValue contains the pressed/released value.
     int sentOk;
     if(mapping.isMouseButton) {
-//        sentOk = XTestFakeButtonEvent(theDisplay, mapping.x11Keycode,
-//                                      kbdEvent.evValue, CurrentTime);
-        // For Wheel Buttons
-        // FIXME:  Make this a config/cmdline option.
-        if(kbdEvent.evValue) {
+        if(mapping.isMouseWheel && kbdEvent.evValue) {
+            // When treating a button as a mouse wheel, ignore release
+            // events.
             sentOk = XTestFakeButtonEvent(theDisplay, mapping.x11Keycode,
                                           true, CurrentTime);
+            // 'And'-in the previous value of "sentOk" ... _after_ the
+            // fn. call.
             sentOk = XTestFakeButtonEvent(theDisplay, mapping.x11Keycode,
-                                          false, CurrentTime);
+                                          false, CurrentTime)
+                && sentOk;
+        } else if(!mapping.isMouseWheel) {
+            sentOk = XTestFakeButtonEvent(theDisplay, mapping.x11Keycode,
+                                          kbdEvent.evValue, CurrentTime);
         }
     } else {
         sentOk = XTestFakeKeyEvent(theDisplay, mapping.x11Keycode,
                                    kbdEvent.evValue, CurrentTime);
     }
-    if(sentOk) {
-        XFlush(theDisplay);
-    } else {
+    int flushOk = XFlush(theDisplay);
+
+    if(!sentOk) {
         cerr << "Failed to send event for scancode==0x"
              << std::hex << mapping.scancode << std::dec
              << endl;
     }
+    return (sentOk && flushOk);
 }
 
 
