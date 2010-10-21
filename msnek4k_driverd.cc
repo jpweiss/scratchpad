@@ -42,7 +42,9 @@ msnek4k_driverd_cc__="RCS $Id$";
 #include <X11/Xlib.h>
 
 #include <tr1/array>
+
 // Requires '-lboost_program_options-mt'
+#include "Daemonizer.h"
 #include "ProgramOptions_Base.h"
 
 
@@ -622,112 +624,6 @@ bool processKbdEvent(const KbdInputEvent& kbdEvent,
 }
 
 
-// Implementation based on an example in W. Richard Stevens's "Unix Network
-// Programming, Volume 1," p. 336.  Unlike that example, this function doesn't
-// touch syslog.
-pid_t daemonize(const char* logFile=0,
-                const char* newCwd=0,
-                bool logFileRequired=false)
-{
-    // Empty log file or newCwd args are equivalent to passing a null ptr.
-    if(logFile && !logFile[0]) {
-        logFile = 0;
-    }
-    if(newCwd && !newCwd[0]) {
-        // FIXME:  This default should probably be a static constant
-        //         someplace...
-        // Force use of the default.
-        newCwd = "/tmp";
-    }
-
-    // Perform the first fork.
-    pid_t pid = fork();
-    assert(pid != -1);
-    if(pid != 0) {
-        // We are the parent.  Quit at once.
-        exit(0);
-    }
-    // Child continues.
-
-    // Create a new session and process group, making the child the new
-    // session leader and new process group leader.  This was the point of the
-    // initial fork: parents are always process group leaders, and you can't
-    // become part of a new group if you're a group leader.
-    setsid();
-
-    // Ignore SIGHUP.  Session leaders send their children SIGHUP when they
-    // terminate.  We don't want that.
-    signal(SIGHUP, SIG_IGN);
-
-    // Fork a second time.
-    pid = fork();
-    assert(pid != -1);
-    if(pid != 0) {
-        // We are child #1, the new parent.  Quit at once.
-        //
-        // Recall that child #1 sends SIGHUP to its children when exiting,
-        // which would kill our new daemon.  Hence why we disabled SIGHUP.
-        exit(0);
-    }
-    // Child #2 continues.
-
-    // The second child... the daemon... is:
-    // 1. Part of its own group;
-    // 2. Not a sesson leader, so it can't grab a terminal.
-
-    // Reset SIGHUP to the default for safety purposes.
-    signal(SIGHUP, SIG_DFL);
-
-    // "chdir()" to another directory.  This prevents the daemon from holding
-    // open a directory file-descriptor, which could cause headaches if the
-    // sysadmin needs to unmount a device.
-    bool chdirOk(true);
-    chdirOk = (chdir(newCwd) == 0);
-    if(!chdirOk) {
-        // The desired directory doesn't exist.  Use the root as fallback.
-        chdir("/");
-    }
-
-    // Redirect stdin.  (This will, hopefully, take care of "cin", too.)
-    int dev_null_fd = open("/dev/null", O_RDWR | O_APPEND);
-    close(0);
-    // To redirect stdin, we need to close it, then call dup() on the new file
-    // descriptor.  This will (hopefully!) grab '0' as the "lowest available
-    // file descriptor".  Calling dup2() doesn't work, since passing '0' as
-    // the second arg is equivalent to calling dup().
-    dup(dev_null_fd);
-
-    // Redirect stdout and stderr.  (Again, hopefully this also takes care of
-    // "cout" and "cerr", respectively.)
-    int log_fd(-1);
-    if(logFile) {
-        mode_t u_rw_go_r = S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
-        log_fd = open(logFile, O_WRONLY | O_CREAT | O_TRUNC, u_rw_go_r);
-    }
-
-    if(log_fd > 0) {
-        dup2(log_fd, 1);
-        dup2(log_fd, 2);
-    } else if(!logFile && logFileRequired) {
-        // There was a log file, but it failed to open, and the calle requires
-        // it.  => Throw an exception.
-        string errmsg("Failed to open log file:\n\t\"");
-        errmsg += logFile;
-        errmsg += "\"\nReason:\n\t";
-        errmsg += strerror(errno);
-        throw ios_base::failure(errmsg);
-    } else {
-        // No log file specified, or opening the log file failed and it's not
-        // required.   => Redirect to /dev/null
-        dup2(dev_null_fd, 1);
-        dup2(dev_null_fd, 2);
-    }
-
-    // Return our PID
-    return getpid();
-}
-
-
 /////////////////////////
 
 //
@@ -742,7 +638,7 @@ int cxx_main(const string& myName,
 {
     // First things first:  daemonize yourself.
     if(!opts.doNotDaemonize) {
-        daemonize(opts.daemonLog.c_str(), 0, true);
+        jpwTools::process::daemonize(opts.daemonLog.c_str(), 0, true);
     }
 
     // X11/XTest Setup
