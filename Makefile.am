@@ -8,3 +8,9 @@
 
 
 SUBDIRS = src
+
+
+## [jpw]  Custom rules
+##
+sysconf_DATA = examples/msnek4k_driverd.conf
+nobase_doc_DATA = LICENSE WARRANTY INSTALL examples/*
