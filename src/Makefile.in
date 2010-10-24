@@ -50,7 +50,8 @@ PROGRAMS = $(bin_PROGRAMS)
 am_msnek4k_driverd_OBJECTS = Trace.$(OBJEXT) Daemonizer.$(OBJEXT) \
 	ProgramOptions_Base.$(OBJEXT) msnek4k_driverd.$(OBJEXT)
 msnek4k_driverd_OBJECTS = $(am_msnek4k_driverd_OBJECTS)
-msnek4k_driverd_LDADD = $(LDADD)
+am__DEPENDENCIES_1 =
+msnek4k_driverd_DEPENDENCIES = $(am__DEPENDENCIES_1)
 DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
@@ -167,6 +168,7 @@ msnek4k_driverd_SOURCES = Trace.cc Daemonizer.cc \
 	ProgramOptions_Base.cc msnek4k_driverd.cc \
 	Trace.h Daemonizer.h ProgramOptions_Base.h
 
+msnek4k_driverd_LDADD = $(BOOST_PROGRAM_OPTIONS_LIB)
 all: all-am
 
 .SUFFIXES:
@@ -180,9 +182,9 @@ $(srcdir)/Makefile.in:  $(srcdir)/Makefile.am  $(am__configure_deps)
 	      exit 1;; \
 	  esac; \
 	done; \
-	echo ' cd $(top_srcdir) && $(AUTOMAKE) --gnu src/Makefile'; \
+	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign src/Makefile'; \
 	$(am__cd) $(top_srcdir) && \
-	  $(AUTOMAKE) --gnu src/Makefile
+	  $(AUTOMAKE) --foreign src/Makefile
 .PRECIOUS: Makefile
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	@case '$?' in \
