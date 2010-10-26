@@ -3,7 +3,7 @@
 ##
 ## (Note:  Use double-comments with autoconf files.)
 ##
-## dnl $Id$
+## $Id$
 #############
 
 AC_PREREQ([2.65])
@@ -16,7 +16,7 @@ AC_CONFIG_HEADERS([config.h])
 
 # [jpw]  My licensing and SVN revision variable.
 AC_COPYRIGHT([Artistic License])
-AC_REVISION([ $Id$ ])
+AC_REVISION([ $Revision$ ])
 
 
 ## [jpw] Create macros to check for missing headers & defines.
