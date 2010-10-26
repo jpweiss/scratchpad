@@ -15,7 +15,7 @@
 // the License John Weiss originally placed this program under.
 //
 static const char* const
-msnek4k_driverd_cc__="RCS $Id$";
+msnek4k_driverd_cc__="$Id$";
 
 
 // Includes
@@ -115,8 +115,8 @@ public:
     //
     // ...arg in the 'add_options()' call when defining your options.
     //
-    explicit ProgramOptions(const string& programName)
-        : Base_t(programName)
+    explicit ProgramOptions(const string& theProgramName)
+        : Base_t(theProgramName)
     {}
 
     // Complete the body of this function (see below).
@@ -490,8 +490,8 @@ class X11Display
 public:
     struct FailToOpen : public std::runtime_error
     {
-        explicit FailToOpen(const string& what)
-            : std::runtime_error(what)
+        explicit FailToOpen(const string& how)
+            : std::runtime_error(how)
         {}
     };
 

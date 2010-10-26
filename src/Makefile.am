@@ -35,7 +35,7 @@ GPROF_GCC = -pg
 GCOV_GCC = -fprofile-arcs -ftest-coverage
 PROFILE = $(GPROF_GCC) $(GCOV_GCC)
 
-WARNFLAGS_COMMON = -Wall -W -Wformat-security -Wshadow -Winline
+WARNFLAGS_COMMON = -Wall -W -Wformat-security -Wshadow # -Winline
 WARNFLAGS_CXX = -felide-constructors -Wreorder \
 	-Wold-style-cast -Woverloaded-virtual
 
