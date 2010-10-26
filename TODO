@@ -1,3 +1,41 @@
+* The Kbd Device
+  - Aaargh!  The name changed from one version of Ubuntu to the next.
+  - Looks like it's not a universal device name.  FEH!
+  - Could it be a udev issue?
+  - I could check a pattern under /dev/input/by-id ...
+  - Use a "wstring" to store the "/dev/input/by-id" name.  Use the locale to
+    determine how to encode it for the filesystem.
+    + Conversion from wstring to the locale-specified encoding?
+     a) Use wcrtomb() or wcsrtombs().  Both use the LC_CTYPE the current
+        locale.
+     b) Use codecvt<wchar_t,char,mbstate_t>::out() after setting the locale
+        via either setlocale() or locale::global(const locale&).  The latter
+        requires a locale object, which you can create by name using one of
+        the c'tors.
+        · To get a codecvt for the desired locale, call:
+              use_facet< codecvt<wchar_t,char,mbstate_t> >(theLocale)
+        · You can call 'use_facet' with any locale object; you don't need to
+          set the global one to do so.
+
+
+* Missing Features:
+  - Shell file
+  - Drop root after opening the kbd device file?
+  - Add an auto-find feature for the kbd device file?
+
+* Other Tasks:
+  - Split source into multiple files?
+    + Underway.
+  - Makefile Options:
+    + include/permit alternate default optimization & warning options.
+  - Doxycomments
+  - Binary tarballs, 32-bit/64-bit.
+  - .deb/.rpm installation pkgs.
+
+
+==============================================================================
+Older:
+
 * X Error Crash
   The following error causes the program to exit(1):
 
@@ -11,15 +49,19 @@
 
   Fix it.  Or, at the very least, prevent it from crashing the program.
 
-* Missing Options:
-  - Log File (--log,-l)
-  - No Daemonizing (--dbg)
+  » Ok.  I wasn't calling XFlush when XTestFake*Event returned false.  This
+    is wrong.  Fixing it seems to have helped with the error+crash.
+    - »Nope.  The error still occurs.
+      Trying the following:  Redirecting stdout/stderr.  See if that does the
+      trick.
+      + Nope.  The error still occurs.
+        ° »For the moment, daemonizing appears to solve the problem...
 
-* Missing Features:
-  - Daemonization
-  - Makefile/autoconf
+  Alternate/Workaround:
+  1. Daemonize self.
+     · All signal handling has to spit out an exit value other than 1.
+  2. Fork a child to perform the actual execution.
+  3. Wait on the child.
+  4. Re-execute if the child exits with 1.
+  + Trying this from the shell, I see a lot of these errors.
 
-* Other Tasks:
-  - Split source into multiple files?
-  - Doxycomments
-  - .deb/.rpm installation pkgs.

@@ -10,9 +10,9 @@ AC_PREREQ([2.65])
 AC_INIT([msnek4k_driverd],
         [0.5],
         [jpwcandide@sourceforge.net],
-        [msnek4kDriverDaemon],
+        [],
         [http://sourceforge.net/projects/msnek4kdriverd/])
-##AC_CONFIG_HEADERS([config.h]) ## [jpw]  Not needed in this project.
+AC_CONFIG_HEADERS([config.h])
 
 # [jpw]  My licensing and SVN revision variable.
 AC_COPYRIGHT([Artistic License])
@@ -61,7 +61,6 @@ AM_INIT_AUTOMAKE([-Wall color-tests])
 
 # Checks for programs.
 AC_PROG_CXX
-AC_PROG_CC
 
 # Checks for libraries.
 AC_CHECK_LIB([Xtst], [XTestDiscard], [],
@@ -92,7 +91,6 @@ AC_CHECK_FUNCS([dup2 strerror], [], [AX_JPW_FUNC_ERROR])
 ## [jpw] Common checks
 AC_CXX_HEADER_STDCXX_TR1
 AX_JPW_REQUIRE([CXX_STDCXX_TR1], [the C++ TR1 headers])
-AC_COMPILE_WARNINGS
 AX_BOOST_BASE
 AX_BOOST_PROGRAM_OPTIONS
 AX_JPW_REQUIRE([BOOST_PROGRAM_OPTIONS], [boost::program_options], [ax])

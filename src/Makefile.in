@@ -42,6 +42,7 @@ am__aclocal_m4_deps = $(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 mkinstalldirs = $(install_sh) -d
+CONFIG_HEADER = $(top_builddir)/config.h
 CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)"
@@ -51,7 +52,7 @@ am_msnek4k_driverd_OBJECTS = Trace.$(OBJEXT) Daemonizer.$(OBJEXT) \
 msnek4k_driverd_OBJECTS = $(am_msnek4k_driverd_OBJECTS)
 am__DEPENDENCIES_1 =
 msnek4k_driverd_DEPENDENCIES = $(am__DEPENDENCIES_1)
-DEFAULT_INCLUDES = -I.@am__isrc@
+DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
 am__mv = mv -f
@@ -168,6 +169,10 @@ msnek4k_driverd_SOURCES = Trace.cc Daemonizer.cc \
 	Trace.h Daemonizer.h ProgramOptions_Base.h
 
 msnek4k_driverd_LDADD = $(BOOST_PROGRAM_OPTIONS_LIB)
+AM_CFLAGS = -Wall -W -Wformat-security -Wshadow -Winline
+AM_CXXFLAGS = $(AM_CFLAGS) -felide-constructors \
+	-Wreorder -Wold-style-cast -Woverloaded-virtual
+
 all: all-am
 
 .SUFFIXES:

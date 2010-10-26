@@ -32,11 +32,11 @@ msnek4k_driverd_cc__="RCS $Id$";
 #include <sys/stat.h>
 #include <fcntl.h>
 
-#include <signal.h>
+#include <csignal>
 
 // For Error Handling (Unix/POSIX  calls)
 #include <cstring>
-#include <errno.h>
+#include <cerrno>
 
 #include <X11/extensions/XTest.h>  // Requires -lXtst
 #include <X11/Xlib.h>
@@ -123,22 +123,6 @@ public:
     void defineOptionsAndVariables();
 
     virtual bool validateParsedOptions(b_po_varmap_t& varMap);
-};
-
-
-//
-// Used by the parse_environment() function in ProgramOptions::parse().
-//
-struct DisplayMapper
-{
-    std::string operator()(const std::string& s)
-    {
-        string o;
-        if(s == "DISPLAY") {
-            o = "display";
-        }
-        return o;
-    }
 };
 
 
@@ -241,10 +225,9 @@ void ProgramOptions::defineOptionsAndVariables()
          "variable.\n"
          "This option is required if DISPLAY is not set.");
 
-    // The keyboard device.
-    string deflDev_tmp("/dev/input/by-id/usb-Microsoft_Natural");
-    deflDev_tmp += "\xC2\xAE"; // Unicode character '®' in UTF-8
-    deflDev_tmp += "_Ergonomic_Keyboard_4000-event-kbd";
+    // The keyboard device.  Unicode character '®'=='\u00A9'
+    string deflDev_tmp("/dev/input/by-id/usb-Microsoft_Natural\u00A9"
+                       "_Ergonomic_Keyboard_4000-event-kbd");
     // Note:  The uber-long default value confuses the
     // boost::program_options engine, destroying the auto-formatting.  So, put
     // it in its own subgroup, then document it elsewhere, via a hidden
@@ -593,7 +576,7 @@ bool processKbdEvent(const KbdInputEvent& kbdEvent,
     }
 
     // kbdEvent.evValue contains the pressed/released value.
-    int sentOk;
+    int sentOk(0);
     if(mapping.isMouseButton) {
         if(mapping.isMouseWheel && kbdEvent.evValue) {
             // When treating a button as a mouse wheel, ignore release
@@ -633,7 +616,7 @@ bool processKbdEvent(const KbdInputEvent& kbdEvent,
 
 // This is where all of your main handling should go.
 int cxx_main(const string& myName,
-             const string& myPath,
+             const string& /*myPath*/,
              const ProgramOptions& opts)
 {
     // First things first:  daemonize yourself.

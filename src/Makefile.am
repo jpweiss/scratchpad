@@ -18,3 +18,6 @@ msnek4k_driverd_LDADD = $(BOOST_PROGRAM_OPTIONS_LIB)
 
 ## [jpw]  Custom rules
 ##
+AM_CFLAGS = -Wall -W -Wformat-security -Wshadow -Winline
+AM_CXXFLAGS = $(AM_CFLAGS) -felide-constructors \
+	-Wreorder -Wold-style-cast -Woverloaded-virtual
