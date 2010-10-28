@@ -1,4 +1,3 @@
-##                                               -*- Autoconf -*-
 ## Process this file with autoconf to produce a configure script.
 ##
 ## (Note:  Use double-comments with autoconf files.)
@@ -8,7 +7,7 @@
 
 AC_PREREQ([2.65])
 AC_INIT([msnek4k_driverd],
-        [0.5],
+        [0.6],
         [jpwcandide@sourceforge.net],
         [],
         [http://sourceforge.net/projects/msnek4kdriverd/])
@@ -18,42 +17,13 @@ AC_CONFIG_HEADERS([config.h])
 AC_COPYRIGHT([Artistic License])
 AC_REVISION([ $Revision$ ])
 
-
-## [jpw] Create macros to check for missing headers & defines.
+# [jpw] Pull in my custom macros.
 # 
-AC_DEFUN([AX_JPW_REQUIRE],
-[
-    jpw__feature_lc=m4_tolower([$1])
-    jpw__cachevar_descr="$2"
-    jpw__cachevar_prefix="$3"
-    if test "x$jpw__cachevar_prefix" = "x" ; then
-        jpw__cachevar_prefix=ac
-    fi
+m4_include([ax_jpwTools.m4])
 
-    if test "x$jpw__cachevar_descr" = "x" ; then
-        jpw__cachevar_descr="feature \"$1\""
-    fi
-
-    jpw__cachevar_name="${jpw__cachevar_prefix}_cv_${jpw__feature_lc}"
-    AS_VAR_COPY([jpw__cachevar_set], [$jpw__cachevar_name])
-
-	if test "$jpw__cachevar_set" != "yes" ; then
-        AC_MSG_ERROR([Error:  Failed to find $jpw__cachevar_descr.
-                      Cannot continue.])
-    fi
-])
-
-AC_DEFUN([AX_JPW_HEADER_ERROR],
-[
-    AC_MSG_ERROR([Error:  Failed to find one or more 
-                  required headers.  Cannot continue.])
-])
-
-AC_DEFUN([AX_JPW_FUNC_ERROR],
-[
-    AC_MSG_ERROR([Error:  Failed to find one or more 
-                  required library functions.  Cannot continue.])
-])
+# When --prefix=/usr, forcibly convert --sysconfdir=/usr/etc to
+# --sysconfdir=/etc
+AX_JPW_NO_USR_ETC
 
 
 # [jpw]  Automake
@@ -73,6 +43,13 @@ AC_CHECK_HEADERS([ fcntl.h stdint.h sys/time.h unistd.h \
                    X11/extensions/XTest.h X11/Xlib.h ],
                    [], [AX_JPW_HEADER_ERROR])
 
+# [jpw] Check for required Boost headers that are part of header-only
+#       libraries.
+#
+AX_JPW_REQUIRE_CXX_HEADERS([ boost/algorithm/string/case_conv.hpp \
+                             boost/algorithm/string/classification.hpp \
+                             boost/algorithm/string/predicate.hpp ])
+
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_HEADER_STDBOOL
@@ -88,22 +65,21 @@ AC_FUNC_FORK
 AX_JPW_REQUIRE([FUNC_FORK], [the fork() function])
 AC_CHECK_FUNCS([dup2 strerror], [], [AX_JPW_FUNC_ERROR])
 
-## [jpw] Common checks
+
+# [jpw] Common checks
 AC_CXX_HEADER_STDCXX_TR1
 AX_JPW_REQUIRE([CXX_STDCXX_TR1], [the C++ TR1 headers])
 AX_BOOST_BASE
 AX_BOOST_PROGRAM_OPTIONS
 AX_JPW_REQUIRE([BOOST_PROGRAM_OPTIONS], [boost::program_options], [ax])
 
-## [jpw] Check for Boost headers after calling AX_BOOST_BASE
-#        Well, I'd _like_ to check for them.  However, AC_CHECK_HEADERS uses
-#        the _C_ compiler to perform the checks.  C++ is a no-go.
-dnl AC_CHECK_HEADERS([ boost/algorithm/string/case_conv.hpp \
-dnl                   boost/algorithm/string/classification.hpp \
-dnl                   boost/algorithm/string/predicate.hpp ],
-dnl                   [], [AX_JPW_HEADER_ERROR])
-
 
 AC_CONFIG_FILES([Makefile
                  src/Makefile])
 AC_OUTPUT
+
+
+##################
+## Local Variables:
+## mode: autoconf
+## End:

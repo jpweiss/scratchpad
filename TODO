@@ -3,20 +3,6 @@
   - Looks like it's not a universal device name.  FEH!
   - Could it be a udev issue?
   - I could check a pattern under /dev/input/by-id ...
-  - Use a "wstring" to store the "/dev/input/by-id" name.  Use the locale to
-    determine how to encode it for the filesystem.
-    + Conversion from wstring to the locale-specified encoding?
-     a) Use wcrtomb() or wcsrtombs().  Both use the LC_CTYPE the current
-        locale.
-     b) Use codecvt<wchar_t,char,mbstate_t>::out() after setting the locale
-        via either setlocale() or locale::global(const locale&).  The latter
-        requires a locale object, which you can create by name using one of
-        the c'tors.
-        · To get a codecvt for the desired locale, call:
-              use_facet< codecvt<wchar_t,char,mbstate_t> >(theLocale)
-        · You can call 'use_facet' with any locale object; you don't need to
-          set the global one to do so.
-
 
 * Missing Features:
   - Shell file
