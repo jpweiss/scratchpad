@@ -128,41 +128,24 @@ AC_DEFUN([AX_JPW_FUNC_ERROR],
 ])
 
 
-## Run this macro if "/usr/etc" doesn't exist on your system.
+## Run this macro if building solely on Linux systems.
 ##
 ## On Linux systems, software whose binaries, data, and documents are
-## installed under "/usr" install their configuration files under "/etc",
-## not "/usr/etc".  Using this macro will eliminate the need to pass
-## "--sysconfdir=/etc" when using "--prefix=/usr", and omit it at all other
-## times.
+## installed under "/usr" install their configuration files under "/etc" and
+## their state under "/var", not "/usr/etc" or "/usr/var".  Using this macro
+## will eliminate the need to set the "--sysconfdir", "--sharedstatedir", and
+## "--localstatedir" options when running 'configure'.
 ##
-AC_DEFUN([AX_JPW_NO_USR_ETC],
+AC_DEFUN([AX_JPW_USE_FHS_DEFAULTS],
 [
-    AC_ARG_ENABLE(
-        [usr-etc],
-        [AS_HELP_STRING([--enable-usr-etc],
-                        [The standard version of "configure" uses 'PREFIX/etc'
-                         as the default value of the "--sysconfdir" 
-                         option.  This version of "configure" is somewhat 
-                         different.  It converts any "--sysconfdir=/usr/etc"
-                         (including the default value) to 
-                         "--sysconfdir=/etc".  Use this option to disable this
-                         custom behavior.
-                        ])
-        ],
-        [],
-        [enable_usr_etc=no])
-
-    AC_CONFIG_COMMANDS_PRE(
-    [
-        if test "$prefix" = "/usr" ; then
-           if test "$sysconfdir" = "${prefix}/etc" ; then
-               if test "$enable_usr_etc" = "no" ; then
-                   sysconfdir="/etc"
-               fi
-           fi
-        fi
-    ])
+     AC_CONFIG_COMMANDS_PRE(
+     [
+         if test "$prefix" = /usr; then
+           test "$sysconfdir" = '${prefix}/etc' && sysconfdir=/etc
+           test "$sharedstatedir" = '${prefix}/com' && sharedstatedir=/var
+           test "$localstatedir" = '${prefix}/var' && localstatedir=/var
+         fi
+     ])
 ])
 
 

@@ -38,7 +38,8 @@ bin_PROGRAMS = msnek4k_driverd$(EXEEXT)
 subdir = src
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
-am__aclocal_m4_deps = $(top_srcdir)/configure.ac
+am__aclocal_m4_deps = $(top_srcdir)/ax_jpwTools.m4 \
+	$(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 mkinstalldirs = $(install_sh) -d
@@ -47,7 +48,8 @@ CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)"
 PROGRAMS = $(bin_PROGRAMS)
-am_msnek4k_driverd_OBJECTS = Trace.$(OBJEXT) Daemonizer.$(OBJEXT) \
+am_msnek4k_driverd_OBJECTS = LinuxInputDevice.$(OBJEXT) \
+	Trace.$(OBJEXT) Daemonizer.$(OBJEXT) \
 	ProgramOptions_Base.$(OBJEXT) msnek4k_driverd.$(OBJEXT)
 msnek4k_driverd_OBJECTS = $(am_msnek4k_driverd_OBJECTS)
 am__DEPENDENCIES_1 =
@@ -85,6 +87,7 @@ CFLAGS = @CFLAGS@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
 CXX = @CXX@
+CXXCPP = @CXXCPP@
 CXXDEPMODE = @CXXDEPMODE@
 CXXFLAGS = @CXXFLAGS@
 CYGPATH_W = @CYGPATH_W@
@@ -164,7 +167,9 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-msnek4k_driverd_SOURCES = Trace.cc Daemonizer.cc \
+msnek4k_driverd_SOURCES = X11Display.h LinuxInputEvent.h \
+	LinuxInputDevice.h LinuxInputDevice.cc \
+	Trace.cc Daemonizer.cc \
 	ProgramOptions_Base.cc msnek4k_driverd.cc \
 	Trace.h Daemonizer.h ProgramOptions_Base.h
 
@@ -277,6 +282,7 @@ distclean-compile:
 	-rm -f *.tab.c
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Daemonizer.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/LinuxInputDevice.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ProgramOptions_Base.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Trace.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/msnek4k_driverd.Po@am__quote@

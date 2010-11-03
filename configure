@@ -694,7 +694,6 @@ SHELL'
 ac_subst_files=''
 ac_user_opts='
 enable_option_checking
-enable_usr_etc
 enable_dependency_tracking
 with_x
 with_boost
@@ -1334,14 +1333,6 @@ Optional Features:
   --disable-option-checking  ignore unrecognized --enable/--with options
   --disable-FEATURE       do not include FEATURE (same as --enable-FEATURE=no)
   --enable-FEATURE[=ARG]  include FEATURE [ARG=yes]
-  --enable-usr-etc        The standard version of "configure" uses
-                          'PREFIX/etc' as the default value of the
-                          "--sysconfdir" option. This version of "configure"
-                          is somewhat different. It converts any
-                          "--sysconfdir=/usr/etc" (including the default
-                          value) to "--sysconfdir=/etc". Use this option to
-                          disable this custom behavior.
-
   --disable-dependency-tracking  speeds up one-time build
   --enable-dependency-tracking   do not reject slow dependency extractors
 
@@ -2543,13 +2534,13 @@ ac_config_headers="$ac_config_headers config.h"
 
 
 
-## Run this macro if "/usr/etc" doesn't exist on your system.
+## Run this macro if building solely on Linux systems.
 ##
 ## On Linux systems, software whose binaries, data, and documents are
-## installed under "/usr" install their configuration files under "/etc",
-## not "/usr/etc".  Using this macro will eliminate the need to pass
-## "--sysconfdir=/etc" when using "--prefix=/usr", and omit it at all other
-## times.
+## installed under "/usr" install their configuration files under "/etc" and
+## their state under "/var", not "/usr/etc" or "/usr/var".  Using this macro
+## will eliminate the need to set the "--sysconfdir", "--sharedstatedir", and
+## "--localstatedir" options when running 'configure'.
 ##
 
 
@@ -2560,16 +2551,7 @@ ac_config_headers="$ac_config_headers config.h"
 ## End:
 
 
-# When --prefix=/usr, forcibly convert --sysconfdir=/usr/etc to
-# --sysconfdir=/etc
-
-    # Check whether --enable-usr-etc was given.
-if test "${enable_usr_etc+set}" = set; then :
-  enableval=$enable_usr_etc;
-else
-  enable_usr_etc=no
-fi
-
+# [jpw] We're building on Linux only.  Follow the FHS layout.
 
 
 
@@ -6433,13 +6415,11 @@ LTLIBOBJS=$ac_ltlibobjs
 
 
 
-        if test "$prefix" = "/usr" ; then
-           if test "$sysconfdir" = "${prefix}/etc" ; then
-               if test "$enable_usr_etc" = "no" ; then
-                   sysconfdir="/etc"
-               fi
-           fi
-        fi
+         if test "$prefix" = /usr; then
+           test "$sysconfdir" = '${prefix}/etc' && sysconfdir=/etc
+           test "$sharedstatedir" = '${prefix}/com' && sharedstatedir=/var
+           test "$localstatedir" = '${prefix}/var' && localstatedir=/var
+         fi
 
  if test -n "$EXEEXT"; then
   am__EXEEXT_TRUE=

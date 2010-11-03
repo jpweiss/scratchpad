@@ -21,9 +21,8 @@ AC_REVISION([ $Revision$ ])
 # 
 m4_include([ax_jpwTools.m4])
 
-# When --prefix=/usr, forcibly convert --sysconfdir=/usr/etc to
-# --sysconfdir=/etc
-AX_JPW_NO_USR_ETC
+# [jpw] We're building on Linux only.  Follow the FHS layout.
+AX_JPW_USE_FHS_DEFAULTS
 
 
 # [jpw]  Automake

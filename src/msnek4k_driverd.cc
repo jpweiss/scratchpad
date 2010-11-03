@@ -21,30 +21,20 @@ msnek4k_driverd_cc__="$Id$";
 // Includes
 //
 #include <iostream>
-#include <string>
-#include <vector>
-#include <stdexcept>
-
-#include <sys/time.h> // Required for keypress/release parsing.
-
-// For Unix I/O
-#include <unistd.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-
 #include <csignal>
 
-// For Error Handling (Unix/POSIX  calls)
-#include <cstring>
-#include <cerrno>
+// Required for keypress/release parsing.
+#include <sys/time.h>
 
-#include <X11/extensions/XTest.h>  // Requires -lXtst
-#include <X11/Xlib.h>
+// Requires -lXtst
+#include <X11/extensions/XTest.h>
 
-#include <tr1/array>
 
-// Requires '-lboost_program_options-mt'
+#include "X11Display.h"
+#include "LinuxInputDevice.h"
+#include "LinuxInputEvent.h"
 #include "Daemonizer.h"
+// Requires '-lboost_program_options-mt'
 #include "ProgramOptions_Base.h"
 
 
@@ -54,12 +44,15 @@ msnek4k_driverd_cc__="$Id$";
 //
 using std::ios_base;
 using std::string;
-using std::vector;
 using std::exception;
 using std::cerr;
 using std::cout;
 using std::endl;
 using std::flush;
+
+using jpwTools::X11Display;
+using jpwTools::LinuxInputDevice;
+using jpwTools::LinuxInputEvent;
 
 
 //
@@ -383,164 +376,15 @@ bool ProgramOptions::validateParsedOptions(b_po_varmap_t& varMap)
 /////////////////////////
 
 //
-// Struct:  UnixFd
-//
-
-
-struct UnixInputFd
-{
-    explicit UnixInputFd(const string& filename)
-        : m__fd(-1)
-    {
-        m__fd = open(filename.c_str(), O_RDONLY);
-        if(m__fd == -1) {
-            string errmsg("Failed to open file for reading:\n\t\"");
-            errmsg += filename;
-            errmsg += "\"\nReason:\n\t";
-            errmsg += strerror(errno);
-            throw std::ios_base::failure(errmsg);
-        }
-    }
-
-    template<typename T>
-    ssize_t reinterpret_read(T* objPtr)
-    {
-        return read(m__fd, reinterpret_cast<void*>(objPtr), sizeof(T));
-    }
-
-private:
-    int m__fd;
-};
-
-
-/////////////////////////
-
-//
-// Struct:  KbdInputEvent
-//
-
-
-struct KbdInputEvent
-{
-    // Notice that the members of this struct require no padding.  All
-    // adjacent members smaller than a word fit within a single word.
-
-    timeval evTime;  // sizeof(timeval) == 2 x wordsize.
-    uint16_t evType;
-    uint16_t evCode;
-    uint32_t evValue;
-
-    // The Keypress (and key-release) data from a "/dev/input/event*" file is
-    // 0x30 or 0x48 bytes long, for 32-bit or 64-bit platforms, respectively.
-    // It comes in 3 groups of 0x10 or 0x18 bytes each.
-
-    // Enum for the evType field.
-    enum event_type {
-        SYN=0x00,
-        KEY=0x01,
-        REL=0x02,
-        ABS=0x03,
-        MSC=0x04,
-        LED=0x11,
-        SND=0x12,
-        REP=0x14,
-        FF=0x15,
-        PWR=0x16,
-        FF_STATUS=0x17,
-        MAX=0x1f
-    };
-
-    // Comparison Functions:
-    // Compare the evType member of this object to a specified event_type
-    // tag.
-
-    bool operator==(event_type t) const
-    { return (static_cast<event_type>(evType) == t); }
-
-    bool operator!=(event_type t) const
-    { return !this->operator==(t); }
-
-    // I/O
-    bool read(UnixInputFd& ufd)
-    {
-        // Recall:  the members of KbdInputEvent have no padding between them.
-        // "Consecutive" member fields all completely fill a machine word, or
-        // occupy an integral number of machine words.
-        //
-        // Reading raw data like this will require one or more
-        // reinterpret_cast<>()'s someplace.  That's unavoidable.
-        ssize_t nRead = ufd.reinterpret_read(this);
-        return (nRead > 0);
-    }
-};
-
-
-/////////////////////////
-
-//
-// Class:  X11Display
-//
-
-
-// Simple wrapper class for automatically closing the X11 Display in the event
-// of an error or exception.
-class X11Display
-{
-    Display* m__x11DisplayPtr;
-public:
-    struct FailToOpen : public std::runtime_error
-    {
-        explicit FailToOpen(const string& how)
-            : std::runtime_error(how)
-        {}
-    };
-
-
-    // C'tor
-    explicit X11Display(const string& displayName)
-        : m__x11DisplayPtr(XOpenDisplay(displayName.c_str()))
-    {
-        if(!m__x11DisplayPtr) {
-            string errmsg("Invalid or unknown $DISPLAY==\"");
-            errmsg += displayName;
-            errmsg += "\"\nCannot continue.";
-            throw FailToOpen(errmsg);
-        }
-    }
-
-    // D'tor
-    ~X11Display()
-    {
-        if(m__x11DisplayPtr) {
-            XCloseDisplay(m__x11DisplayPtr);
-        }
-    }
-
-    // Allow access via implicit cast.
-    operator Display*() { return m__x11DisplayPtr; }
-};
-
-
-/////////////////////////
-
-//
 // General Function Definitions
 //
 
 
-// Commuted op==() and op!=() for KbdInputEvent.  Just in case.
-bool operator==(KbdInputEvent::event_type t, const KbdInputEvent& kbd)
-{ return kbd.operator==(t); }
-
-bool operator!=(KbdInputEvent::event_type t, const KbdInputEvent& kbd)
-{ return kbd.operator!=(t); }
-
-
-bool processKbdEvent(const KbdInputEvent& kbdEvent,
+bool processKbdEvent(const LinuxInputEvent& kbdEvent,
                      X11Display& theDisplay,
                      const ProgramOptions& opts)
 {
-    if(kbdEvent != KbdInputEvent::KEY) {
+    if(kbdEvent != LinuxInputEvent::KEY) {
         return true;
     }
 
@@ -641,11 +485,11 @@ int cxx_main(const string& myName,
 
     // The Main Loop
 
-    UnixInputFd kbd_fd(opts.kbdDriverDev);
-    KbdInputEvent kbdEvent;
+    LinuxInputDevice kbdDev(opts.kbdDriverDev);
+    LinuxInputEvent kbdEvent;
     while(true)
     {
-        if(!kbdEvent.read(kbd_fd)) {
+        if(!kbdEvent.read(kbdDev)) {
             sleep(1);
             continue;
         }
