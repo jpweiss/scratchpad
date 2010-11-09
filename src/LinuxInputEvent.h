@@ -21,6 +21,7 @@
 // Includes
 //
 #include <stdint.h>
+#include <sys/time.h>
 #include "LinuxInputDevice.h"
 
 
@@ -36,43 +37,33 @@ namespace jpwTools {
   */
  struct LinuxInputEvent
  {
+ public:
      // Notice that the members of this struct require no padding.  All
      // adjacent members smaller than a word fit within a single word.
 
      /// The time at which the input event occurred.
      timeval evTime;  // sizeof(timeval) == 2 x wordsize.
-     /// The type of input event.  Use the \c event_type enum to convert to
-     /// something meaningful.
+     /// The type of input event.
      uint16_t evType;
      /// What event happened.  Its meaning depends on the value of \c evType.
      uint16_t evCode;
      /// The event "value".  Its meaning depends on the value of \c evType.
      uint32_t evValue;
 
-     /// Enum for the evType field.  See "linux/input.h".
-     enum event_type {
-         SYNCHRONIZE=0x00,
-         KEY=0x01,
-         RELATIVE_MOTION=0x02,
-         ABSOLUTE_MOTION=0x03,
-         MISC=0x04,
-         SWITCH=0x05,
-         LED=0x11,
-         SOUND=0x12,
-         AUTOREPEAT=0x14,
-         FORCE_FEEDBACK=0x15,
-         POWER=0x16,
-         FORCE_FEEDBACK_STATUS=0x17,
-         MAX=0x1f
-     };
-
-     /// Compare the \c evType member to a specified \c event_type.
-     bool operator==(event_type t) const
-     { return (static_cast<event_type>(evType) == t); }
-
-     /// Compare the \c evType member to a specified \c event_type.
-     bool operator!=(event_type t) const
-     { return !this->operator==(t); }
+     // Static member constants.  See "linux/input.h".
+     static const uint16_t evt_SYNCHRONIZE;
+     static const uint16_t evt_KEY;
+     static const uint16_t evt_RELATIVE_MOTION;
+     static const uint16_t evt_ABSOLUTE_MOTION;
+     static const uint16_t evt_MISC;
+     static const uint16_t evt_SWITCH;
+     static const uint16_t evt_LED;
+     static const uint16_t evt_SOUND;
+     static const uint16_t evt_AUTOREPEAT;
+     static const uint16_t evt_FORCE_FEEDBACK;
+     static const uint16_t evt_POWER;
+     static const uint16_t evt_FORCE_FEEDBACK_STATUS;
+     static const uint16_t evt_MAX;
 
      /// Read an event from the specified device.
      bool read(LinuxInputDevice& ufd)
@@ -87,15 +78,6 @@ namespace jpwTools {
          return (nRead > 0);
      }
  };
-
- /// Commuted \c LinuxInputEvent::operator==().
- bool operator==(LinuxInputEvent::event_type t, const LinuxInputEvent& kbd)
- { return kbd.operator==(t); }
-
- /// Commuted \c LinuxInputEvent::operator!=().
- bool operator!=(LinuxInputEvent::event_type t, const LinuxInputEvent& kbd)
- { return kbd.operator!=(t); }
-
 
 }; //end namespace
 

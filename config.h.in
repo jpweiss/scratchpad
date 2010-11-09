@@ -3,6 +3,18 @@
 /* define if the Boost library is available */
 #undef HAVE_BOOST
 
+/* Define to 1 if you have the <boost/algorithm/string/case_conv.hpp> header
+   file. */
+#undef HAVE_BOOST_ALGORITHM_STRING_CASE_CONV_HPP
+
+/* Define to 1 if you have the <boost/algorithm/string/classification.hpp>
+   header file. */
+#undef HAVE_BOOST_ALGORITHM_STRING_CLASSIFICATION_HPP
+
+/* Define to 1 if you have the <boost/algorithm/string/predicate.hpp> header
+   file. */
+#undef HAVE_BOOST_ALGORITHM_STRING_PREDICATE_HPP
+
 /* define if the Boost::PROGRAM_OPTIONS library is available */
 #undef HAVE_BOOST_PROGRAM_OPTIONS
 

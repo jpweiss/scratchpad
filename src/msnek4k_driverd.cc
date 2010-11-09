@@ -38,7 +38,6 @@ msnek4k_driverd_cc__="$Id$";
 #include "ProgramOptions_Base.h"
 
 
-
 //
 // Using Decls.
 //
@@ -60,6 +59,13 @@ using jpwTools::LinuxInputEvent;
 //
 
 
+namespace ms {
+ const uint16_t vendorId(0x45E);
+ const uint16_t nek4kProductId(0xDB);
+ const string nek4kName("Microsoft Natural\u00A9 Ergonomic Keyboard 4000");
+};
+
+
 //
 // Typedefs
 //
@@ -75,6 +81,7 @@ using jpwTools::LinuxInputEvent;
 class ProgramOptions : public jpwTools::boost_helpers::ProgramOptions_Base
 {
     typedef jpwTools::boost_helpers::ProgramOptions_Base Base_t;
+
 public:
     struct KbdMapping
     {
@@ -135,7 +142,7 @@ void ProgramOptions::defineOptionsAndVariables()
     //
 
     addOpts()
-        ("--dbg",
+        ("dbg",
          bool_switch(&doNotDaemonize)->default_value(false),
          "Run in the foreground instead of as a daemon."
          )
@@ -218,24 +225,31 @@ void ProgramOptions::defineOptionsAndVariables()
          "variable.\n"
          "This option is required if DISPLAY is not set.");
 
-    // The keyboard device.  Unicode character '®'=='\u00A9'
-    string deflDev_tmp("/dev/input/by-id/usb-Microsoft_Natural\u00A9"
-                       "_Ergonomic_Keyboard_4000-event-kbd");
-    // Note:  The uber-long default value confuses the
-    // boost::program_options engine, destroying the auto-formatting.  So, put
-    // it in its own subgroup, then document it elsewhere, via a hidden
-    // option.
-    options_description kbdDev_descr_wrapper(usageLineLength());
-    kbdDev_descr_wrapper.add_options()
+    // Because of the overly-long defaults for some options, we need to use a
+    // special option group, or the doc strings for the following won't
+    // properly line-wrap.
+    options_description otherShared_wrapper(usageLineLength());
+    otherShared_wrapper.add_options()
         ("kbd-dev,k",
-         value<string>(&kbdDriverDev)->default_value(deflDev_tmp.c_str()),
-         "The full pathname of the keyboard device."
+         value<string>(&kbdDriverDev)->default_value("auto"),
+         "The full pathname of the keyboard device, or the special string, "
+         "\"auto\".  The latter triggers autoscanning for the keyboard."
+         )
+        ("Zoom.isMouseButton,b", bool_switch()->default_value(false),
+         "Equivalent to setting both the \"ZoomUp.isMouseButton\" and "
+         "\"ZoomDown.isMouseButton\" configuration file variables."
+         )
+        ("Zoom.isMouseWheel,w", bool_switch()->default_value(false),
+         "Equivalent to setting both the \"ZoomUp.isMouseWheel\" and "
+         "\"ZoomDown.isMouseWheel\" configuration file variables.  Ignored "
+         "if \"Zoom.isMouseButton\" isn't also set to true."
          )
         ;
-    addCfgVars(kbdDev_descr_wrapper, Base_t::SHARED);
+    addCfgVars(otherShared_wrapper, Base_t::SHARED);
 
-    // This is another potentially-long default value.  So like kbd-dev, it
-    // goes in its own group.
+    // Note:  The uber-long default value confuses the
+    // boost::program_options engine, destroying the auto-formatting.  So, put
+    // it in its own subgroup.
     string deflLogfile("/tmp/");
     deflLogfile += programName();
     deflLogfile += ".log";
@@ -249,23 +263,6 @@ void ProgramOptions::defineOptionsAndVariables()
         ;
     addCfgVars(logfile_descr_wrapper, Base_t::SHARED);
 
-    // Because of the overly-long defaults for some options, we need to use a
-    // special option group, or the doc strings for the following won't
-    // properly line-wrap.
-    options_description otherShared_wrapper(usageLineLength());
-    otherShared_wrapper.add_options()
-        ("Zoom.isMouseButton,b", bool_switch()->default_value(false),
-         "Equivalent to setting both the \"ZoomUp.isMouseButton\" and "
-         "\"ZoomDown.isMouseButton\" configuration file variables."
-         )
-        ("Zoom.isMouseWheel,w", bool_switch()->default_value(false),
-         "Equivalent to setting both the \"ZoomUp.isMouseWheel\" and "
-         "\"ZoomDown.isMouseWheel\" configuration file variables.  Ignored "
-         "if \"Zoom.isMouseButton\" isn't also set to true."
-         )
-        ;
-    addCfgVars(otherShared_wrapper, Base_t::SHARED);
-
 
     //
     // Define the additional/verbose/enhanced configuration file
@@ -275,6 +272,10 @@ void ProgramOptions::defineOptionsAndVariables()
     const char* kbd_dev_doc =
         "\n"
         "* Selecting a \"--kbd-dev <dev>\":\n"
+        "\n  \t"
+        "In the event that autoscanning fails to find the keyboard device "
+        "... or it finds the wrong device ... you will have to set the "
+        "\"kbd-dev\" option manually."
         "\n  \t"
         "Usually, <dev> will be under \"/dev/input\" or "
         "\"/dev/input/by-id\".  To determine which one to use:"
@@ -355,6 +356,16 @@ void ProgramOptions::defineOptionsAndVariables()
 //
 bool ProgramOptions::validateParsedOptions(b_po_varmap_t& varMap)
 {
+    // Sanity-check:  make sure that certain variables are present.  They
+    // should be, but we'll do this check to prevent the
+    // boost::program_options engine from segfaulting
+    if( varMap.empty() ||
+        varMap["Zoom.isMouseButton"].empty() ||
+        varMap["Zoom.isMouseWheel"].empty() )
+    {
+        return false;
+    }
+
     // Handle Zoom.isMouseButton and Zoom.isMouseWheel:
     if(varMap["Zoom.isMouseButton"].as<bool>()) {
         zoomDown.isMouseButton = zoomUp.isMouseButton = true;
@@ -384,7 +395,7 @@ bool processKbdEvent(const LinuxInputEvent& kbdEvent,
                      X11Display& theDisplay,
                      const ProgramOptions& opts)
 {
-    if(kbdEvent != LinuxInputEvent::KEY) {
+    if(kbdEvent.evType != LinuxInputEvent::evt_KEY) {
         return true;
     }
 
@@ -420,14 +431,16 @@ bool processKbdEvent(const LinuxInputEvent& kbdEvent,
     }
 
     // kbdEvent.evValue contains the pressed/released value.
+
     int sentOk(0);
     if(mapping.isMouseButton) {
+
         if(mapping.isMouseWheel && kbdEvent.evValue) {
-            // When treating a button as a mouse wheel, ignore release
-            // events.
+            // When treating a button as a mouse wheel, ignore release events.
+            // Perform both a button press and release instead.
             sentOk = XTestFakeButtonEvent(theDisplay, mapping.x11Keycode,
                                           true, CurrentTime);
-            // 'And'-in the previous value of "sentOk" ... _after_ the
+            // '&&'-in the previous value of "sentOk" ... _after_ the
             // fn. call.
             sentOk = XTestFakeButtonEvent(theDisplay, mapping.x11Keycode,
                                           false, CurrentTime)
@@ -436,10 +449,14 @@ bool processKbdEvent(const LinuxInputEvent& kbdEvent,
             sentOk = XTestFakeButtonEvent(theDisplay, mapping.x11Keycode,
                                           kbdEvent.evValue, CurrentTime);
         }
+
     } else {
+
         sentOk = XTestFakeKeyEvent(theDisplay, mapping.x11Keycode,
                                    kbdEvent.evValue, CurrentTime);
+
     }
+
     int flushOk = XFlush(theDisplay);
 
     if(!sentOk) {
@@ -464,8 +481,16 @@ int cxx_main(const string& myName,
              const ProgramOptions& opts)
 {
     // First things first:  daemonize yourself.
+    jpwTools::process::DiabLogStream dlog_st;
     if(!opts.doNotDaemonize) {
-        jpwTools::process::daemonize(opts.daemonLog.c_str(), 0, true);
+        dlog_st.open(opts.daemonLog);
+        if(!dlog_st.is_open()) {
+            string errmsg("Failed to open log file for writing: \"");
+            errmsg += opts.daemonLog;
+            errmsg += '"';
+            throw std::ios_base::failure(errmsg);
+        }
+        jpwTools::process::daemonize(dlog_st);
     }
 
     // X11/XTest Setup
@@ -483,9 +508,21 @@ int cxx_main(const string& myName,
         throw std::runtime_error(errmsg);
     }
 
+    // Open the keyboard device or autoscan for it.
+
+    LinuxInputDevice::cap_flag_vec_t required;
+    required.push_back(LinuxInputEvent::evt_RELATIVE_MOTION);
+    required.push_back(LinuxInputEvent::evt_ABSOLUTE_MOTION);
+
+    LinuxInputDevice::cap_flag_vec_t forbidden;
+    forbidden.push_back(LinuxInputEvent::evt_LED);
+
+    LinuxInputDevice kbdDev(opts.kbdDriverDev, ms::vendorId,
+                            ms::nek4kProductId, ms::nek4kName,
+                            required, forbidden);
+
     // The Main Loop
 
-    LinuxInputDevice kbdDev(opts.kbdDriverDev);
     LinuxInputEvent kbdEvent;
     while(true)
     {
@@ -512,8 +549,21 @@ int main(int argc, char* argv[])
 
     // Call cxx_main(), which is where almost all of your code should go.
     try {
+        jpwTools::Trace::tracingEnabled=true;
+
         ProgramOptions myOpts(myName);
-        myOpts.parse(argc, argv);
+        bool parsedOk = myOpts.parse(argc, argv);
+        if(!parsedOk) {
+            cerr << "Fatal Error:  "
+                 << endl
+                 << "Unable to parse commandline arguments "
+                 << "and/or configuration file."
+                 << endl
+                 << endl
+                 << "Cannot continue."
+                 << endl;
+            return 1;
+        }
 
         return cxx_main(myName, myPath, myOpts);
     } catch(std::ios_base::failure& ex) {
