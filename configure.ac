@@ -7,7 +7,7 @@
 
 AC_PREREQ([2.65])
 AC_INIT([msnek4k_driverd],
-        [0.6],
+        [0.7],
         [jpwcandide@sourceforge.net],
         [],
         [http://sourceforge.net/projects/msnek4kdriverd/])
@@ -21,8 +21,20 @@ AC_REVISION([ $Revision$ ])
 # 
 m4_include([ax_jpwTools.m4])
 
+
 # [jpw] We're building on Linux only.  Follow the FHS layout.
 AX_JPW_USE_FHS_DEFAULTS
+
+
+# [jpw] Default for XSESSIOND_PATH
+AX_JPW_ARG_MAKEFILE_VAR([XSESSIOND_PATH], 
+                        [/etc/X11/Xsession.d],
+                        [Sets the path to X11's 'Xsession.d' directory.
+                         Usually, this is "/etc/X11/Xsession.d".  Set this
+                         variable if your system needs to use an alternate
+                         path.  Note that 'configure' will prepend the value
+                         of $(DESTDIR), if defined, to this path
+                         automatically.])
 
 
 # [jpw]  Automake

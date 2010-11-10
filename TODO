@@ -1,19 +1,7 @@
-* The Kbd Device
-  - Aaargh!  The name changed from one version of Ubuntu to the next.
-  - Looks like it's not a universal device name.  FEH!
-  - Could it be a udev issue?
-  - I could check a pattern under /dev/input/by-id ...
-
 * Missing Features:
-  - Shell file
   - Drop root after opening the kbd device file?
-  - Add an auto-find feature for the kbd device file?
 
 * Other Tasks:
-  - Split source into multiple files?
-    + Underway.
-  - Makefile Options:
-    + include/permit alternate default optimization & warning options.
   - Doxycomments
   - Binary tarballs, 32-bit/64-bit.
   - .deb/.rpm installation pkgs.

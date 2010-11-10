@@ -178,6 +178,7 @@ SHELL = @SHELL@
 STRIP = @STRIP@
 VERSION = @VERSION@
 XMKMF = @XMKMF@
+XSESSIOND_PATH = @XSESSIOND_PATH@
 abs_builddir = @abs_builddir@
 abs_srcdir = @abs_srcdir@
 abs_top_builddir = @abs_top_builddir@

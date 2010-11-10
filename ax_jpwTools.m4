@@ -71,6 +71,49 @@ AC_DEFUN([AX_JPW_REQUIRE],
 ])
 
 
+## AX_JPW_SET_VAR_DEFAULT([<varname>],
+##                        [<default-value>])
+##
+## Run this macro to provide a 'configure' variable with a default value.
+##
+## "<varname>" is the name of a custom variable that users can pass to
+## 'configure' on the commandline.
+##
+## "<default-value>" is the value that "<varname>" should have if not
+## explicitly passed to 'configure' on the commandline.
+##
+AC_DEFUN([AX_JPW_SET_VAR_DEFAULT],
+[
+     AC_CONFIG_COMMANDS_PRE(
+     [
+         jpw__varname="$1"
+         jpw__defaultval="$2"
+
+         AS_VAR_COPY([jpw__varval], [$jpw__varname])
+         if test "x$jpw__varval" = "x"; then
+           AS_VAR_COPY([$jpw__varname], [jpw__defaultval])
+         fi
+     ])
+])
+
+
+## AX_JPW_ARG_MAKEFILE_VAR([<varname>],
+##                         [<default-value>],
+##                         [<var-doc>])
+##
+## Invokes "AC_ARG_VAR([<varname>], [<var-doc>])" followed by
+## "AX_JPW_SET_VAR_DEFAULT([<varname>], [<default-value>])".  See their
+## respective documentation for more info.
+##
+## You might also consider using the AC_SUBST macro.
+##
+AC_DEFUN([AX_JPW_ARG_MAKEFILE_VAR],
+[
+     AC_ARG_VAR([$1], [$3])
+     AX_JPW_SET_VAR_DEFAULT([$1], [$2])
+])
+
+
 ## AX_JPW_CHECK_CXX_HEADERS([<header-file-list>],
 ##                          [<action-if-found>],
 ##                          [<action-if-not-found>],

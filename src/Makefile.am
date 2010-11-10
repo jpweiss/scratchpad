@@ -19,6 +19,22 @@ msnek4k_driverd_SOURCES = X11Display.h \
 msnek4k_driverd_LDADD = $(BOOST_PROGRAM_OPTIONS_LIB)
 
 
+bin_SCRIPTS = 90x11-msnek4k_driverd
+CLEANFILES = $(bin_SCRIPTS)
+EXTRA_DIST = 90x11-msnek4k_driverd.in
+
+
+90x11-msnek4k_driverd: $(srcdir)/90x11-msnek4k_driverd.in Makefile
+	sed -e 's,[@]bindir[@],$(bindir),' \
+		-e 's,[@]sysconfdir[@],$(sysconfdir),' \
+		< $(srcdir)/90x11-msnek4k_driverd.in \
+		> $(srcdir)/90x11-msnek4k_driverd
+
+install-exec-local:
+	$(INSTALL_DATA) $(srcdir)/90x11-msnek4k_driverd \
+		$(DESTDIR)/$(XSESSIOND_PATH)
+
+
 ## [jpw]  System-Specific Makefile Vars and Generic Build-Customizations
 ##
 include $(top_srcdir)/make.syscfg.mk
