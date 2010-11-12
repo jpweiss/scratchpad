@@ -225,6 +225,7 @@ top_srcdir = @top_srcdir@
 SUBDIRS = src
 sysconf_DATA = examples/msnek4k_driverd.conf
 nobase_doc_DATA = LICENSE WARRANTY INSTALL examples/*
+EXTRA_DIST = $(nobase_doc_DATA) debian/*
 all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive
 

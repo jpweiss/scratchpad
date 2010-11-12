@@ -85,8 +85,12 @@ AX_BOOST_PROGRAM_OPTIONS
 AX_JPW_REQUIRE([BOOST_PROGRAM_OPTIONS], [boost::program_options], [ax])
 
 
+# [jpw]  Nonstandard file:  "90x11-msnek4k_driverd".  It's not a
+# configuration file, but it requires @bindir@ and @sysconfdir@ to be
+# replaced.
 AC_CONFIG_FILES([Makefile
-                 src/Makefile])
+                 src/Makefile
+                 src/90x11-msnek4k_driverd])
 AC_OUTPUT
 
 

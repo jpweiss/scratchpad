@@ -36,7 +36,7 @@
 # You should have received a copy of the file "LICENSE", containing
 # the License John Weiss originally placed this program under.
 #
-# $Id: make.syscfg.mk 2061 2010-11-09 19:59:02Z candide $
+# $Id: make.syscfg.mk 2062 2010-11-10 18:52:49Z candide $
 ##########
 #
 # Architecture.  Not used by all compilers.
@@ -62,8 +62,8 @@ NORMAL_UNINSTALL = :
 PRE_UNINSTALL = :
 POST_UNINSTALL = :
 bin_PROGRAMS = msnek4k_driverd$(EXEEXT)
-DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in \
-	$(top_srcdir)/make.syscfg.mk
+DIST_COMMON = $(srcdir)/90x11-msnek4k_driverd.in $(srcdir)/Makefile.am \
+	$(srcdir)/Makefile.in $(top_srcdir)/make.syscfg.mk
 subdir = src
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/ax_jpwTools.m4 \
@@ -72,9 +72,9 @@ am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 mkinstalldirs = $(install_sh) -d
 CONFIG_HEADER = $(top_builddir)/config.h
-CONFIG_CLEAN_FILES =
+CONFIG_CLEAN_FILES = 90x11-msnek4k_driverd
 CONFIG_CLEAN_VPATH_FILES =
-am__installdirs = "$(DESTDIR)$(bindir)" "$(DESTDIR)$(bindir)"
+am__installdirs = "$(DESTDIR)$(bindir)" "$(DESTDIR)$(xsessionddir)"
 PROGRAMS = $(bin_PROGRAMS)
 am_msnek4k_driverd_OBJECTS = LinuxInputEvent.$(OBJEXT) \
 	LinuxInputDevice.$(OBJEXT) Trace.$(OBJEXT) \
@@ -83,6 +83,21 @@ am_msnek4k_driverd_OBJECTS = LinuxInputEvent.$(OBJEXT) \
 msnek4k_driverd_OBJECTS = $(am_msnek4k_driverd_OBJECTS)
 am__DEPENDENCIES_1 =
 msnek4k_driverd_DEPENDENCIES = $(am__DEPENDENCIES_1)
+DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)
+depcomp = $(SHELL) $(top_srcdir)/depcomp
+am__depfiles_maybe = depfiles
+am__mv = mv -f
+CXXCOMPILE = $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
+	$(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)
+CXXLD = $(CXX)
+CXXLINK = $(CXXLD) $(AM_CXXFLAGS) $(CXXFLAGS) $(AM_LDFLAGS) $(LDFLAGS) \
+	-o $@
+COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
+	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
+CCLD = $(CC)
+LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
+SOURCES = $(msnek4k_driverd_SOURCES)
+DIST_SOURCES = $(msnek4k_driverd_SOURCES)
 am__vpath_adj_setup = srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`;
 am__vpath_adj = case $$p in \
     $(srcdir)/*) f=`echo "$$p" | sed "s|^$$srcdirstrip/||"`;; \
@@ -104,22 +119,7 @@ am__nobase_list = $(am__nobase_strip_setup); \
 am__base_list = \
   sed '$$!N;$$!N;$$!N;$$!N;$$!N;$$!N;$$!N;s/\n/ /g' | \
   sed '$$!N;$$!N;$$!N;$$!N;s/\n/ /g'
-SCRIPTS = $(bin_SCRIPTS)
-DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)
-depcomp = $(SHELL) $(top_srcdir)/depcomp
-am__depfiles_maybe = depfiles
-am__mv = mv -f
-CXXCOMPILE = $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
-	$(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)
-CXXLD = $(CXX)
-CXXLINK = $(CXXLD) $(AM_CXXFLAGS) $(CXXFLAGS) $(AM_LDFLAGS) $(LDFLAGS) \
-	-o $@
-COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
-	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
-CCLD = $(CC)
-LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
-SOURCES = $(msnek4k_driverd_SOURCES)
-DIST_SOURCES = $(msnek4k_driverd_SOURCES)
+DATA = $(xsessiond_DATA)
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -224,12 +224,13 @@ msnek4k_driverd_SOURCES = X11Display.h \
 	LinuxInputDevice.h LinuxInputDevice.cc \
 	Trace.cc Daemonizer.cc \
 	ProgramOptions_Base.cc msnek4k_driverd.cc \
-	Trace.h Daemonizer.h ProgramOptions_Base.h
+	LibTrace.h Trace.h Daemonizer.h ProgramOptions_Base.h
 
 msnek4k_driverd_LDADD = $(BOOST_PROGRAM_OPTIONS_LIB)
-bin_SCRIPTS = 90x11-msnek4k_driverd
-CLEANFILES = $(bin_SCRIPTS)
+xsessionddir = $(XSESSIOND_PATH)
+xsessiond_DATA = 90x11-msnek4k_driverd
 EXTRA_DIST = 90x11-msnek4k_driverd.in
+CLEANFILES = $(xsessiond_DATA)
 ARCH = generic
 #ARCH=pentium4
 #ARCH=athlon #athlon-4 #athlon-xp #athlon-mp
@@ -372,9 +373,9 @@ $(srcdir)/Makefile.in:  $(srcdir)/Makefile.am $(top_srcdir)/make.syscfg.mk $(am_
 	      exit 1;; \
 	  esac; \
 	done; \
-	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign src/Makefile'; \
+	echo ' cd $(top_srcdir) && $(AUTOMAKE) --gnu src/Makefile'; \
 	$(am__cd) $(top_srcdir) && \
-	  $(AUTOMAKE) --foreign src/Makefile
+	  $(AUTOMAKE) --gnu src/Makefile
 .PRECIOUS: Makefile
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	@case '$?' in \
@@ -393,6 +394,8 @@ $(top_srcdir)/configure:  $(am__configure_deps)
 $(ACLOCAL_M4):  $(am__aclocal_m4_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
 $(am__aclocal_m4_deps):
+90x11-msnek4k_driverd: $(top_builddir)/config.status $(srcdir)/90x11-msnek4k_driverd.in
+	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
 install-binPROGRAMS: $(bin_PROGRAMS)
 	@$(NORMAL_INSTALL)
 	test -z "$(bindir)" || $(MKDIR_P) "$(DESTDIR)$(bindir)"
@@ -433,40 +436,6 @@ clean-binPROGRAMS:
 msnek4k_driverd$(EXEEXT): $(msnek4k_driverd_OBJECTS) $(msnek4k_driverd_DEPENDENCIES) 
 	@rm -f msnek4k_driverd$(EXEEXT)
 	$(CXXLINK) $(msnek4k_driverd_OBJECTS) $(msnek4k_driverd_LDADD) $(LIBS)
-install-binSCRIPTS: $(bin_SCRIPTS)
-	@$(NORMAL_INSTALL)
-	test -z "$(bindir)" || $(MKDIR_P) "$(DESTDIR)$(bindir)"
-	@list='$(bin_SCRIPTS)'; test -n "$(bindir)" || list=; \
-	for p in $$list; do \
-	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
-	  if test -f "$$d$$p"; then echo "$$d$$p"; echo "$$p"; else :; fi; \
-	done | \
-	sed -e 'p;s,.*/,,;n' \
-	    -e 'h;s|.*|.|' \
-	    -e 'p;x;s,.*/,,;$(transform)' | sed 'N;N;N;s,\n, ,g' | \
-	$(AWK) 'BEGIN { files["."] = ""; dirs["."] = 1; } \
-	  { d=$$3; if (dirs[d] != 1) { print "d", d; dirs[d] = 1 } \
-	    if ($$2 == $$4) { files[d] = files[d] " " $$1; \
-	      if (++n[d] == $(am__install_max)) { \
-		print "f", d, files[d]; n[d] = 0; files[d] = "" } } \
-	    else { print "f", d "/" $$4, $$1 } } \
-	  END { for (d in files) print "f", d, files[d] }' | \
-	while read type dir files; do \
-	     if test "$$dir" = .; then dir=; else dir=/$$dir; fi; \
-	     test -z "$$files" || { \
-	       echo " $(INSTALL_SCRIPT) $$files '$(DESTDIR)$(bindir)$$dir'"; \
-	       $(INSTALL_SCRIPT) $$files "$(DESTDIR)$(bindir)$$dir" || exit $$?; \
-	     } \
-	; done
-
-uninstall-binSCRIPTS:
-	@$(NORMAL_UNINSTALL)
-	@list='$(bin_SCRIPTS)'; test -n "$(bindir)" || exit 0; \
-	files=`for p in $$list; do echo "$$p"; done | \
-	       sed -e 's,.*/,,;$(transform)'`; \
-	test -n "$$list" || exit 0; \
-	echo " ( cd '$(DESTDIR)$(bindir)' && rm -f" $$files ")"; \
-	cd "$(DESTDIR)$(bindir)" && rm -f $$files
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -494,6 +463,26 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(CXXCOMPILE) -c -o $@ `$(CYGPATH_W) '$<'`
+install-xsessiondDATA: $(xsessiond_DATA)
+	@$(NORMAL_INSTALL)
+	test -z "$(xsessionddir)" || $(MKDIR_P) "$(DESTDIR)$(xsessionddir)"
+	@list='$(xsessiond_DATA)'; test -n "$(xsessionddir)" || list=; \
+	for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  echo "$$d$$p"; \
+	done | $(am__base_list) | \
+	while read files; do \
+	  echo " $(INSTALL_DATA) $$files '$(DESTDIR)$(xsessionddir)'"; \
+	  $(INSTALL_DATA) $$files "$(DESTDIR)$(xsessionddir)" || exit $$?; \
+	done
+
+uninstall-xsessiondDATA:
+	@$(NORMAL_UNINSTALL)
+	@list='$(xsessiond_DATA)'; test -n "$(xsessionddir)" || list=; \
+	files=`for p in $$list; do echo $$p; done | sed -e 's|^.*/||'`; \
+	test -n "$$files" || exit 0; \
+	echo " ( cd '$(DESTDIR)$(xsessionddir)' && rm -f" $$files ")"; \
+	cd "$(DESTDIR)$(xsessionddir)" && rm -f $$files
 
 ID: $(HEADERS) $(SOURCES) $(LISP) $(TAGS_FILES)
 	list='$(SOURCES) $(HEADERS) $(LISP) $(TAGS_FILES)'; \
@@ -579,9 +568,9 @@ distdir: $(DISTFILES)
 	done
 check-am: all-am
 check: check-am
-all-am: Makefile $(PROGRAMS) $(SCRIPTS)
+all-am: Makefile $(PROGRAMS) $(DATA)
 installdirs:
-	for dir in "$(DESTDIR)$(bindir)" "$(DESTDIR)$(bindir)"; do \
+	for dir in "$(DESTDIR)$(bindir)" "$(DESTDIR)$(xsessionddir)"; do \
 	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \
 	done
 install: install-am
@@ -632,14 +621,13 @@ info: info-am
 
 info-am:
 
-install-data-am:
+install-data-am: install-xsessiondDATA
 
 install-dvi: install-dvi-am
 
 install-dvi-am:
 
-install-exec-am: install-binPROGRAMS install-binSCRIPTS \
-	install-exec-local
+install-exec-am: install-binPROGRAMS
 
 install-html: install-html-am
 
@@ -678,7 +666,7 @@ ps: ps-am
 
 ps-am:
 
-uninstall-am: uninstall-binPROGRAMS uninstall-binSCRIPTS
+uninstall-am: uninstall-binPROGRAMS uninstall-xsessiondDATA
 
 .MAKE: install-am install-strip
 
@@ -686,26 +674,17 @@ uninstall-am: uninstall-binPROGRAMS uninstall-binSCRIPTS
 	clean-generic ctags distclean distclean-compile \
 	distclean-generic distclean-tags distdir dvi dvi-am html \
 	html-am info info-am install install-am install-binPROGRAMS \
-	install-binSCRIPTS install-data install-data-am install-dvi \
-	install-dvi-am install-exec install-exec-am install-exec-local \
-	install-html install-html-am install-info install-info-am \
-	install-man install-pdf install-pdf-am install-ps \
-	install-ps-am install-strip installcheck installcheck-am \
-	installdirs maintainer-clean maintainer-clean-generic \
-	mostlyclean mostlyclean-compile mostlyclean-generic pdf pdf-am \
-	ps ps-am tags uninstall uninstall-am uninstall-binPROGRAMS \
-	uninstall-binSCRIPTS
+	install-data install-data-am install-dvi install-dvi-am \
+	install-exec install-exec-am install-html install-html-am \
+	install-info install-info-am install-man install-pdf \
+	install-pdf-am install-ps install-ps-am install-strip \
+	install-xsessiondDATA installcheck installcheck-am installdirs \
+	maintainer-clean maintainer-clean-generic mostlyclean \
+	mostlyclean-compile mostlyclean-generic pdf pdf-am ps ps-am \
+	tags uninstall uninstall-am uninstall-binPROGRAMS \
+	uninstall-xsessiondDATA
 
-
-90x11-msnek4k_driverd: $(srcdir)/90x11-msnek4k_driverd.in Makefile
-	sed -e 's,[@]bindir[@],$(bindir),' \
-		-e 's,[@]sysconfdir[@],$(sysconfdir),' \
-		< $(srcdir)/90x11-msnek4k_driverd.in \
-		> $(srcdir)/90x11-msnek4k_driverd
-
-install-exec-local:
-	$(INSTALL_DATA) $(srcdir)/90x11-msnek4k_driverd \
-		$(DESTDIR)/$(XSESSIOND_PATH)
+	$(top_srcdir)/examples/msnek4k_driverd.xmodmap
 
 ##########
 #
@@ -741,6 +720,12 @@ install-exec-local:
 #################
 #
 #  End
+
+#install-exec-local: 90x11-msnek4k_driverd
+#	test -d $(DESTDIR)/$(XSESSIOND_PATH) || \
+#	    mkdir -p $(DESTDIR)/$(XSESSIOND_PATH)
+#	$(INSTALL_DATA) $(srcdir)/90x11-msnek4k_driverd \
+#		$(DESTDIR)/$(XSESSIOND_PATH)
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
