@@ -74,7 +74,8 @@ mkinstalldirs = $(install_sh) -d
 CONFIG_HEADER = $(top_builddir)/config.h
 CONFIG_CLEAN_FILES = 90x11-msnek4k_driverd
 CONFIG_CLEAN_VPATH_FILES =
-am__installdirs = "$(DESTDIR)$(bindir)" "$(DESTDIR)$(xsessionddir)"
+am__installdirs = "$(DESTDIR)$(bindir)" "$(DESTDIR)$(etcx11ddir)" \
+	"$(DESTDIR)$(xsessionddir)"
 PROGRAMS = $(bin_PROGRAMS)
 am_msnek4k_driverd_OBJECTS = LinuxInputEvent.$(OBJEXT) \
 	LinuxInputDevice.$(OBJEXT) Trace.$(OBJEXT) \
@@ -119,7 +120,7 @@ am__nobase_list = $(am__nobase_strip_setup); \
 am__base_list = \
   sed '$$!N;$$!N;$$!N;$$!N;$$!N;$$!N;$$!N;s/\n/ /g' | \
   sed '$$!N;$$!N;$$!N;$$!N;s/\n/ /g'
-DATA = $(xsessiond_DATA)
+DATA = $(etcx11d_DATA) $(xsessiond_DATA)
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -148,6 +149,7 @@ ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
 ECHO_T = @ECHO_T@
 EGREP = @EGREP@
+ETC_X11_PATH = @ETC_X11_PATH@
 EXEEXT = @EXEEXT@
 GREP = @GREP@
 INSTALL = @INSTALL@
@@ -227,10 +229,14 @@ msnek4k_driverd_SOURCES = X11Display.h \
 	LibTrace.h Trace.h Daemonizer.h ProgramOptions_Base.h
 
 msnek4k_driverd_LDADD = $(BOOST_PROGRAM_OPTIONS_LIB)
+etcx11ddir = $(ETC_X11_PATH)
+# N.B.:  'etcx11d_DATA' requires 'etcx11ddir'
+etcx11d_DATA = $(top_srcdir)/examples/msnek4k_driverd.xmodmap
 xsessionddir = $(XSESSIOND_PATH)
+# N.B.:  'xessiond_DATA' requires 'xsessionddir'
 xsessiond_DATA = 90x11-msnek4k_driverd
-EXTRA_DIST = 90x11-msnek4k_driverd.in
 CLEANFILES = $(xsessiond_DATA)
+EXTRA_DIST = 90x11-msnek4k_driverd.in
 ARCH = generic
 #ARCH=pentium4
 #ARCH=athlon #athlon-4 #athlon-xp #athlon-mp
@@ -463,6 +469,26 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(CXXCOMPILE) -c -o $@ `$(CYGPATH_W) '$<'`
+install-etcx11dDATA: $(etcx11d_DATA)
+	@$(NORMAL_INSTALL)
+	test -z "$(etcx11ddir)" || $(MKDIR_P) "$(DESTDIR)$(etcx11ddir)"
+	@list='$(etcx11d_DATA)'; test -n "$(etcx11ddir)" || list=; \
+	for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  echo "$$d$$p"; \
+	done | $(am__base_list) | \
+	while read files; do \
+	  echo " $(INSTALL_DATA) $$files '$(DESTDIR)$(etcx11ddir)'"; \
+	  $(INSTALL_DATA) $$files "$(DESTDIR)$(etcx11ddir)" || exit $$?; \
+	done
+
+uninstall-etcx11dDATA:
+	@$(NORMAL_UNINSTALL)
+	@list='$(etcx11d_DATA)'; test -n "$(etcx11ddir)" || list=; \
+	files=`for p in $$list; do echo $$p; done | sed -e 's|^.*/||'`; \
+	test -n "$$files" || exit 0; \
+	echo " ( cd '$(DESTDIR)$(etcx11ddir)' && rm -f" $$files ")"; \
+	cd "$(DESTDIR)$(etcx11ddir)" && rm -f $$files
 install-xsessiondDATA: $(xsessiond_DATA)
 	@$(NORMAL_INSTALL)
 	test -z "$(xsessionddir)" || $(MKDIR_P) "$(DESTDIR)$(xsessionddir)"
@@ -570,7 +596,7 @@ check-am: all-am
 check: check-am
 all-am: Makefile $(PROGRAMS) $(DATA)
 installdirs:
-	for dir in "$(DESTDIR)$(bindir)" "$(DESTDIR)$(xsessionddir)"; do \
+	for dir in "$(DESTDIR)$(bindir)" "$(DESTDIR)$(etcx11ddir)" "$(DESTDIR)$(xsessionddir)"; do \
 	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \
 	done
 install: install-am
@@ -621,7 +647,7 @@ info: info-am
 
 info-am:
 
-install-data-am: install-xsessiondDATA
+install-data-am: install-etcx11dDATA install-xsessiondDATA
 
 install-dvi: install-dvi-am
 
@@ -666,7 +692,8 @@ ps: ps-am
 
 ps-am:
 
-uninstall-am: uninstall-binPROGRAMS uninstall-xsessiondDATA
+uninstall-am: uninstall-binPROGRAMS uninstall-etcx11dDATA \
+	uninstall-xsessiondDATA
 
 .MAKE: install-am install-strip
 
@@ -675,16 +702,16 @@ uninstall-am: uninstall-binPROGRAMS uninstall-xsessiondDATA
 	distclean-generic distclean-tags distdir dvi dvi-am html \
 	html-am info info-am install install-am install-binPROGRAMS \
 	install-data install-data-am install-dvi install-dvi-am \
-	install-exec install-exec-am install-html install-html-am \
-	install-info install-info-am install-man install-pdf \
-	install-pdf-am install-ps install-ps-am install-strip \
-	install-xsessiondDATA installcheck installcheck-am installdirs \
-	maintainer-clean maintainer-clean-generic mostlyclean \
-	mostlyclean-compile mostlyclean-generic pdf pdf-am ps ps-am \
-	tags uninstall uninstall-am uninstall-binPROGRAMS \
+	install-etcx11dDATA install-exec install-exec-am install-html \
+	install-html-am install-info install-info-am install-man \
+	install-pdf install-pdf-am install-ps install-ps-am \
+	install-strip install-xsessiondDATA installcheck \
+	installcheck-am installdirs maintainer-clean \
+	maintainer-clean-generic mostlyclean mostlyclean-compile \
+	mostlyclean-generic pdf pdf-am ps ps-am tags uninstall \
+	uninstall-am uninstall-binPROGRAMS uninstall-etcx11dDATA \
 	uninstall-xsessiondDATA
 
-	$(top_srcdir)/examples/msnek4k_driverd.xmodmap
 
 ##########
 #
@@ -720,12 +747,6 @@ uninstall-am: uninstall-binPROGRAMS uninstall-xsessiondDATA
 #################
 #
 #  End
-
-#install-exec-local: 90x11-msnek4k_driverd
-#	test -d $(DESTDIR)/$(XSESSIOND_PATH) || \
-#	    mkdir -p $(DESTDIR)/$(XSESSIOND_PATH)
-#	$(INSTALL_DATA) $(srcdir)/90x11-msnek4k_driverd \
-#		$(DESTDIR)/$(XSESSIOND_PATH)
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

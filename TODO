@@ -5,6 +5,7 @@
   - Doxycomments
   - Binary tarballs, 32-bit/64-bit.
   - .deb/.rpm installation pkgs.
+    + RPM Dependencies:
 
 
 ==============================================================================

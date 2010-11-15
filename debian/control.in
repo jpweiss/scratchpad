@@ -1,12 +1,12 @@
-Source: msnek4k-driverd
+Source: @PACKAGE_TARNAME@
 Section: x11
 Priority: optional
-Maintainer: John Weiss <jpwcandide@sourceforge.net>
+Maintainer: John Weiss <@PACKAGE_BUGREPORT@>
 Build-Depends: debhelper (>= 7), autotools-dev, libxtst-dev, libboost-program-options1.42-dev|libboost-program-options1.40-dev|libboost-program-options1.38-dev|libboost-program-options1.34-dev|libboost-program-options-dev
 Standards-Version: 3.8.3
-Homepage: http://sourceforge.net/projects/msnek4kdriverd
+Homepage: @PACKAGE_URL@
 
-Package: msnek4k-driverd
+Package: @PACKAGE_TARNAME@
 Architecture: any
 #Depends: ${shlibs:Depends}, ${misc:Depends}
 Depends: libboost-program-options1.42.0|libboost-program-options1.40.0|libboost-program-options1.38.0|libboost-program-options1.34.1|libboost-program-options (>= 1.34.1-1), libgcc1, libstdc++6, libx11-6 (>= 0), libxtst6, ${misc:Depends}

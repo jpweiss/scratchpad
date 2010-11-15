@@ -35,10 +35,12 @@ NORMAL_UNINSTALL = :
 PRE_UNINSTALL = :
 POST_UNINSTALL = :
 subdir = .
-DIST_COMMON = $(am__configure_deps) $(srcdir)/Makefile.am \
+DIST_COMMON = README $(am__configure_deps) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in $(srcdir)/config.h.in \
-	$(top_srcdir)/configure COPYING INSTALL TODO depcomp \
-	install-sh missing
+	$(srcdir)/msnek4k-driverd.spec.in $(top_srcdir)/configure \
+	$(top_srcdir)/debian/control.in AUTHORS COPYING ChangeLog \
+	INSTALL NEWS TODO config.guess config.sub depcomp install-sh \
+	missing
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/ax_jpwTools.m4 \
 	$(top_srcdir)/configure.ac
@@ -48,7 +50,7 @@ am__CONFIG_DISTCLEAN_FILES = config.status config.cache config.log \
  configure.lineno config.status.lineno
 mkinstalldirs = $(install_sh) -d
 CONFIG_HEADER = config.h
-CONFIG_CLEAN_FILES =
+CONFIG_CLEAN_FILES = msnek4k-driverd.spec debian/control
 CONFIG_CLEAN_VPATH_FILES =
 SOURCES =
 DIST_SOURCES =
@@ -151,6 +153,7 @@ ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
 ECHO_T = @ECHO_T@
 EGREP = @EGREP@
+ETC_X11_PATH = @ETC_X11_PATH@
 EXEEXT = @EXEEXT@
 GREP = @GREP@
 INSTALL = @INSTALL@
@@ -224,8 +227,18 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 SUBDIRS = src
 sysconf_DATA = examples/msnek4k_driverd.conf
-nobase_doc_DATA = LICENSE WARRANTY INSTALL examples/*
-EXTRA_DIST = $(nobase_doc_DATA) debian/*
+autoconf_automake_files = COPYING WARRANTY INSTALL NEWS AUTHORS \
+	README ChangeLog
+
+nobase_doc_DATA = $(autoconf_automake_files) examples/*
+debian_build_files = debian/changelog debian/compat \
+	debian/control debian/copyright debian/docs debian/rules
+
+EXTRA_DIST = $(nobase_doc_DATA) $(debian_build_files) *.spec*
+bindistdir_base = $(abs_top_srcdir)/bindist
+bindistdir = $(distdir)-$${arch}
+top_bindistdir = $(bindistdir_base)/$(bindistdir)
+bindist_archive = $(PACKAGE_TARNAME)-$${arch}
 all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive
 
@@ -236,15 +249,15 @@ $(srcdir)/Makefile.in:  $(srcdir)/Makefile.am  $(am__configure_deps)
 	@for dep in $?; do \
 	  case '$(am__configure_deps)' in \
 	    *$$dep*) \
-	      echo ' cd $(srcdir) && $(AUTOMAKE) --foreign'; \
-	      $(am__cd) $(srcdir) && $(AUTOMAKE) --foreign \
+	      echo ' cd $(srcdir) && $(AUTOMAKE) --gnu'; \
+	      $(am__cd) $(srcdir) && $(AUTOMAKE) --gnu \
 		&& exit 0; \
 	      exit 1;; \
 	  esac; \
 	done; \
-	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign Makefile'; \
+	echo ' cd $(top_srcdir) && $(AUTOMAKE) --gnu Makefile'; \
 	$(am__cd) $(top_srcdir) && \
-	  $(AUTOMAKE) --foreign Makefile
+	  $(AUTOMAKE) --gnu Makefile
 .PRECIOUS: Makefile
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	@case '$?' in \
@@ -281,6 +294,10 @@ $(srcdir)/config.h.in:  $(am__configure_deps)
 
 distclean-hdr:
 	-rm -f config.h stamp-h1
+msnek4k-driverd.spec: $(top_builddir)/config.status $(srcdir)/msnek4k-driverd.spec.in
+	cd $(top_builddir) && $(SHELL) ./config.status $@
+debian/control: $(top_builddir)/config.status $(top_srcdir)/debian/control.in
+	cd $(top_builddir) && $(SHELL) ./config.status $@
 install-nobase_docDATA: $(nobase_doc_DATA)
 	@$(NORMAL_INSTALL)
 	test -z "$(docdir)" || $(MKDIR_P) "$(DESTDIR)$(docdir)"
@@ -725,7 +742,7 @@ maintainer-clean-am: distclean-am maintainer-clean-generic
 
 mostlyclean: mostlyclean-recursive
 
-mostlyclean-am: mostlyclean-generic
+mostlyclean-am: mostlyclean-generic mostlyclean-local
 
 pdf: pdf-recursive
 
@@ -753,10 +770,34 @@ uninstall-am: uninstall-nobase_docDATA uninstall-sysconfDATA
 	install-pdf-am install-ps install-ps-am install-strip \
 	install-sysconfDATA installcheck installcheck-am installdirs \
 	installdirs-am maintainer-clean maintainer-clean-generic \
-	mostlyclean mostlyclean-generic pdf pdf-am ps ps-am tags \
-	tags-recursive uninstall uninstall-am uninstall-nobase_docDATA \
-	uninstall-sysconfDATA
+	mostlyclean mostlyclean-generic mostlyclean-local pdf pdf-am \
+	ps ps-am tags tags-recursive uninstall uninstall-am \
+	uninstall-nobase_docDATA uninstall-sysconfDATA
 
+
+clean-bindist:
+	-rm -rf $(bindistdir_base)
+
+mostlyclean-local: clean-bindist
+
+bindist-install-recurse:
+	arch="bin_`uname -m`" && \
+		$(MAKE) DESTDIR=$(top_bindistdir) install
+
+bindist: bindist-install-recurse
+	arch="bin_`uname -m`" && \
+		cd $(top_bindistdir) && \
+		tardir=. && \
+		$(am__tar) | \
+			GZIP=$(GZIP_ENV) \
+				gzip -c >$(bindistdir_base)/$(bindist_archive).tar.gz
+
+bindist-bzip2: bindist-install-recurse
+	arch="bin_`uname -m`" && \
+		cd $(top_bindistdir) && \
+		tardir=. && \
+		$(am__tar) | \
+			bzip2 -9 -c >$(bindistdir_base)/$(bindist_archive).tar.bz2
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

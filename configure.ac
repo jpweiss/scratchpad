@@ -7,10 +7,10 @@
 
 AC_PREREQ([2.65])
 AC_INIT([msnek4k_driverd],
-        [0.7],
+        [0.7.2],
         [jpwcandide@sourceforge.net],
-        [],
-        [http://sourceforge.net/projects/msnek4kdriverd/])
+        [msnek4k-driverd],
+        [http://sourceforge.net/projects/msnek4kdriverd])
 AC_CONFIG_HEADERS([config.h])
 
 # [jpw]  My licensing and SVN revision variable.
@@ -27,13 +27,24 @@ AX_JPW_USE_FHS_DEFAULTS
 
 
 # [jpw] Default for XSESSIOND_PATH
-AX_JPW_ARG_MAKEFILE_VAR([XSESSIOND_PATH], 
-                        [/etc/X11/Xsession.d],
-                        [Sets the path to X11's 'Xsession.d' directory.
-                         Usually, this is "/etc/X11/Xsession.d".  Set this
+AX_JPW_ARG_MAKEFILE_VAR([ETC_X11_PATH], 
+                        [/etc/X11],
+                        [Sets the path to X11's configuration directory (which
+                         is where the "msnek4k_driverd.xmodmap" file will be
+                         installed).  Usually, this is "/etc/X11".  Set this
                          variable if your system needs to use an alternate
                          path.  Note that 'configure' will prepend the value
                          of $(DESTDIR), if defined, to this path
+                         automatically.])
+
+AX_JPW_ARG_MAKEFILE_VAR([XSESSIOND_PATH], 
+                        [${ETC_X11_PATH}/Xsession.d],
+                        [Sets the path to X11's 'Xsession.d' directory.  (The
+                         daemon's startup script will be installed here.)
+                         Usually, this is "${ETC_X11_PATH}/Xsession.d".  Set
+                         this variable if your system needs to use an
+                         alternate path.  Note that 'configure' will prepend
+                         the value of $(DESTDIR), if defined, to this path
                          automatically.])
 
 
@@ -90,7 +101,9 @@ AX_JPW_REQUIRE([BOOST_PROGRAM_OPTIONS], [boost::program_options], [ax])
 # replaced.
 AC_CONFIG_FILES([Makefile
                  src/Makefile
-                 src/90x11-msnek4k_driverd])
+                 src/90x11-msnek4k_driverd
+                 msnek4k-driverd.spec
+                 debian/control])
 AC_OUTPUT
 
 
