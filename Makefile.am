@@ -23,7 +23,7 @@ debian_build_files = debian/changelog debian/compat \
 ## here.  I thought that *_DATA macros added their files to the
 ## dist-manifest...
 EXTRA_DIST = $(nobase_doc_DATA) $(debian_build_files) *.spec*
-
+CLEANFILES = debian/files debian/*.debhelper.log
 
 
 ##

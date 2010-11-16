@@ -37,10 +37,11 @@ POST_UNINSTALL = :
 subdir = .
 DIST_COMMON = README $(am__configure_deps) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in $(srcdir)/config.h.in \
-	$(srcdir)/msnek4k-driverd.spec.in $(top_srcdir)/configure \
-	$(top_srcdir)/debian/control.in AUTHORS COPYING ChangeLog \
-	INSTALL NEWS TODO config.guess config.sub depcomp install-sh \
-	missing
+	$(top_srcdir)/configure \
+	$(top_srcdir)/pkgTemplates/debian.control.in \
+	$(top_srcdir)/pkgTemplates/msnek4k-driverd.spec.in AUTHORS \
+	COPYING ChangeLog INSTALL NEWS TODO config.guess config.sub \
+	depcomp install-sh missing
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/ax_jpwTools.m4 \
 	$(top_srcdir)/configure.ac
@@ -50,7 +51,8 @@ am__CONFIG_DISTCLEAN_FILES = config.status config.cache config.log \
  configure.lineno config.status.lineno
 mkinstalldirs = $(install_sh) -d
 CONFIG_HEADER = config.h
-CONFIG_CLEAN_FILES = msnek4k-driverd.spec debian/control
+CONFIG_CLEAN_FILES = pkgTemplates/debian.control \
+	pkgTemplates/msnek4k-driverd.spec
 CONFIG_CLEAN_VPATH_FILES =
 SOURCES =
 DIST_SOURCES =
@@ -176,6 +178,7 @@ PACKAGE_TARNAME = @PACKAGE_TARNAME@
 PACKAGE_URL = @PACKAGE_URL@
 PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
+REBUILD_PACKAGING_FILES = @REBUILD_PACKAGING_FILES@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
@@ -235,6 +238,7 @@ debian_build_files = debian/changelog debian/compat \
 	debian/control debian/copyright debian/docs debian/rules
 
 EXTRA_DIST = $(nobase_doc_DATA) $(debian_build_files) *.spec*
+CLEANFILES = debian/files debian/*.debhelper.log
 bindistdir_base = $(abs_top_srcdir)/bindist
 bindistdir = $(distdir)-$${arch}
 top_bindistdir = $(bindistdir_base)/$(bindistdir)
@@ -294,9 +298,9 @@ $(srcdir)/config.h.in:  $(am__configure_deps)
 
 distclean-hdr:
 	-rm -f config.h stamp-h1
-msnek4k-driverd.spec: $(top_builddir)/config.status $(srcdir)/msnek4k-driverd.spec.in
+pkgTemplates/debian.control: $(top_builddir)/config.status $(top_srcdir)/pkgTemplates/debian.control.in
 	cd $(top_builddir) && $(SHELL) ./config.status $@
-debian/control: $(top_builddir)/config.status $(top_srcdir)/debian/control.in
+pkgTemplates/msnek4k-driverd.spec: $(top_builddir)/config.status $(top_srcdir)/pkgTemplates/msnek4k-driverd.spec.in
 	cd $(top_builddir) && $(SHELL) ./config.status $@
 install-nobase_docDATA: $(nobase_doc_DATA)
 	@$(NORMAL_INSTALL)
@@ -677,6 +681,7 @@ install-strip:
 mostlyclean-generic:
 
 clean-generic:
+	-test -z "$(CLEANFILES)" || rm -f $(CLEANFILES)
 
 distclean-generic:
 	-test -z "$(CONFIG_CLEAN_FILES)" || rm -f $(CONFIG_CLEAN_FILES)

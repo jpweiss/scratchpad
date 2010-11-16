@@ -25,6 +25,10 @@ m4_include([ax_jpwTools.m4])
 # [jpw] We're building on Linux only.  Follow the FHS layout.
 AX_JPW_USE_FHS_DEFAULTS
 
+# [jpw] We're building Debian and RPM packaging files.
+AX_JPW_CREATING_DEB_RPM([pkgTemplates/debian.control], 
+                        [pkgTemplates/msnek4k-driverd.spec])
+
 
 # [jpw] Default for XSESSIOND_PATH
 AX_JPW_ARG_MAKEFILE_VAR([ETC_X11_PATH], 
@@ -101,9 +105,8 @@ AX_JPW_REQUIRE([BOOST_PROGRAM_OPTIONS], [boost::program_options], [ax])
 # replaced.
 AC_CONFIG_FILES([Makefile
                  src/Makefile
-                 src/90x11-msnek4k_driverd
-                 msnek4k-driverd.spec
-                 debian/control])
+                 src/90x11-msnek4k_driverd])
+
 AC_OUTPUT
 
 

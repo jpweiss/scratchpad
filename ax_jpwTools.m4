@@ -50,24 +50,24 @@
 ##
 AC_DEFUN([AX_JPW_REQUIRE],
 [
-    jpw__feature_lc=m4_tolower([$1])
-    jpw__cachevar_descr="$2"
-    jpw__cachevar_prefix=m4_tolower([$3])
-    if test "x$jpw__cachevar_prefix" = "x" ; then
-        jpw__cachevar_prefix=ac
-    fi
+  jpw__feature_lc=m4_tolower([$1])
+  jpw__cachevar_descr="$2"
+  jpw__cachevar_prefix=m4_tolower([$3])
+  if test "x$jpw__cachevar_prefix" = "x" ; then
+    jpw__cachevar_prefix=ac
+  fi
 
-    if test "x$jpw__cachevar_descr" = "x" ; then
-        jpw__cachevar_descr="feature \"$1\""
-    fi
+  if test "x$jpw__cachevar_descr" = "x" ; then
+      jpw__cachevar_descr="feature \"$1\""
+  fi
 
-    jpw__cachevar_name="${jpw__cachevar_prefix}_cv_${jpw__feature_lc}"
-    AS_VAR_COPY([jpw__cachevar_set], [$jpw__cachevar_name])
+  jpw__cachevar_name="${jpw__cachevar_prefix}_cv_${jpw__feature_lc}"
+  AS_VAR_COPY([jpw__cachevar_set], [$jpw__cachevar_name])
 
-	if test "$jpw__cachevar_set" != "yes" ; then
-        AC_MSG_ERROR([Error:  Failed to find $jpw__cachevar_descr.
-                      Cannot continue.])
-    fi
+  if test "$jpw__cachevar_set" != "yes" ; then
+    AC_MSG_ERROR([Error:  Failed to find $jpw__cachevar_descr.
+                  Cannot continue.])
+  fi
 ])
 
 
@@ -84,16 +84,16 @@ AC_DEFUN([AX_JPW_REQUIRE],
 ##
 AC_DEFUN([AX_JPW_SET_VAR_DEFAULT],
 [
-     AC_CONFIG_COMMANDS_PRE(
-     [
-         jpw__varname="$1"
-         jpw__defaultval="$2"
+   AC_CONFIG_COMMANDS_PRE(
+   [
+     jpw__varname="$1"
+     jpw__defaultval="$2"
 
-         AS_VAR_COPY([jpw__varval], [$jpw__varname])
-         if test "x$jpw__varval" = "x"; then
-           AS_VAR_COPY([$jpw__varname], [jpw__defaultval])
-         fi
-     ])
+     AS_VAR_COPY([jpw__varval], [$jpw__varname])
+     if test "x$jpw__varval" = "x"; then
+       AS_VAR_COPY([$jpw__varname], [jpw__defaultval])
+     fi
+   ])
 ])
 
 
@@ -109,8 +109,8 @@ AC_DEFUN([AX_JPW_SET_VAR_DEFAULT],
 ##
 AC_DEFUN([AX_JPW_ARG_MAKEFILE_VAR],
 [
-     AC_ARG_VAR([$1], [$3])
-     AX_JPW_SET_VAR_DEFAULT([$1], [$2])
+   AC_ARG_VAR([$1], [$3])
+   AX_JPW_SET_VAR_DEFAULT([$1], [$2])
 ])
 
 
@@ -125,9 +125,9 @@ AC_DEFUN([AX_JPW_ARG_MAKEFILE_VAR],
 ##
 AC_DEFUN([AX_JPW_CHECK_CXX_HEADERS],
 [
-	AC_LANG_PUSH(C++)
-    AC_CHECK_HEADERS([$1], [$2], [$3], [$4])
-	AC_LANG_POP([C++])    
+  AC_LANG_PUSH(C++)
+  AC_CHECK_HEADERS([$1], [$2], [$3], [$4])
+  AC_LANG_POP([C++])    
 ])
 
 
@@ -139,8 +139,8 @@ AC_DEFUN([AX_JPW_CHECK_CXX_HEADERS],
 ##
 AC_DEFUN([AX_JPW_HEADER_ERROR],
 [
-    AC_MSG_ERROR([Error:  Failed to find one or more 
-                  required headers.  Cannot continue.])
+  AC_MSG_ERROR([Error:  Failed to find one or more 
+                required headers.  Cannot continue.])
 ])
 
 
@@ -154,7 +154,7 @@ AC_DEFUN([AX_JPW_HEADER_ERROR],
 ##
 AC_DEFUN([AX_JPW_REQUIRE_CXX_HEADERS],
 [
-    AX_JPW_CHECK_CXX_HEADERS([$1], [], [AX_JPW_HEADER_ERROR], [$2])
+  AX_JPW_CHECK_CXX_HEADERS([$1], [], [AX_JPW_HEADER_ERROR], [$2])
 ])
 
 
@@ -166,8 +166,8 @@ AC_DEFUN([AX_JPW_REQUIRE_CXX_HEADERS],
 ##
 AC_DEFUN([AX_JPW_FUNC_ERROR],
 [
-    AC_MSG_ERROR([Error:  Failed to find one or more 
-                  required library functions.  Cannot continue.])
+  AC_MSG_ERROR([Error:  Failed to find one or more 
+                required library functions.  Cannot continue.])
 ])
 
 
@@ -181,14 +181,75 @@ AC_DEFUN([AX_JPW_FUNC_ERROR],
 ##
 AC_DEFUN([AX_JPW_USE_FHS_DEFAULTS],
 [
-     AC_CONFIG_COMMANDS_PRE(
-     [
-         if test "$prefix" = /usr; then
-           test "$sysconfdir" = '${prefix}/etc' && sysconfdir=/etc
-           test "$sharedstatedir" = '${prefix}/com' && sharedstatedir=/var
-           test "$localstatedir" = '${prefix}/var' && localstatedir=/var
-         fi
-     ])
+   AC_CONFIG_COMMANDS_PRE(
+   [
+     if test "$prefix" = /usr; then
+       test "$sysconfdir" = '${prefix}/etc' && sysconfdir=/etc
+       test "$sharedstatedir" = '${prefix}/com' && sharedstatedir=/var
+       test "$localstatedir" = '${prefix}/var' && localstatedir=/var
+     fi
+   ])
+])
+
+
+## AX_JPW_CREATING_DEB_RPM([<deb-file-list>], [<rpm-file-list>])
+##
+## Run this macro if building on Linux systems.
+##
+## Both arguments are optional, and should specify lists of *.in files
+## required by the packaging software.
+##
+## <deb-file-list>
+##   The each file should contain its path, relative to $(top_srcdir).
+##   Usually will be the Debian packaging file, "control.in".  Each file is
+##   copied to $(top_srcdir)/debian; if a file's name has the prefix
+##   "debian.", the prefix will be removed after being copied.
+##
+## <rpm-file-list>
+##   The each file should contain its path, relative to $(top_srcdir).
+##   Usually will be just a *.spec.in file.  Each file is copied to
+##   $(top_srcdir)
+##
+AC_DEFUN([AX_JPW_CREATING_DEB_RPM],
+[
+  jpw__deb_ftb="$1"
+  jpw__rpm_ftb="$2"
+  jpw__bpf_cmds=""
+
+  AC_ARG_VAR([REBUILD_PACKAGING_FILES],
+             [Used by maintainers to recreate static files.  Safe
+              to ignore.])
+
+  # Add the Debian packaging file(s), if there are any.
+  if test "x$jpw__deb_ftb" != "x"; then
+    AC_CONFIG_FILES([$1])
+    jpw__bpf_cmds="${jpw__bpf_cmds} cp $jpw__deb_ftb debian/;"
+    for jpw__deb_file in $jpw__deb_ftb; do
+      jpw__deb_file="`basename ${jpw__deb_file}`"
+      jpw__deb_file_ren="debian/${jpw__deb_file#debian.}"
+      jpw__deb_file="debian/${jpw__deb_file}"
+      if test "${jpw__deb_file}" != "${jpw__deb_file_ren}"; then
+        jpw__bpf_cmds="${jpw__bpf_cmds} mv $jpw__deb_file $jpw__deb_file_ren;"
+      fi
+    done
+  fi
+
+  # Add the RPM *.spec file(s), if there are any.
+  if test "x$jpw__rpm_ftb" != "x"; then
+    AC_CONFIG_FILES([$2])
+    jpw__bpf_cmds="${jpw__bpf_cmds} cp $jpw__rpm_ftb ./;"
+  fi
+
+
+  # Now, add the "installation" commands, if we need them.
+  AC_CONFIG_COMMANDS_PRE([set -x
+                          if test -n "${REBUILD_PACKAGING_FILES}"; then
+    echo "Doing Rebuild Tasks:  $jpw__bpf_cmds"
+                            if test -n "$jpw__bpf_cmds"; then
+                              eval "$jpw__bpf_cmds"
+                            fi
+                          fi
+                          set +x])
 ])
 
 

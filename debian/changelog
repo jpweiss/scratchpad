@@ -1,3 +1,18 @@
+msnek4k-driverd (0.7.1-2) unstable; urgency=low
+
+  * Configfile changes
+  * Packaging Improvements, including addition of an RPM specfile.
+  * Autoconf changes/enhancements.
+  * Changes to std doc files (COPYING et. al.)
+
+ -- John Weiss <candide@smtp.frontiernet.net>  Mon, 15 Nov 2010 20:28:14 -0500
+
+msnek4k-driverd (0.7.1-1) unstable; urgency=low
+
+  * Bugfixes to toplevel Makefile.am
+
+ -- John Weiss <jpwcandide@sourceforge.net>  Thu, 11 Nov 2010 17:00:00 -0500
+
 msnek4k-driverd (0.7-1) unstable; urgency=low
 
   * Initial release

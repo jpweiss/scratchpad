@@ -655,6 +655,7 @@ INSTALL_SCRIPT
 INSTALL_PROGRAM
 XSESSIOND_PATH
 ETC_X11_PATH
+REBUILD_PACKAGING_FILES
 target_alias
 host_alias
 build_alias
@@ -705,6 +706,7 @@ with_boost_program_options
       ac_precious_vars='build_alias
 host_alias
 target_alias
+REBUILD_PACKAGING_FILES
 ETC_X11_PATH
 XSESSIOND_PATH
 CXX
@@ -1359,13 +1361,17 @@ Optional Packages:
                           --with-boost-program-options=boost_program_options-gcc-mt-1_33_1
 
 Some influential environment variables:
+  REBUILD_PACKAGING_FILES
+              Used by maintainers to recreate static files. Safe to ignore.
   ETC_X11_PATH
-              Sets the path to X11's configuration directory. Usually, this is
-              "/etc/X11". Set this variable if your system needs to use an
-              alternate path. Note that 'configure' will prepend the value of
-              $(DESTDIR), if defined, to this path automatically.
+              Sets the path to X11's configuration directory (which is where
+              the "msnek4k_driverd.xmodmap" file will be installed). Usually,
+              this is "/etc/X11". Set this variable if your system needs to
+              use an alternate path. Note that 'configure' will prepend the
+              value of $(DESTDIR), if defined, to this path automatically.
   XSESSIOND_PATH
-              Sets the path to X11's 'Xsession.d' directory. Usually, this is
+              Sets the path to X11's 'Xsession.d' directory. (The daemon's
+              startup script will be installed here.) Usually, this is
               "${ETC_X11_PATH}/Xsession.d". Set this variable if your system
               needs to use an alternate path. Note that 'configure' will
               prepend the value of $(DESTDIR), if defined, to this path
@@ -2587,6 +2593,27 @@ ac_config_headers="$ac_config_headers config.h"
 
 
 
+## AX_JPW_CREATING_DEB_RPM([<deb-file-list>], [<rpm-file-list>])
+##
+## Run this macro if building on Linux systems.
+##
+## Both arguments are optional, and should specify lists of *.in files
+## required by the packaging software.
+##
+## <deb-file-list>
+##   The each file should contain its path, relative to $(top_srcdir).
+##   Usually will be the Debian packaging file, "control.in".  Each file is
+##   copied to $(top_srcdir)/debian; if a file's name has the prefix
+##   "debian.", the prefix will be removed after being copied.
+##
+## <rpm-file-list>
+##   The each file should contain its path, relative to $(top_srcdir).
+##   Usually will be just a *.spec.in file.  Each file is copied to
+##   $(top_srcdir)
+##
+
+
+
 ##################
 ## Local Variables:
 ## mode: autoconf
@@ -2596,6 +2623,41 @@ ac_config_headers="$ac_config_headers config.h"
 
 # [jpw] We're building on Linux only.  Follow the FHS layout.
 
+
+
+
+# [jpw] We're building Debian and RPM packaging files.
+
+  jpw__deb_ftb="pkgTemplates/debian.control"
+  jpw__rpm_ftb="pkgTemplates/msnek4k-driverd.spec"
+  jpw__bpf_cmds=""
+
+
+
+  # Add the Debian packaging file(s), if there are any.
+  if test "x$jpw__deb_ftb" != "x"; then
+    ac_config_files="$ac_config_files pkgTemplates/debian.control"
+
+    jpw__bpf_cmds="${jpw__bpf_cmds} cp $jpw__deb_ftb debian/;"
+    for jpw__deb_file in $jpw__deb_ftb; do
+      jpw__deb_file="`basename ${jpw__deb_file}`"
+      jpw__deb_file_ren="debian/${jpw__deb_file#debian.}"
+      jpw__deb_file="debian/${jpw__deb_file}"
+      if test "${jpw__deb_file}" != "${jpw__deb_file_ren}"; then
+        jpw__bpf_cmds="${jpw__bpf_cmds} mv $jpw__deb_file $jpw__deb_file_ren;"
+      fi
+    done
+  fi
+
+  # Add the RPM *.spec file(s), if there are any.
+  if test "x$jpw__rpm_ftb" != "x"; then
+    ac_config_files="$ac_config_files pkgTemplates/msnek4k-driverd.spec"
+
+    jpw__bpf_cmds="${jpw__bpf_cmds} cp $jpw__rpm_ftb ./;"
+  fi
+
+
+  # Now, add the "installation" commands, if we need them.
 
 
 
@@ -5141,8 +5203,8 @@ _ACEOF
 
 else
 
-    as_fn_error "Error:  Failed to find one or more
-                  required headers.  Cannot continue." "$LINENO" 5
+  as_fn_error "Error:  Failed to find one or more
+                required headers.  Cannot continue." "$LINENO" 5
 
 fi
 
@@ -5289,13 +5351,13 @@ ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
 
 
 
-	ac_ext=cpp
+  ac_ext=cpp
 ac_cpp='$CXXCPP $CPPFLAGS'
 ac_compile='$CXX -c $CXXFLAGS $CPPFLAGS conftest.$ac_ext >&5'
 ac_link='$CXX -o conftest$ac_exeext $CXXFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
 ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
 
-    for ac_header in  boost/algorithm/string/case_conv.hpp \
+  for ac_header in  boost/algorithm/string/case_conv.hpp \
                              boost/algorithm/string/classification.hpp \
                              boost/algorithm/string/predicate.hpp
 do :
@@ -5309,14 +5371,14 @@ _ACEOF
 
 else
 
-    as_fn_error "Error:  Failed to find one or more
-                  required headers.  Cannot continue." "$LINENO" 5
+  as_fn_error "Error:  Failed to find one or more
+                required headers.  Cannot continue." "$LINENO" 5
 
 fi
 
 done
 
-	ac_ext=c
+  ac_ext=c
 ac_cpp='$CPP $CPPFLAGS'
 ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
 ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
@@ -5755,24 +5817,24 @@ $as_echo "#define HAVE_WORKING_FORK 1" >>confdefs.h
 fi
 
 
-    jpw__feature_lc=func_fork
-    jpw__cachevar_descr="the fork() function"
-    jpw__cachevar_prefix=
-    if test "x$jpw__cachevar_prefix" = "x" ; then
-        jpw__cachevar_prefix=ac
-    fi
+  jpw__feature_lc=func_fork
+  jpw__cachevar_descr="the fork() function"
+  jpw__cachevar_prefix=
+  if test "x$jpw__cachevar_prefix" = "x" ; then
+    jpw__cachevar_prefix=ac
+  fi
 
-    if test "x$jpw__cachevar_descr" = "x" ; then
-        jpw__cachevar_descr="feature \"FUNC_FORK\""
-    fi
+  if test "x$jpw__cachevar_descr" = "x" ; then
+      jpw__cachevar_descr="feature \"FUNC_FORK\""
+  fi
 
-    jpw__cachevar_name="${jpw__cachevar_prefix}_cv_${jpw__feature_lc}"
-    eval jpw__cachevar_set=\$$jpw__cachevar_name
+  jpw__cachevar_name="${jpw__cachevar_prefix}_cv_${jpw__feature_lc}"
+  eval jpw__cachevar_set=\$$jpw__cachevar_name
 
-	if test "$jpw__cachevar_set" != "yes" ; then
-        as_fn_error "Error:  Failed to find $jpw__cachevar_descr.
-                      Cannot continue." "$LINENO" 5
-    fi
+  if test "$jpw__cachevar_set" != "yes" ; then
+    as_fn_error "Error:  Failed to find $jpw__cachevar_descr.
+                  Cannot continue." "$LINENO" 5
+  fi
 
 for ac_func in dup2 strerror
 do :
@@ -5786,8 +5848,8 @@ _ACEOF
 
 else
 
-    as_fn_error "Error:  Failed to find one or more
-                  required library functions.  Cannot continue." "$LINENO" 5
+  as_fn_error "Error:  Failed to find one or more
+                required library functions.  Cannot continue." "$LINENO" 5
 
 fi
 done
@@ -5870,24 +5932,24 @@ $as_echo "#define STDCXX_TR1_HEADERS /**/" >>confdefs.h
   fi
 
 
-    jpw__feature_lc=cxx_stdcxx_tr1
-    jpw__cachevar_descr="the C++ TR1 headers"
-    jpw__cachevar_prefix=
-    if test "x$jpw__cachevar_prefix" = "x" ; then
-        jpw__cachevar_prefix=ac
-    fi
+  jpw__feature_lc=cxx_stdcxx_tr1
+  jpw__cachevar_descr="the C++ TR1 headers"
+  jpw__cachevar_prefix=
+  if test "x$jpw__cachevar_prefix" = "x" ; then
+    jpw__cachevar_prefix=ac
+  fi
 
-    if test "x$jpw__cachevar_descr" = "x" ; then
-        jpw__cachevar_descr="feature \"CXX_STDCXX_TR1\""
-    fi
+  if test "x$jpw__cachevar_descr" = "x" ; then
+      jpw__cachevar_descr="feature \"CXX_STDCXX_TR1\""
+  fi
 
-    jpw__cachevar_name="${jpw__cachevar_prefix}_cv_${jpw__feature_lc}"
-    eval jpw__cachevar_set=\$$jpw__cachevar_name
+  jpw__cachevar_name="${jpw__cachevar_prefix}_cv_${jpw__feature_lc}"
+  eval jpw__cachevar_set=\$$jpw__cachevar_name
 
-	if test "$jpw__cachevar_set" != "yes" ; then
-        as_fn_error "Error:  Failed to find $jpw__cachevar_descr.
-                      Cannot continue." "$LINENO" 5
-    fi
+  if test "$jpw__cachevar_set" != "yes" ; then
+    as_fn_error "Error:  Failed to find $jpw__cachevar_descr.
+                  Cannot continue." "$LINENO" 5
+  fi
 
 
 
@@ -6353,31 +6415,32 @@ fi
 	fi
 
 
-    jpw__feature_lc=boost_program_options
-    jpw__cachevar_descr="boost::program_options"
-    jpw__cachevar_prefix=ax
-    if test "x$jpw__cachevar_prefix" = "x" ; then
-        jpw__cachevar_prefix=ac
-    fi
+  jpw__feature_lc=boost_program_options
+  jpw__cachevar_descr="boost::program_options"
+  jpw__cachevar_prefix=ax
+  if test "x$jpw__cachevar_prefix" = "x" ; then
+    jpw__cachevar_prefix=ac
+  fi
 
-    if test "x$jpw__cachevar_descr" = "x" ; then
-        jpw__cachevar_descr="feature \"BOOST_PROGRAM_OPTIONS\""
-    fi
+  if test "x$jpw__cachevar_descr" = "x" ; then
+      jpw__cachevar_descr="feature \"BOOST_PROGRAM_OPTIONS\""
+  fi
 
-    jpw__cachevar_name="${jpw__cachevar_prefix}_cv_${jpw__feature_lc}"
-    eval jpw__cachevar_set=\$$jpw__cachevar_name
+  jpw__cachevar_name="${jpw__cachevar_prefix}_cv_${jpw__feature_lc}"
+  eval jpw__cachevar_set=\$$jpw__cachevar_name
 
-	if test "$jpw__cachevar_set" != "yes" ; then
-        as_fn_error "Error:  Failed to find $jpw__cachevar_descr.
-                      Cannot continue." "$LINENO" 5
-    fi
+  if test "$jpw__cachevar_set" != "yes" ; then
+    as_fn_error "Error:  Failed to find $jpw__cachevar_descr.
+                  Cannot continue." "$LINENO" 5
+  fi
 
 
 
 # [jpw]  Nonstandard file:  "90x11-msnek4k_driverd".  It's not a
 # configuration file, but it requires @bindir@ and @sysconfdir@ to be
 # replaced.
-ac_config_files="$ac_config_files Makefile src/Makefile src/90x11-msnek4k_driverd msnek4k-driverd.spec debian/control"
+ac_config_files="$ac_config_files Makefile src/Makefile src/90x11-msnek4k_driverd"
+
 
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
@@ -6477,29 +6540,37 @@ LTLIBOBJS=$ac_ltlibobjs
 
 
 
-         if test "$prefix" = /usr; then
-           test "$sysconfdir" = '${prefix}/etc' && sysconfdir=/etc
-           test "$sharedstatedir" = '${prefix}/com' && sharedstatedir=/var
-           test "$localstatedir" = '${prefix}/var' && localstatedir=/var
-         fi
+     if test "$prefix" = /usr; then
+       test "$sysconfdir" = '${prefix}/etc' && sysconfdir=/etc
+       test "$sharedstatedir" = '${prefix}/com' && sharedstatedir=/var
+       test "$localstatedir" = '${prefix}/var' && localstatedir=/var
+     fi
+
+set -x
+                          if test -n "${REBUILD_PACKAGING_FILES}"; then
+    echo "Doing Rebuild Tasks:  $jpw__bpf_cmds"
+                            if test -n "$jpw__bpf_cmds"; then
+                              eval "$jpw__bpf_cmds"
+                            fi
+                          fi
+                          set +x
+
+     jpw__varname="ETC_X11_PATH"
+     jpw__defaultval="/etc/X11"
+
+     eval jpw__varval=\$$jpw__varname
+     if test "x$jpw__varval" = "x"; then
+       eval $jpw__varname=\$jpw__defaultval
+     fi
 
 
-         jpw__varname="ETC_X11_PATH"
-         jpw__defaultval="/etc/X11"
+     jpw__varname="XSESSIOND_PATH"
+     jpw__defaultval="${ETC_X11_PATH}/Xsession.d"
 
-         eval jpw__varval=\$$jpw__varname
-         if test "x$jpw__varval" = "x"; then
-           eval $jpw__varname=\$jpw__defaultval
-         fi
-
-
-         jpw__varname="XSESSIOND_PATH"
-         jpw__defaultval="${ETC_X11_PATH}/Xsession.d"
-
-         eval jpw__varval=\$$jpw__varname
-         if test "x$jpw__varval" = "x"; then
-           eval $jpw__varname=\$jpw__defaultval
-         fi
+     eval jpw__varval=\$$jpw__varname
+     if test "x$jpw__varval" = "x"; then
+       eval $jpw__varname=\$jpw__defaultval
+     fi
 
  if test -n "$EXEEXT"; then
   am__EXEEXT_TRUE=
@@ -7120,12 +7191,12 @@ for ac_config_target in $ac_config_targets
 do
   case $ac_config_target in
     "config.h") CONFIG_HEADERS="$CONFIG_HEADERS config.h" ;;
+    "pkgTemplates/debian.control") CONFIG_FILES="$CONFIG_FILES pkgTemplates/debian.control" ;;
+    "pkgTemplates/msnek4k-driverd.spec") CONFIG_FILES="$CONFIG_FILES pkgTemplates/msnek4k-driverd.spec" ;;
     "depfiles") CONFIG_COMMANDS="$CONFIG_COMMANDS depfiles" ;;
     "Makefile") CONFIG_FILES="$CONFIG_FILES Makefile" ;;
     "src/Makefile") CONFIG_FILES="$CONFIG_FILES src/Makefile" ;;
     "src/90x11-msnek4k_driverd") CONFIG_FILES="$CONFIG_FILES src/90x11-msnek4k_driverd" ;;
-    "msnek4k-driverd.spec") CONFIG_FILES="$CONFIG_FILES msnek4k-driverd.spec" ;;
-    "debian/control") CONFIG_FILES="$CONFIG_FILES debian/control" ;;
 
   *) as_fn_error "invalid argument: \`$ac_config_target'" "$LINENO" 5;;
   esac

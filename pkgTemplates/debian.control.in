@@ -1,3 +1,5 @@
+# -*- Debian-control -*-
+
 Source: @PACKAGE_TARNAME@
 Section: x11
 Priority: optional

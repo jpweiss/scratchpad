@@ -1,3 +1,5 @@
+# -*- Debian-control -*-
+
 Source: msnek4k-driverd
 Section: x11
 Priority: optional
