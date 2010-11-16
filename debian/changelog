@@ -1,4 +1,4 @@
-msnek4k-driverd (0.7.1-2) unstable; urgency=low
+msnek4k-driverd (0.7.2-1) unstable; urgency=low
 
   * Configfile changes
   * Packaging Improvements, including addition of an RPM specfile.

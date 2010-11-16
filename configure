@@ -2593,12 +2593,18 @@ ac_config_headers="$ac_config_headers config.h"
 
 
 
-## AX_JPW_CREATING_DEB_RPM([<deb-file-list>], [<rpm-file-list>])
+## AX_JPW_CREATING_DEB_RPM([<path-to-.in-files>],
+##                         [<deb-file-list>],
+##                         [<rpm-file-list>])
 ##
 ## Run this macro if building on Linux systems.
 ##
 ## Both arguments are optional, and should specify lists of *.in files
 ## required by the packaging software.
+##
+## <path-to-.in-files>
+##   This is the path containing the *.in files specified in the
+##   <deb-file-list> and <rpm-file-list> arguments.
 ##
 ## <deb-file-list>
 ##   The each file should contain its path, relative to $(top_srcdir).
@@ -2628,32 +2634,34 @@ ac_config_headers="$ac_config_headers config.h"
 
 # [jpw] We're building Debian and RPM packaging files.
 
-  jpw__deb_ftb="pkgTemplates/debian.control"
-  jpw__rpm_ftb="pkgTemplates/msnek4k-driverd.spec"
+  jpw__path_ftb="pkgTemplates"
+  jpw__deb_ftb="debian.control"
+  jpw__rpm_ftb="msnek4k-driverd.spec"
   jpw__bpf_cmds=""
 
 
 
   # Add the Debian packaging file(s), if there are any.
   if test "x$jpw__deb_ftb" != "x"; then
-    ac_config_files="$ac_config_files pkgTemplates/debian.control"
+    ac_config_files="$ac_config_files ${jpw__path_ftb}/${jpw__deb_ftb}"
 
-    jpw__bpf_cmds="${jpw__bpf_cmds} cp $jpw__deb_ftb debian/;"
     for jpw__deb_file in $jpw__deb_ftb; do
-      jpw__deb_file="`basename ${jpw__deb_file}`"
-      jpw__deb_file_ren="debian/${jpw__deb_file#debian.}"
-      jpw__deb_file="debian/${jpw__deb_file}"
-      if test "${jpw__deb_file}" != "${jpw__deb_file_ren}"; then
-        jpw__bpf_cmds="${jpw__bpf_cmds} mv $jpw__deb_file $jpw__deb_file_ren;"
-      fi
+      jpw__deb_file_src="${jpw__path_ftb}/${jpw__deb_file}"
+      jpw__deb_file_targ="debian/${jpw__deb_file#debian.}"
+      jpw__deb_file_cp_cmd="cp $jpw__deb_file_src $jpw__deb_file_targ;"
+      jpw__bpf_cmds="${jpw__bpf_cmds} ${jpw__deb_file_cp_cmd}"
     done
+    unset jpw__deb_file
+    unset jpw__deb_file_src
+    unset jpw__deb_file_targ
+    unset jpw__deb_file_cp_cmd
   fi
 
   # Add the RPM *.spec file(s), if there are any.
   if test "x$jpw__rpm_ftb" != "x"; then
-    ac_config_files="$ac_config_files pkgTemplates/msnek4k-driverd.spec"
+    ac_config_files="$ac_config_files ${jpw__path_ftb}/${jpw__rpm_ftb}"
 
-    jpw__bpf_cmds="${jpw__bpf_cmds} cp $jpw__rpm_ftb ./;"
+    jpw__bpf_cmds="${jpw__bpf_cmds} cp ${jpw__path_ftb}/${jpw__rpm_ftb} ./;"
   fi
 
 
@@ -6546,14 +6554,11 @@ LTLIBOBJS=$ac_ltlibobjs
        test "$localstatedir" = '${prefix}/var' && localstatedir=/var
      fi
 
-set -x
-                          if test -n "${REBUILD_PACKAGING_FILES}"; then
-    echo "Doing Rebuild Tasks:  $jpw__bpf_cmds"
+if test -n "${REBUILD_PACKAGING_FILES}"; then
                             if test -n "$jpw__bpf_cmds"; then
                               eval "$jpw__bpf_cmds"
                             fi
                           fi
-                          set +x
 
      jpw__varname="ETC_X11_PATH"
      jpw__defaultval="/etc/X11"
@@ -7191,8 +7196,8 @@ for ac_config_target in $ac_config_targets
 do
   case $ac_config_target in
     "config.h") CONFIG_HEADERS="$CONFIG_HEADERS config.h" ;;
-    "pkgTemplates/debian.control") CONFIG_FILES="$CONFIG_FILES pkgTemplates/debian.control" ;;
-    "pkgTemplates/msnek4k-driverd.spec") CONFIG_FILES="$CONFIG_FILES pkgTemplates/msnek4k-driverd.spec" ;;
+    "${jpw__path_ftb}/${jpw__deb_ftb}") CONFIG_FILES="$CONFIG_FILES ${jpw__path_ftb}/${jpw__deb_ftb}" ;;
+    "${jpw__path_ftb}/${jpw__rpm_ftb}") CONFIG_FILES="$CONFIG_FILES ${jpw__path_ftb}/${jpw__rpm_ftb}" ;;
     "depfiles") CONFIG_COMMANDS="$CONFIG_COMMANDS depfiles" ;;
     "Makefile") CONFIG_FILES="$CONFIG_FILES Makefile" ;;
     "src/Makefile") CONFIG_FILES="$CONFIG_FILES src/Makefile" ;;

@@ -14,6 +14,15 @@ autoconf_automake_files = COPYING WARRANTY INSTALL NEWS AUTHORS \
 	README ChangeLog
 nobase_doc_DATA = $(autoconf_automake_files) examples/*
 
+CLEANFILES = debian/files debian/*.debhelper.log
+
+
+##
+## Files to Package
+##
+
+
+package_template_files = *.spec pkgTemplates/*.in
 ## [jpw]  Note that we can't use debian/*, or we'll drag in files created
 ## during the package build.  And that's a Bad Thing.
 debian_build_files = debian/changelog debian/compat \
@@ -22,8 +31,8 @@ debian_build_files = debian/changelog debian/compat \
 ## [jpw]  I don't get why I need to specify the stuff in $(nobase_doc_DATA)
 ## here.  I thought that *_DATA macros added their files to the
 ## dist-manifest...
-EXTRA_DIST = $(nobase_doc_DATA) $(debian_build_files) *.spec*
-CLEANFILES = debian/files debian/*.debhelper.log
+EXTRA_DIST = $(nobase_doc_DATA) $(debian_build_files) \
+	$(package_template_files)
 
 
 ##

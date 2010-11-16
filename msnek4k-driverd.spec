@@ -22,7 +22,7 @@ BuildRequires: boost-devel >= 1.34.1
 BuildRequires: libXtst-devel
 %else
 BuildRequires: xorg-x11-proto-devel
-%fi
+%endif
 %{define requirements_are_set 1}
 %endif
 
@@ -84,13 +84,16 @@ BuildRequires: xorg-x11-proto-devel
 
 %prep
 rm -rf %{buildroot}/*
-%setup
 
+%setup
+%define xconfdir %{_sysconfdir}/X11
+%define xsessiondir %{xconfdir}/Xsession.d
 
 %build
 echo BuildRoot=%{buildroot}
+
 %configure
-#%configure $LOCALFLAGS
+
 %{__make}
 
 %postun
@@ -105,13 +108,13 @@ rm -rf %{buildroot}/*
 
 %files
     %defattr(-,root,root)
-    %doc README INSTALL WARRANTY COPYING NEWS AUTHORS ChangeLog
-    %DOC examples/*
-    %config ${_sysconfdir}/msnek4k_driverd.conf
-    %config(noreplace) ./etc/X11/msnek4k_driverd.xmodmap
+    %doc %{_docdir}/msnek4k-driverd/*
+    %config %{_sysconfdir}/msnek4k_driverd.conf
+    %config(noreplace) %{xconfdir}/msnek4k_driverd.xmodmap
     %{_bindir}/*
+    %{xsessiondir}/90x11-msnek4k_driverd
 #    %{_mandir}/*
 
 %changelog
-* Sun Jan 1 2010 John Weiss <jpwcandide@sourceforge.net> %{version}-%{release}
-- Adapted from the original package/tarball/whatever.
+* Tue Nov 16 2010 John Weiss <jpwcandide@sourceforge.net> %{version}-%{release}
+- Initial Version
