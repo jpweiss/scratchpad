@@ -26,8 +26,9 @@ m4_include([ax_jpwTools.m4])
 AX_JPW_USE_FHS_DEFAULTS
 
 # [jpw] We're building Debian and RPM packaging files.
-AX_JPW_CREATING_DEB_RPM([pkgTemplates/debian.control], 
-                        [pkgTemplates/msnek4k-driverd.spec])
+AX_JPW_CREATING_DEB_RPM([pkgTemplates],
+                        [debian.control],
+                        [msnek4k-driverd.spec])
 
 
 # [jpw] Default for XSESSIOND_PATH

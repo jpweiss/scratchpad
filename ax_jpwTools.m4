@@ -192,12 +192,18 @@ AC_DEFUN([AX_JPW_USE_FHS_DEFAULTS],
 ])
 
 
-## AX_JPW_CREATING_DEB_RPM([<deb-file-list>], [<rpm-file-list>])
+## AX_JPW_CREATING_DEB_RPM([<path-to-.in-files>],
+##                         [<deb-file-list>],
+##                         [<rpm-file-list>])
 ##
 ## Run this macro if building on Linux systems.
 ##
 ## Both arguments are optional, and should specify lists of *.in files
 ## required by the packaging software.
+##
+## <path-to-.in-files>
+##   This is the path containing the *.in files specified in the
+##   <deb-file-list> and <rpm-file-list> arguments.
 ##
 ## <deb-file-list>
 ##   The each file should contain its path, relative to $(top_srcdir).
@@ -212,8 +218,9 @@ AC_DEFUN([AX_JPW_USE_FHS_DEFAULTS],
 ##
 AC_DEFUN([AX_JPW_CREATING_DEB_RPM],
 [
-  jpw__deb_ftb="$1"
-  jpw__rpm_ftb="$2"
+  jpw__path_ftb="$1"
+  jpw__deb_ftb="$2"
+  jpw__rpm_ftb="$3"
   jpw__bpf_cmds=""
 
   AC_ARG_VAR([REBUILD_PACKAGING_FILES],
@@ -222,34 +229,32 @@ AC_DEFUN([AX_JPW_CREATING_DEB_RPM],
 
   # Add the Debian packaging file(s), if there are any.
   if test "x$jpw__deb_ftb" != "x"; then
-    AC_CONFIG_FILES([$1])
-    jpw__bpf_cmds="${jpw__bpf_cmds} cp $jpw__deb_ftb debian/;"
+    AC_CONFIG_FILES([${jpw__path_ftb}/${jpw__deb_ftb}])
     for jpw__deb_file in $jpw__deb_ftb; do
-      jpw__deb_file="`basename ${jpw__deb_file}`"
-      jpw__deb_file_ren="debian/${jpw__deb_file#debian.}"
-      jpw__deb_file="debian/${jpw__deb_file}"
-      if test "${jpw__deb_file}" != "${jpw__deb_file_ren}"; then
-        jpw__bpf_cmds="${jpw__bpf_cmds} mv $jpw__deb_file $jpw__deb_file_ren;"
-      fi
+      jpw__deb_file_src="${jpw__path_ftb}/${jpw__deb_file}"
+      jpw__deb_file_targ="debian/${jpw__deb_file#debian.}"
+      jpw__deb_file_cp_cmd="cp $jpw__deb_file_src $jpw__deb_file_targ;"
+      jpw__bpf_cmds="${jpw__bpf_cmds} ${jpw__deb_file_cp_cmd}"
     done
+    unset jpw__deb_file
+    unset jpw__deb_file_src
+    unset jpw__deb_file_targ
+    unset jpw__deb_file_cp_cmd
   fi
 
   # Add the RPM *.spec file(s), if there are any.
   if test "x$jpw__rpm_ftb" != "x"; then
-    AC_CONFIG_FILES([$2])
-    jpw__bpf_cmds="${jpw__bpf_cmds} cp $jpw__rpm_ftb ./;"
+    AC_CONFIG_FILES([${jpw__path_ftb}/${jpw__rpm_ftb}])
+    jpw__bpf_cmds="${jpw__bpf_cmds} cp ${jpw__path_ftb}/${jpw__rpm_ftb} ./;"
   fi
 
 
   # Now, add the "installation" commands, if we need them.
-  AC_CONFIG_COMMANDS_PRE([set -x
-                          if test -n "${REBUILD_PACKAGING_FILES}"; then
-    echo "Doing Rebuild Tasks:  $jpw__bpf_cmds"
+  AC_CONFIG_COMMANDS_PRE([if test -n "${REBUILD_PACKAGING_FILES}"; then
                             if test -n "$jpw__bpf_cmds"; then
                               eval "$jpw__bpf_cmds"
                             fi
-                          fi
-                          set +x])
+                          fi])
 ])
 
 
