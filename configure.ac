@@ -106,7 +106,8 @@ AX_JPW_REQUIRE([BOOST_PROGRAM_OPTIONS], [boost::program_options], [ax])
 # replaced.
 AC_CONFIG_FILES([Makefile
                  src/Makefile
-                 src/90x11-msnek4k_driverd])
+                 src/90x11-msnek4k_driverd
+                 manpage/Makefile])
 
 AC_OUTPUT
 

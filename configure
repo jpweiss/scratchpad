@@ -6447,7 +6447,7 @@ fi
 # [jpw]  Nonstandard file:  "90x11-msnek4k_driverd".  It's not a
 # configuration file, but it requires @bindir@ and @sysconfdir@ to be
 # replaced.
-ac_config_files="$ac_config_files Makefile src/Makefile src/90x11-msnek4k_driverd"
+ac_config_files="$ac_config_files Makefile src/Makefile src/90x11-msnek4k_driverd manpage/Makefile"
 
 
 cat >confcache <<\_ACEOF
@@ -7202,6 +7202,7 @@ do
     "Makefile") CONFIG_FILES="$CONFIG_FILES Makefile" ;;
     "src/Makefile") CONFIG_FILES="$CONFIG_FILES src/Makefile" ;;
     "src/90x11-msnek4k_driverd") CONFIG_FILES="$CONFIG_FILES src/90x11-msnek4k_driverd" ;;
+    "manpage/Makefile") CONFIG_FILES="$CONFIG_FILES manpage/Makefile" ;;
 
   *) as_fn_error "invalid argument: \`$ac_config_target'" "$LINENO" 5;;
   esac

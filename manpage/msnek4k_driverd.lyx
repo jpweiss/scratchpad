@@ -1,0 +1,629 @@
+#LyX 1.6.5 created this file. For more info see http://www.lyx.org/
+\lyxformat 345
+\begin_document
+\begin_header
+\textclass docbook-refentry
+\use_default_options false
+\language english
+\inputencoding auto
+\font_roman default
+\font_sans default
+\font_typewriter default
+\font_default_family default
+\font_sc false
+\font_osf false
+\font_sf_scale 100
+\font_tt_scale 100
+
+\graphics default
+\paperfontsize default
+\spacing single
+\use_hyperref false
+\papersize default
+\use_geometry false
+\use_amsmath 0
+\use_esint 0
+\cite_engine basic
+\use_bibtopic false
+\paperorientation portrait
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation indent
+\defskip medskip
+\quotes_language english
+\papercolumns 1
+\papersides 1
+\paperpagestyle default
+\tracking_changes false
+\output_changes false
+\author "" 
+\author "" 
+\end_header
+
+\begin_body
+
+\begin_layout Reference
+
+\end_layout
+
+\begin_layout Ref Title
+msnek4k_driverd
+\end_layout
+
+\begin_layout Ref ManpageSection
+1
+\end_layout
+
+\begin_layout Ref Name
+\begin_inset Flex RefName:TheName
+status open
+
+\begin_layout Plain Layout
+msnek4k_driverd
+\end_layout
+
+\end_inset
+
+ 
+\begin_inset Flex RefName:ShortDescr
+status open
+
+\begin_layout Plain Layout
+A Sample Manpage
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Ref Synopsis
+\begin_inset Flex Ref:Command
+status collapsed
+
+\begin_layout Plain Layout
+msnek4k_driverd
+\end_layout
+
+\end_inset
+
+ 
+\begin_inset Flex RefCmdSyn:OptArg
+status open
+
+\begin_layout Plain Layout
+\begin_inset Flex Ref:Option
+status collapsed
+
+\begin_layout Plain Layout
+--xyz
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\begin_inset Flex RefCmdSyn:OptionalGroup
+status open
+
+\begin_layout Plain Layout
+\begin_inset Flex RefCmdSyn:Arg
+status open
+
+\begin_layout Plain Layout
+\begin_inset Flex Ref:Option
+status collapsed
+
+\begin_layout Plain Layout
+--this
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\begin_inset Flex RefCmdSyn:Arg
+status open
+
+\begin_layout Plain Layout
+\begin_inset Flex Ref:Option
+status collapsed
+
+\begin_layout Plain Layout
+--that
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\begin_inset Flex RefCmdSyn:RequiredGroup
+status open
+
+\begin_layout Plain Layout
+\begin_inset Flex RefCmdSyn:Arg
+status open
+
+\begin_layout Plain Layout
+\begin_inset Flex Ref:Option
+status collapsed
+
+\begin_layout Plain Layout
+--must
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\begin_inset Flex RefCmdSyn:Arg
+status open
+
+\begin_layout Plain Layout
+\begin_inset Flex Ref:Option
+status collapsed
+
+\begin_layout Plain Layout
+--have
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\begin_inset Flex RefCmdSyn:OptionalGroup
+status open
+
+\begin_layout Plain Layout
+\begin_inset Flex RefCmdSyn:Arg
+status open
+
+\begin_layout Plain Layout
+\begin_inset Flex RefCmdSyn:RequiredGroup
+status open
+
+\begin_layout Plain Layout
+\begin_inset Flex RefCmdSyn:Arg
+status open
+
+\begin_layout Plain Layout
+\begin_inset Flex Ref:Option
+status collapsed
+
+\begin_layout Plain Layout
+-h
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\begin_inset Flex RefCmdSyn:Arg
+status open
+
+\begin_layout Plain Layout
+\begin_inset Flex Ref:Option
+status collapsed
+
+\begin_layout Plain Layout
+--help
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\begin_inset Flex RefCmdSyn:Arg
+status open
+
+\begin_layout Plain Layout
+\begin_inset Flex RefCmdSyn:RequiredGroup
+status open
+
+\begin_layout Plain Layout
+\begin_inset Flex RefCmdSyn:Arg
+status open
+
+\begin_layout Plain Layout
+\begin_inset Flex Ref:Option
+status collapsed
+
+\begin_layout Plain Layout
+-v
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\begin_inset Flex RefCmdSyn:Arg
+status open
+
+\begin_layout Plain Layout
+\begin_inset Flex Ref:Option
+status collapsed
+
+\begin_layout Plain Layout
+--verbose
+\end_layout
+
+\end_inset
+
+[
+\begin_inset Flex Ref:OptVal
+status collapsed
+
+\begin_layout Plain Layout
+=level
+\end_layout
+
+\end_inset
+
+]
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\begin_inset Flex RefCmdSyn:Arg
+status open
+
+\begin_layout Plain Layout
+\begin_inset Flex Ref:Option
+status collapsed
+
+\begin_layout Plain Layout
+--version
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\begin_inset Flex RefCmdSyn:Arg
+status open
+
+\begin_layout Plain Layout
+\begin_inset Flex Ref:Value
+status collapsed
+
+\begin_layout Plain Layout
+input-src
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\begin_inset Flex RefCmdSyn:RepeatingArg
+status open
+
+\begin_layout Plain Layout
+\begin_inset Flex Ref:Value
+status collapsed
+
+\begin_layout Plain Layout
+file(s)
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout RefSection
+DESCRIPTION
+\end_layout
+
+\begin_layout Standard
+descriptive stuff goes here
+\end_layout
+
+\begin_layout RefSection
+OPTIONS
+\end_layout
+
+\begin_layout Description
+\begin_inset Flex Ref:Option
+status collapsed
+
+\begin_layout Plain Layout
+--option
+\end_layout
+
+\end_inset
+
+ Its description
+\end_layout
+
+\begin_layout Description
+\begin_inset Flex Ref:Option
+status collapsed
+
+\begin_layout Plain Layout
+--opt_with_arg
+\end_layout
+
+\end_inset
+
+
+\begin_inset Flex Ref:Value
+status collapsed
+
+\begin_layout Plain Layout
+=val
+\end_layout
+
+\end_inset
+
+ An option that requires its own argument.
+\end_layout
+
+\begin_layout Description
+\begin_inset Flex Ref:Option
+status collapsed
+
+\begin_layout Plain Layout
+--verbose
+\end_layout
+
+\end_inset
+
+[
+\begin_inset Flex Ref:OptVal
+status collapsed
+
+\begin_layout Plain Layout
+=level
+\end_layout
+
+\end_inset
+
+] Makes 
+\begin_inset Flex Ref:Command
+status collapsed
+
+\begin_layout Plain Layout
+sample
+\end_layout
+
+\end_inset
+
+ more verbose.
+\end_layout
+
+\begin_layout RefSection
+EXAMPLES
+\end_layout
+
+\begin_layout Standard
+Put them here.
+\end_layout
+
+\begin_layout RefSection
+ENVIRONMENT
+\end_layout
+
+\begin_layout Standard
+Here's the description of an 
+\begin_inset Flex Ref:Envar
+status collapsed
+
+\begin_layout Plain Layout
+ENVAR
+\end_layout
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout RefSection
+FILES
+\end_layout
+
+\begin_layout Description
+\begin_inset Flex Ref:Filename
+status collapsed
+
+\begin_layout Plain Layout
+/usr/share/someplace/something
+\end_layout
+
+\end_inset
+
+ What this file is for.
+\end_layout
+
+\begin_layout RefSection
+BUGS
+\end_layout
+
+\begin_layout Standard
+List any known ones here.
+\end_layout
+
+\begin_layout RefSection
+AUTHORS and HISTORY
+\end_layout
+
+\begin_layout Standard
+List any known ones here.
+\end_layout
+
+\begin_layout RefSection
+SEE ALSO
+\end_layout
+
+\begin_layout Standard
+\begin_inset Flex Ref:SeeAlso
+status open
+
+\begin_layout Plain Layout
+\begin_inset Flex RefSA:Manpage
+status open
+
+\begin_layout Plain Layout
+ls
+\end_layout
+
+\end_inset
+
+
+\begin_inset Flex RefSA:Section
+status open
+
+\begin_layout Plain Layout
+1
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+, 
+\begin_inset Flex Ref:SeeAlso
+status open
+
+\begin_layout Plain Layout
+\begin_inset Flex RefSA:Manpage
+status open
+
+\begin_layout Plain Layout
+man
+\end_layout
+
+\end_inset
+
+
+\begin_inset Flex RefSA:Section
+status open
+
+\begin_layout Plain Layout
+1
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+, 
+\begin_inset Flex Ref:SeeAlso
+status open
+
+\begin_layout Plain Layout
+\begin_inset Flex RefSA:Manpage
+status open
+
+\begin_layout Plain Layout
+frob.conf
+\end_layout
+
+\end_inset
+
+
+\begin_inset Flex RefSA:Section
+status open
+
+\begin_layout Plain Layout
+5
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_body
+\end_document

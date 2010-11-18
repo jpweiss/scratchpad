@@ -7,7 +7,7 @@
 #############
 
 
-SUBDIRS = src
+SUBDIRS = src manpage
 
 sysconf_DATA = examples/msnek4k_driverd.conf
 autoconf_automake_files = COPYING WARRANTY INSTALL NEWS AUTHORS \

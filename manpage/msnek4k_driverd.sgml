@@ -1,0 +1,37 @@
+<!DOCTYPE article  PUBLIC "-//OASIS//DTD DocBook V4.2//EN"
+ [ <!ENTITY % output.print.png "IGNORE">
+<!ENTITY % output.print.pdf "IGNORE">
+<!ENTITY % output.print.eps "IGNORE">
+<!ENTITY % output.print.bmp "IGNORE">
+ ]>
+
+<!-- SGML file was created by LyX 1.6.5
+  See http://www.lyx.org/ for more information -->
+<article lang="en">
+<refentry>
+
+<refmeta>
+<refentrytitle>sample</refentrytitle>
+<manvolnum>1</manvolnum></refmeta><refnamediv>
+<refname>sample</refname> <refpurpose>A Sample Manpage</refpurpose>
+</refnamediv><refsynopsisdiv>
+<cmdsynopsis><command>sample</command> <arg choice="opt"><option>--xyz</option></arg><group choice="opt"><arg choice="plain"><option>--this</option></arg><arg choice="plain"><option>--that</option></arg></group><group choice="req"><arg choice="plain"><option>--must</option></arg><arg choice="plain"><option>--have</option></arg></group><group choice="opt"><arg choice="plain"><group choice="req"><arg choice="plain"><option>-h</option></arg><arg choice="plain"><option>--help</option></arg></group></arg><arg choice="plain"><group choice="req"><arg choice="plain"><option>-v</option></arg><arg choice="plain"><option>--verbose</option>[<replaceable class="option">=level</replaceable>]</arg></group></arg><arg choice="plain"><option>--version</option></arg></group><arg choice="plain"><replaceable>input-src</replaceable></arg><arg choice="plain" rep="repeat"><replaceable>file(s)</replaceable></arg></cmdsynopsis>
+<refsect1 renderas="sect1">
+<title>DESCRIPTION</title>
+<para>descriptive stuff goes here</para></refsect1><refsect1 renderas="sect1">
+<title>OPTIONS</title>
+<variablelist>
+<varlistentry><term><option>--option</option></term><listitem><para>Its description</para></listitem></varlistentry><varlistentry><term><option>--opt_with_arg</option><replaceable>=val</replaceable></term><listitem><para>An option that requires its own argument.</para></listitem></varlistentry><varlistentry><term><option>--verbose</option>[<replaceable class="option">=level</replaceable>]</term><listitem><para>Makes <command>sample</command> more verbose.</para></listitem></varlistentry></variablelist></refsect1><refsect1 renderas="sect1">
+<title>EXAMPLES</title>
+<para>Put them here.</para></refsect1><refsect1 renderas="sect1">
+<title>ENVIRONMENT</title>
+<para>Here's the description of an <envar>ENVAR</envar>.</para></refsect1><refsect1 renderas="sect1">
+<title>FILES</title>
+<variablelist>
+<varlistentry><term><filename>/usr/share/someplace/something</filename></term><listitem><para>What this file is for.</para></listitem></varlistentry></variablelist></refsect1><refsect1 renderas="sect1">
+<title>BUGS</title>
+<para>List any known ones here.</para></refsect1><refsect1 renderas="sect1">
+<title>AUTHORS and HISTORY</title>
+<para>List any known ones here.</para></refsect1><refsect1 renderas="sect1">
+<title>SEE ALSO</title>
+<para><citerefentry><refentrytitle>ls</refentrytitle><manvolnum>1</manvolnum></citerefentry>, <citerefentry><refentrytitle>man</refentrytitle><manvolnum>1</manvolnum></citerefentry>, <citerefentry><refentrytitle>frob.conf</refentrytitle><manvolnum>5</manvolnum></citerefentry></para></refsect1></refsynopsisdiv></refentry></article>
