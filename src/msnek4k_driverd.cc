@@ -1,5 +1,5 @@
 // -*- C++ -*-
-// Implementation of a userspace driver for the keys on a "MS Natural
+// Implementation of a userspace driver for the keys on a "MS Natural(C)
 // Ergonomic Keyboard 4000" not supported by Linux at present.
 //
 // Copyright (C) 2010 by John Weiss
@@ -29,6 +29,7 @@ msnek4k_driverd_cc__="$Id$";
 // Requires -lXtst
 #include <X11/extensions/XTest.h>
 
+#include <boost/lexical_cast.hpp>
 
 #include "X11Display.h"
 #include "LinuxInputDevice.h"
@@ -36,6 +37,8 @@ msnek4k_driverd_cc__="$Id$";
 #include "Daemonizer.h"
 // Requires '-lboost_program_options-mt'
 #include "ProgramOptions_Base.h"
+
+#include "config.h"
 
 
 //
@@ -49,6 +52,8 @@ using std::cout;
 using std::endl;
 using std::flush;
 
+using boost::lexical_cast;
+
 using jpwTools::X11Display;
 using jpwTools::LinuxInputDevice;
 using jpwTools::LinuxInputEvent;
@@ -57,6 +62,22 @@ using jpwTools::LinuxInputEvent;
 //
 // Static variables
 //
+
+
+namespace g__ {
+ const unsigned InactivitySleepSec=1;
+
+ const string CopyrightInfo="Copyright (C) 2010 by John Weiss\n"
+     "This program is free software; you can redistribute it and/or modify\n"
+     "it under the terms of the Artistic License.\n"
+     "\n"
+     "This program is distributed in the hope that it will be useful,\n"
+     "but WITHOUT ANY WARRANTY; without even the implied warranty of\n"
+     "MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n"
+     "\n"
+     "Sourceforge project page:\n"
+     "    \"" PACKAGE_URL "\"";
+};
 
 
 namespace ms {
@@ -115,8 +136,9 @@ public:
     //
     // ...arg in the 'add_options()' call when defining your options.
     //
-    explicit ProgramOptions(const string& theProgramName)
-        : Base_t(theProgramName)
+    explicit ProgramOptions(const string& theProgramName,
+                            const string& defaultCfgfile)
+        : Base_t(theProgramName, defaultCfgfile)
     {}
 
     // Complete the body of this function (see below).
@@ -144,25 +166,20 @@ void ProgramOptions::defineOptionsAndVariables()
     addOpts()
         ("dbg",
          bool_switch(&doNotDaemonize)->default_value(false),
-         "Run in the foreground instead of as a daemon."
+         "Run in the foreground instead of as a daemon.  No logfile is "
+         "created."
          )
         ("zoom-up,U",
          value<uint16_t>(&(zoomUp.x11Keycode)),
-         "The X11 keycode to generate when the Zoom jog is pressed up.\n"
-         "Equivalent to the \"ZoomUp.x11Keycode\" configuration file "
-         "variable."
+         "The X11 keycode to generate when the Zoom jog is pressed up."
          )
         ("zoom-down,D",
          value<uint16_t>(&(zoomDown.x11Keycode)),
          "The X11 keycode to generate when the Zoom jog is pressed down."
-         "Equivalent to the \"ZoomDown.x11Keycode\" configuration file "
-         "variable."
          )
         ("spell,S",
          value<uint16_t>(&(spell.x11Keycode)),
          "The X11 keycode to map the Spell key to."
-         "Equivalent to the \"Spell.x11Keycode\" configuration file "
-         "variable."
          )
         ;
 
@@ -173,37 +190,35 @@ void ProgramOptions::defineOptionsAndVariables()
     addCfgVars()
         ("ZoomUp.scancode",
          value<uint16_t>(&(zoomUp.scancode))->default_value(0x1A2),
-         "The raw keyboard scancode returned when the Zoom jog is "
-         "pressed up (or released from that position).")
+         "The raw keyboard scancode generated when the Zoom jog moves up.")
         ("ZoomUp.x11Keycode",
          value<uint16_t>(&(zoomUp.x11Keycode)),
-         "The X11 keycode to generate when the Zoom jog is pressed up.\n")
+         "The X11 keycode to generate when the Zoom jog is pressed up.")
         ("ZoomUp.isMouseButton",
          value<bool>(&(zoomUp.isMouseButton))->default_value(false),
-         "When set to 'true', the value specified to \"ZoomUp.x11Keycode\" "
-         "is a mouse button number.  Binds to this mouse button instead of a "
-         "keycode.")
+         "When set to 'true', treats the value specified to "
+         "\"ZoomUp.x11Keycode\" as a mouse button number.  Binds to this "
+         "mouse button instead of a keycode.")
         ("ZoomUp.isMouseWheel",
          value<bool>(&(zoomUp.isMouseWheel))->default_value(false),
-         "When set to 'true', the value specified to \"ZoomUp.x11Keycode\" "
-         "maps to a mouse wheel button.  Ignored unless "
+         "Set this to 'true' if the button number specified to "
+         "\"ZoomUp.x11Keycode\" is for a mouse wheel.  Ignored unless "
          "\"ZoomUp.isMouseButton\" is set to true.")
         ("ZoomDown.scancode",
          value<uint16_t>(&(zoomDown.scancode))->default_value(0x1A3),
-         "The raw keyboard scancode returned when the Zoom jog is "
-         "pressed down (or released from that position).")
+         "The raw keyboard scancode generated when the Zoom jog moves down.")
         ("ZoomDown.x11Keycode",
          value<uint16_t>(&(zoomDown.x11Keycode)),
-         "The X11 keycode to generate when the Zoom jog is pressed down.\n")
+         "The X11 keycode to generate when the Zoom jog moves down.")
         ("ZoomDown.isMouseButton",
          value<bool>(&(zoomDown.isMouseButton))->default_value(false),
-         "When set to 'true', the value specified to \"ZoomDown.x11Keycode\" "
-         "is a mouse button number.  Binds to this mouse button instead of a "
-         "keycode.")
+         "When set to 'true', treats the value specified to "
+         "\"ZoomUp.x11Keycode\" as a mouse button number.  Binds to this "
+         "mouse button instead of a keycode.")
         ("ZoomDown.isMouseWheel",
          value<bool>(&(zoomDown.isMouseWheel))->default_value(false),
-         "When set to 'true', the value specified to \"ZoomDown.x11Keycode\" "
-         "maps to a mouse wheel button.  Ignored unless "
+         "Set this to 'true' if the button number specified to "
+         "\"ZoomUp.x11Keycode\" is for a mouse wheel.  Ignored unless "
          "\"ZoomDown.isMouseButton\" is set to true.")
         ("Spell.scancode",
          value<uint16_t>(&(spell.scancode))->default_value(0x1B0),
@@ -221,9 +236,7 @@ void ProgramOptions::defineOptionsAndVariables()
     // Environment variable:  DISPLAY.  Will be added to the shared options.
     addEnvvars(Base_t::SHARED)
         ("display,d", value<string>(),
-         "The X11 display to run on.  Overrides the DISPLAY environment "
-         "variable.\n"
-         "This option is required if DISPLAY is not set.");
+         "Self-explanatory.  Required if not set elsewhere.");
 
     // Because of the overly-long defaults for some options, we need to use a
     // special option group, or the doc strings for the following won't
@@ -233,16 +246,15 @@ void ProgramOptions::defineOptionsAndVariables()
         ("kbd-dev,k",
          value<string>(&kbdDriverDev)->default_value("auto"),
          "The full pathname of the keyboard device, or the special string, "
-         "\"auto\".  The latter triggers autoscanning for the keyboard."
+         "\"auto\"."
          )
         ("Zoom.isMouseButton,b", bool_switch()->default_value(false),
-         "Equivalent to setting both the \"ZoomUp.isMouseButton\" and "
-         "\"ZoomDown.isMouseButton\" configuration file variables."
+         "Same as setting \"ZoomUp.isMouseButton\" and "
+         "\"ZoomDown.isMouseButton\" to the same value."
          )
         ("Zoom.isMouseWheel,w", bool_switch()->default_value(false),
-         "Equivalent to setting both the \"ZoomUp.isMouseWheel\" and "
-         "\"ZoomDown.isMouseWheel\" configuration file variables.  Ignored "
-         "if \"Zoom.isMouseButton\" isn't also set to true."
+         "Same as setting \"ZoomUp.isMouseWheel\" and "
+         "\"ZoomDown.isMouseWheel\" to the same value."
          )
         ;
     addCfgVars(otherShared_wrapper, Base_t::SHARED);
@@ -257,94 +269,10 @@ void ProgramOptions::defineOptionsAndVariables()
     logfile_descr_wrapper.add_options()
         ("logfile,l",
          value<string>(&daemonLog)->default_value(deflLogfile.c_str()),
-         "The name of the log file.  Ignored if \"--dbg\" is passed on the "
-         "commandline. "
+         "Self-explanatory.  Should contain an absolute path."
          )
         ;
     addCfgVars(logfile_descr_wrapper, Base_t::SHARED);
-
-
-    //
-    // Define the additional/verbose/enhanced configuration file
-    // documentation:
-    //
-
-    const char* kbd_dev_doc =
-        "\n"
-        "* Selecting a \"--kbd-dev <dev>\":\n"
-        "\n  \t"
-        "In the event that autoscanning fails to find the keyboard device "
-        "... or it finds the wrong device ... you will have to set the "
-        "\"kbd-dev\" option manually."
-        "\n  \t"
-        "Usually, <dev> will be under \"/dev/input\" or "
-        "\"/dev/input/by-id\".  To determine which one to use:"
-        "\n"
-        "  1. \tRun 'input-events <n>', replacing \"<n>\" with an integer "
-        "corresponding to an \"event*\" file in \"/dev/input\"."
-        "\n"
-        "  2. \tMove the 'Zoom' key on your keyboard.  If you get no "
-        "response, repeat step-1 with a different value of \"<n>\".  "
-        "Otherwise, the file \"/dev/input/event<n>\" (where \"<n>\""
-        "is the integer you used in step-1) is the device you want."
-        "\n";
-    addConfigHelpDetails(kbd_dev_doc);
-
-    const char* mouseWheelDoc =
-        "\n"
-        "* \tThe \"ZoomUp.isMouseWheel\", and \"ZoomDown.isMouseWheel\" "
-        "Settings:\n"
-        "\n  \t"
-        "Normally, holding down a mouse button generates a single event.  "
-        "Releasing it generates another, separate event.  Under X11, a "
-        "mouse wheel is mapped to two buttons, one for each wheel "
-        "direction.  The mouse wheel itself produces a button-click (or so "
-        "it appears to X11)."
-        "\n  \t"
-        "If you want to use the Zoom jog as a mouse wheel, this becomes a "
-        "problem.  Suppose you've set \"ZoomUp.isMouseWheel\", and "
-        "\"ZoomDown.isMouseWheel\" to true.  Holding the Zoom jog up or "
-        "down produces the same event as holding _down_ a mouse button, "
-        "which is the same as moving the mouse wheel _once_.\n"
-        "\n  \t"
-        "The main reason for mapping the Zoom jog to the mouse wheel "
-        "buttons, however, is to use it as an auto-rolling mouse wheel.\n"
-        "\n  \t"
-        "Setting \"ZoomUp.isMouseWheel\" and \"ZoomDown.isMouseWheel\" to "
-        "true causes holding the Zoom jog to click the mouse wheel button, "
-        "just like an actual mouse wheel does.  Releasing the Zoom jog will "
-        "be ignored.  So, holding the Zoom jog will act as if you're "
-        "spinning the mouse wheel nonstop.\n"
-        "\n  \t"
-        "Remember:  Each of these settings are ignored if the corresponding "
-        "\"Zoom*.isMouseButton\" isn't set to true."
-        "\n";
-    addConfigHelpDetails(mouseWheelDoc);
-
-    const char* keycodeDoc =
-        "\n"
-        "* \tThe \"Spell.x11Keycode\", \"ZoomUp.x11Keycode\", and "
-        "\"ZoomDown.x11Keycode\" Settings:\n"
-        "\n  \t"
-        "Note that these are not keySYMs, but keyCODEs.  X11 maps the raw "
-        "keyboard scancodes to its own set of 8-bit codes.  These are the "
-        "X11 keycodes.\n"
-        "\n  \t"
-        "You should choose a keycode (between 1 and 255) that isn't "
-        "already in use by X11.  (You *could* use the same keycode as "
-        "another key, causing this key to behave identical to that other "
-        "key.  But then, why map it at all?)  To find unused keycodes, run "
-        "the following from a terminal:\n\n"
-        "      xmodmap -pke | grep ' = *$' | less\n"
-        "\n  \t"
-        "(Picking one of the higher unused keycodes should insulate you "
-        "from future XFree86/Xorg or kernel changes.)\n"
-        "\n"
-        "  Note:  \tUsing this driver will not automagically map the Spell "
-        "& Zoom keys to a keysym for you.  You'll need to do that, "
-        "yourself, using the \"xmodmap\" utility."
-        "\n";
-    addConfigHelpDetails(keycodeDoc);
 }
 
 
@@ -375,10 +303,57 @@ bool ProgramOptions::validateParsedOptions(b_po_varmap_t& varMap)
         zoomDown.isMouseWheel = zoomUp.isMouseWheel = true;
     }
 
+    // Not an error, but a misconfiguration.  Warn the user about it.
+    if(varMap["verbose"].as<int>()) {
+        if(zoomDown.isMouseWheel && !zoomDown.isMouseButton) {
+            const char* section = ((zoomUp.isMouseWheel
+                                    && !zoomUp.isMouseButton)
+                                   ? "Zoom"
+                                   : "ZoomDown");
+            cerr << "Warning - Misconfiguration:  \""
+                 << section << ".isMouseWheel\" is meaningless when "
+                 << endl
+                 << section << ".isMouseButton\"==false."
+                 << endl
+                 << "Ignoring error (consider fixing it)..."
+                 << endl;
+        } else if(zoomUp.isMouseWheel && !zoomUp.isMouseButton) {
+            cerr << "Warning - Misconfiguration:  "
+                 << "\"ZoomUp.isMouseWheel\" is meaningless when "
+                 << endl
+                 << "ZoomUp.isMouseButton\"==false."
+                 << endl
+                 << "Ignoring error (consider fixing it)..."
+                 << endl;
+        }
+    }
+
     // Make sure that the specified keycodes are in range.
-    require8BitSize(spell.x11Keycode, "Spell.x11Keycode");
-    require8BitSize(zoomUp.x11Keycode, "ZoomUp.x11Keycode");
-    require8BitSize(zoomDown.x11Keycode, "ZoomDown.x11Keycode");
+    require8BitSize(spell.x11Keycode, "Spell.x11Keycode", true);
+    require8BitSize(zoomUp.x11Keycode, "ZoomUp.x11Keycode", true);
+    require8BitSize(zoomDown.x11Keycode, "ZoomDown.x11Keycode", true);
+
+    if( zoomDown.isMouseButton && (!zoomDown.x11Keycode ||
+                                   (zoomDown.x11Keycode > 10)) ) {
+        string errmsg("Invalid mouse button number:  "
+                      "\"ZoomDown.x11Keycode\"==");
+        errmsg += lexical_cast<string>(zoomDown.x11Keycode);
+        errmsg += "\"\n(Zoom.isMouseButton or ZoomDown.isMouseButton"
+            "erroneously set to \"true\"?";
+        errmsg += "\nMouse buttons are numbered from 1 to 10.";
+        throw boost::program_options::invalid_option_value(errmsg);
+    }
+
+    if( zoomUp.isMouseButton && (!zoomUp.x11Keycode ||
+                                 (zoomUp.x11Keycode > 10)) ) {
+        string errmsg("Invalid mouse button number:  "
+                      "\"ZoomUp.x11Keycode\"==");
+        errmsg += lexical_cast<string>(zoomUp.x11Keycode);
+        errmsg += "\"\n(Zoom.isMouseButton or ZoomUp.isMouseButton"
+            "erroneously set to \"true\"?";
+        errmsg += "\nMouse buttons are numbered from 1 to 10.";
+        throw boost::program_options::invalid_option_value(errmsg);
+    }
 
     return true;
 }
@@ -389,6 +364,33 @@ bool ProgramOptions::validateParsedOptions(b_po_varmap_t& varMap)
 //
 // General Function Definitions
 //
+
+
+void noteSignalAndIgnore(int sig)
+{
+    cerr << "Received signal: " << sig << ".  Ignoring." << endl;
+}
+
+
+void setupSignalHandling()
+{
+    struct sigaction sigspec;
+    sigspec.sa_handler = noteSignalAndIgnore;
+    sigspec.sa_flags = SA_RESTART;
+
+    // Signals that normally terminate the process:
+    sigaction(SIGHUP, &sigspec, 0);
+    sigaction(SIGINT, &sigspec, 0);
+    sigaction(SIGUSR1, &sigspec, 0);
+    sigaction(SIGUSR2, &sigspec, 0);
+    // Used only when the process creates pipes
+    sigaction(SIGPIPE, &sigspec, 0);
+
+    // Don't restart SIGALRMs
+    sigspec.sa_flags = 0;
+    // An unhandled SIGALRM will also terminate the process.
+    sigaction(SIGALRM, &sigspec, 0);
+}
 
 
 bool processKbdEvent(const LinuxInputEvent& kbdEvent,
@@ -404,48 +406,69 @@ bool processKbdEvent(const LinuxInputEvent& kbdEvent,
     ProgramOptions::KbdMapping mapping;
 
     // We just have 3 keys to map; no need to use a generic data structure.
+    // Just copy the appropriate KbdMapping object to the working variable.
     if(kbdEvent.evCode == opts.zoomUp.scancode) {
         mapping = opts.zoomUp;
     } else if(kbdEvent.evCode == opts.zoomDown.scancode) {
         mapping = opts.zoomDown;
     } else if(kbdEvent.evCode == opts.spell.scancode) {
         mapping = opts.spell;
-    } else if(verbose) {
-        cerr << "Key "
-             << (kbdEvent.evValue ? "Pressed" : "Released")
-             << ":  unknown scancode==0x"
-             << std::hex << kbdEvent.evCode << endl;
+    } else {
+        // Unknown keycode.  Ignore it.
+        if(verbose) {
+            cerr << "[" << std::fixed
+                 << (kbdEvent.evTime.tv_sec
+                     + kbdEvent.evTime.tv_usec/1000000.0)
+                 << "] Key "
+                 << (kbdEvent.evValue ? "Pressed" : "Released")
+                 << ":  unknown scancode==0x"
+                 << std::hex << kbdEvent.evCode << endl;
+        }
         return true;
     }
 
     if(verbose > 1) {
-        cout << "Key "
+        cout << "[" << std::fixed
+             << kbdEvent.evTime.tv_sec + kbdEvent.evTime.tv_usec/1000000.0
+             << "] Key "
              << (kbdEvent.evValue ? "Pressed" : "Released")
              << ":  scancode==0x"
              << std::hex << mapping.scancode << std::dec
              << (mapping.isMouseButton
-                 ? " ==> mouse button #"
-                 : " ==> X11 Key: ")
+                 ? (mapping.isMouseWheel
+                    ? " ==> mouse wheel button #"
+                    : " ==> mouse button #")
+                 : " ==> X11 keycode: ")
              << mapping.x11Keycode
              << endl;
     }
 
     // kbdEvent.evValue contains the pressed/released value.
 
-    int sentOk(0);
+    bool flushRequired(true);
+    int sentOk(1);
     if(mapping.isMouseButton) {
 
-        if(mapping.isMouseWheel && kbdEvent.evValue) {
+        if(mapping.isMouseWheel) {
             // When treating a button as a mouse wheel, ignore release events.
             // Perform both a button press and release instead.
-            sentOk = XTestFakeButtonEvent(theDisplay, mapping.x11Keycode,
-                                          true, CurrentTime);
-            // '&&'-in the previous value of "sentOk" ... _after_ the
-            // fn. call.
-            sentOk = XTestFakeButtonEvent(theDisplay, mapping.x11Keycode,
-                                          false, CurrentTime)
-                && sentOk;
-        } else if(!mapping.isMouseWheel) {
+            if(kbdEvent.evValue) {
+                sentOk = XTestFakeButtonEvent(theDisplay,
+                                              mapping.x11Keycode,
+                                              true,
+                                              CurrentTime);
+                // '&&' the previous value of "sentOk" to the return value
+                // ... _after_ the fn. call.
+                sentOk = XTestFakeButtonEvent(theDisplay,
+                                              mapping.x11Keycode,
+                                              false,
+                                              CurrentTime)
+                    && sentOk;
+            } else {
+                // When we ignore an event, don't flush.
+                flushRequired = false;
+            }
+        } else {
             sentOk = XTestFakeButtonEvent(theDisplay, mapping.x11Keycode,
                                           kbdEvent.evValue, CurrentTime);
         }
@@ -457,13 +480,29 @@ bool processKbdEvent(const LinuxInputEvent& kbdEvent,
 
     }
 
-    int flushOk = XFlush(theDisplay);
+    int flushOk(1);
+    // Since release events are ignored when using Zoom as a mouse wheel,
+    // don't flush in that case.
+    if(flushRequired) {
+        flushOk = XFlush(theDisplay);
+    }
 
     if(!sentOk) {
-        cerr << "Failed to send event for scancode==0x"
+        cerr << "Failed to send a "
+             << (mapping.isMouseButton
+                 ? (mapping.isMouseWheel
+                    ? "mouse wheel "
+                    : "mouse button ")
+                 : "key ")
+             << (kbdEvent.evValue ? "press " : "release ")
+             << "event for scancode==0x"
              << std::hex << mapping.scancode << std::dec
              << endl;
     }
+    if(verbose && !flushOk) {
+        cerr << "Failed to flush the X event buffer." << endl;
+    }
+
     return (sentOk && flushOk);
 }
 
@@ -492,6 +531,10 @@ int cxx_main(const string& myName,
         }
         jpwTools::process::daemonize(dlog_st);
     }
+
+    // The default on several signals is "terminate the process".  We don't
+    // necessarily want that.
+    setupSignalHandling();
 
     // X11/XTest Setup
     X11Display theDisplay(opts["display"].as<string>());
@@ -527,7 +570,7 @@ int cxx_main(const string& myName,
     while(true)
     {
         if(!kbdEvent.read(kbdDev)) {
-            sleep(1);
+            sleep(g__::InactivitySleepSec);
             continue;
         }
 
@@ -551,7 +594,9 @@ int main(int argc, char* argv[])
     try {
         jpwTools::Trace::tracingEnabled=true;
 
-        ProgramOptions myOpts(myName);
+        ProgramOptions myOpts(myName, (ACPATH_SYSCONFDIR "/"));
+        myOpts.setVersion(PACKAGE_VERSION, g__::CopyrightInfo);
+
         bool parsedOk = myOpts.parse(argc, argv);
         if(!parsedOk) {
             cerr << "Fatal Error:  "

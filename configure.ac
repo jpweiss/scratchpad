@@ -7,7 +7,7 @@
 
 AC_PREREQ([2.65])
 AC_INIT([msnek4k_driverd],
-        [0.7.2],
+        [0.8.0],
         [jpwcandide@sourceforge.net],
         [msnek4k-driverd],
         [http://sourceforge.net/projects/msnek4kdriverd])
@@ -52,6 +52,8 @@ AX_JPW_ARG_MAKEFILE_VAR([XSESSIOND_PATH],
                          the value of $(DESTDIR), if defined, to this path
                          automatically.])
 
+# [jpw] Add a config.h var corresponding to the 'sysconfdir' variable.
+AX_JPW_EXPORT_PATH_TO_CONFIG_H([sysconfdir])
 
 # [jpw]  Automake
 AM_INIT_AUTOMAKE([-Wall color-tests])

@@ -114,6 +114,81 @@ AC_DEFUN([AX_JPW_ARG_MAKEFILE_VAR],
 ])
 
 
+## This is an internal helper macro.  No user-servicable parts inside.
+##
+AC_DEFUN([AX_JPW_EXPORT_PATH_TO_CONFIG_H__IMPL],
+[
+  AC_CONFIG_COMMANDS_PRE(
+  [
+    # [jpw] FIXME:  The following check doesn't do what I wanted.  I wanted
+    # 'autoconf'/'autoreconf' to perform it to warn developers if they have
+    # typos or such.
+    #
+    # Unfortunately, (A) it creates a test in 'configure'; (B) 'autoconf'
+    # always evaluates it as 'false'.  I guess it doesn't know about 'prefix'
+    # variable and friends.
+    #
+    #if AS_VAR_TEST_SET([$2]); then
+      AS_VAR_COPY([jpw__path_expanded_val], [$2])
+      eval jpw__path_expanded_val=$jpw__path_expanded_val
+      AC_DEFINE_UNQUOTED([$1],
+                         ["$jpw__path_expanded_val"],
+                         [Exported from Autoconf's 'configure' script: 
+                          the "--sysconfdir" setting.])
+    #else
+    #  m4_fatal([FATAL ERROR:  Programmer-misuse.
+    #            No such Autoconf variable, "$2".])
+    #fi
+  ])
+])
+
+
+## AX_JPW_EXPORT_PATH_TO_CONFIG_H([<autoconf-variable>])
+##
+## "Exports" an Autconf variable to your C/C++ source.
+## 
+## Specifically, defines a CPP macro in "config.h".  The name of the macro
+## always begins with "ACPATH_", and is followed by "<autoconf-variable>"
+## all-uppercased.
+##
+## The macro's value is a string constant, containing the value of
+## <autoconf-variable> as set by 'configure'.
+##
+## Example:
+##
+##    # Set in configure.ac:
+##    AX_JPW_EXPORT_PATH_TO_CONFIG_H([datadir])
+##    AX_JPW_EXPORT_PATH_TO_CONFIG_H([localstatedir])
+##
+##    # How you ran 'configure':
+##    configure --prefix=/opt/custom/WhizBangPackage \
+##        --localstatedir=/opt/var
+##
+##    # How you ran 'make':
+##    make DESTDIR=$HOME/src/buildarea
+##
+## After running 'autoconf' (or 'autoreconf') 'config.h.in' will contain:
+## "#undef ACPATH_DATADIR" and "#undef ACPATH_LOCALSTATEDIR".  The second part
+## of the example creates the following two entries in "config.h":
+##   #define ACPATH_DATADIR "/opt/custom/WhizBangPackage/share"
+##   #define ACPATH_LOCALSTATEDIR "/opt/var"
+## Notice that 'datadir' is _fully_ _expanded_.
+##
+## Finally, the example's last part _has_ _no_ _effect_ _whatsoever_ on the
+## ACPATH_DATADIR and ACPATH_LOCALSTATEDIR macros in "config.h".  This is by
+## design.  The value of any "ACPATH_" macros should tell your program where
+## it was _ultimately_ _installed_, not where it was built or installed for
+## the sake of packaging.  Use them accordingly.
+##
+AC_DEFUN([AX_JPW_EXPORT_PATH_TO_CONFIG_H],
+[
+    m4_define([jpw__m4_config_h_name], [ACPATH_])
+    m4_append([jpw__m4_config_h_name], m4_toupper([$1]))
+    AX_JPW_EXPORT_PATH_TO_CONFIG_H__IMPL([jpw__m4_config_h_name],
+                                         [$1])
+])
+
+
 ## AX_JPW_CHECK_CXX_HEADERS([<header-file-list>],
 ##                          [<action-if-found>],
 ##                          [<action-if-not-found>],

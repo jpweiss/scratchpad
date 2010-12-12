@@ -2541,6 +2541,51 @@ ac_config_headers="$ac_config_headers config.h"
 
 
 
+## This is an internal helper macro.  No user-servicable parts inside.
+##
+
+
+
+## AX_JPW_EXPORT_PATH_TO_CONFIG_H([<autoconf-variable>])
+##
+## "Exports" an Autconf variable to your C/C++ source.
+##
+## Specifically, defines a CPP macro in "config.h".  The name of the macro
+## always begins with "ACPATH_", and is followed by "<autoconf-variable>"
+## all-uppercased.
+##
+## The macro's value is a string constant, containing the value of
+## <autoconf-variable> as set by 'configure'.
+##
+## Example:
+##
+##    # Set in configure.ac:
+##    AX_JPW_EXPORT_PATH_TO_CONFIG_H([datadir])
+##    AX_JPW_EXPORT_PATH_TO_CONFIG_H([localstatedir])
+##
+##    # How you ran 'configure':
+##    configure --prefix=/opt/custom/WhizBangPackage \
+##        --localstatedir=/opt/var
+##
+##    # How you ran 'make':
+##    make DESTDIR=$HOME/src/buildarea
+##
+## After running 'autoconf' (or 'autoreconf') 'config.h.in' will contain:
+## "#undef ACPATH_DATADIR" and "#undef ACPATH_LOCALSTATEDIR".  The second part
+## of the example creates the following two entries in "config.h":
+##   #define ACPATH_DATADIR "/opt/custom/WhizBangPackage/share"
+##   #define ACPATH_LOCALSTATEDIR "/opt/var"
+## Notice that 'datadir' is _fully_ _expanded_.
+##
+## Finally, the example's last part _has_ _no_ _effect_ _whatsoever_ on the
+## ACPATH_DATADIR and ACPATH_LOCALSTATEDIR macros in "config.h".  This is by
+## design.  The value of any "ACPATH_" macros should tell your program where
+## it was _ultimately_ _installed_, not where it was built or installed for
+## the sake of packaging.  Use them accordingly.
+##
+
+
+
 ## AX_JPW_CHECK_CXX_HEADERS([<header-file-list>],
 ##                          [<action-if-found>],
 ##                          [<action-if-not-found>],
@@ -2678,6 +2723,14 @@ ac_config_headers="$ac_config_headers config.h"
 
 
 
+
+
+
+
+
+
+
+# [jpw] Add a config.h var corresponding to the 'sysconfdir' variable.
 
 
 
@@ -6576,6 +6629,28 @@ if test -n "${REBUILD_PACKAGING_FILES}"; then
      if test "x$jpw__varval" = "x"; then
        eval $jpw__varname=\$jpw__defaultval
      fi
+
+
+    # [jpw] FIXME:  The following check doesn't do what I wanted.  I wanted
+    # 'autoconf'/'autoreconf' to perform it to warn developers if they have
+    # typos or such.
+    #
+    # Unfortunately, (A) it creates a test in 'configure'; (B) 'autoconf'
+    # always evaluates it as 'false'.  I guess it doesn't know about 'prefix'
+    # variable and friends.
+    #
+    #if AS_VAR_TEST_SET([sysconfdir]); then
+      jpw__path_expanded_val=$sysconfdir
+      eval jpw__path_expanded_val=$jpw__path_expanded_val
+
+cat >>confdefs.h <<_ACEOF
+#define ACPATH_SYSCONFDIR "$jpw__path_expanded_val"
+_ACEOF
+
+    #else
+    #  m4_fatal([FATAL ERROR:  Programmer-misuse.
+    #            No such Autoconf variable, "sysconfdir".])
+    #fi
 
  if test -n "$EXEEXT"; then
   am__EXEEXT_TRUE=

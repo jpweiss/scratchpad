@@ -14,12 +14,22 @@ msnek4k_mantarg = msnek4k_driverd.1
 dist_man_MANS = $(msnek4k_mantarg)
 EXTRA_DIST = $(msnek4k_mansrc) msnek4k_driverd.lyx
 
+CLEANFILES = manpage.*
+
 
 ##
 ## [jpw] Rules for building the manpage
 ##
 
-
+# Remappings for the single-quote, double-quote, right-arrow, and (R)
+# characters, in UTF-8 encoding.
 $(msnek4k_mantarg):  $(msnek4k_mansrc)
-	docbook2man $@
+	perl -p -i -e 's/&hellip;/.../g;' \
+		-e 's/\xC2\xAE/\xAE/g;' \
+		-e 's/\xE2\x80[\x9C\x9D]/"/g;' \
+		-e 's/\xE2\x80[\x98\x99]/'"'"'/g;' \
+		-e 's/\xE2\x86\x92/->/g;' \
+		-e 's/&[lr]dquo;/"/g;' \
+		-e 's/&[lr]squo;/'"'"'/g;' $?
+	docbook2man $?
 

@@ -1,5 +1,8 @@
 /* config.h.in.  Generated from configure.ac by autoheader.  */
 
+/* Exported from Autoconf's 'configure' script: the "--sysconfdir" setting. */
+#undef ACPATH_SYSCONFDIR
+
 /* define if the Boost library is available */
 #undef HAVE_BOOST
 
