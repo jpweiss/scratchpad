@@ -1,20 +1,24 @@
+msnek4k-driverd (0.8.0-1) unstable; urgency=low
+
+  * See Changelog, rev2072 onward, for the code changes.
+
+ -- John Weiss <jpwcandide@sourceforge.net>  Fri, 10 Dec 2010 22:56:28 -0500
+
 msnek4k-driverd (0.7.2-1) unstable; urgency=low
 
-  * Configfile changes
-  * Packaging Improvements, including addition of an RPM specfile.
-  * Autoconf changes/enhancements.
-  * Changes to std doc files (COPYING et. al.)
+  * See Changelog, rev2063-2070, for the code changes.
 
- -- John Weiss <candide@smtp.frontiernet.net>  Mon, 15 Nov 2010 20:28:14 -0500
+ -- John Weiss <jpwcandide@sourceforge.net>  Mon, 15 Nov 2010 20:28:14 -0500
 
 msnek4k-driverd (0.7.1-1) unstable; urgency=low
 
   * Bugfixes to toplevel Makefile.am
-
+    (Corresponds to ChangeLog rev2063.)
+  
  -- John Weiss <jpwcandide@sourceforge.net>  Thu, 11 Nov 2010 17:00:00 -0500
 
 msnek4k-driverd (0.7-1) unstable; urgency=low
 
-  * Initial release
+  * Initial release (See ChangeLog, rev2062 and earlier, for the code changes.)
 
  -- John Weiss <jpwcandide@sourceforge.net>  Thu, 11 Nov 2010 11:45:43 -0500

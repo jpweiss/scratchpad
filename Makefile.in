@@ -241,7 +241,7 @@ EXTRA_DIST = $(nobase_doc_DATA) $(debian_build_files) \
 bindistdir_base = $(abs_top_srcdir)/bindist
 bindistdir = $(distdir)-$${arch}
 top_bindistdir = $(bindistdir_base)/$(bindistdir)
-bindist_archive = $(PACKAGE_TARNAME)-$${arch}
+bindist_archive = $(PACKAGE_TARNAME)_$(PACKAGE_VERSION)-$${arch}
 all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive
 

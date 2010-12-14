@@ -2,9 +2,9 @@
 
 Name: msnek4k-driverd
 Summary: A driver for the MS Natural Ergo Keyboard 4000
-Version: 0.7.2
+Version: 0.8.0
 Release: 1
-Source: http://sourceforge.net/projects/msnek4kdriverd/files/v%{version}/%{name}-%{version}.tgz
+Source: http://sourceforge.net/projects/msnek4kdriverd/files/v%{version}/%{name}-%{version}.tar.gz
 URL: http://sourceforge.net/projects/msnek4kdriverd
 License: Artistic
 Group: X11
@@ -113,8 +113,10 @@ rm -rf %{buildroot}/*
     %config(noreplace) %{xconfdir}/msnek4k_driverd.xmodmap
     %{_bindir}/*
     %{xsessiondir}/90x11-msnek4k_driverd
-#    %{_mandir}/*
+    %{_mandir}/*
 
 %changelog
-* Tue Nov 16 2010 John Weiss <jpwcandide@sourceforge.net> %{version}-%{release}
-- Initial Version
+* Fri Dec 10 2010 John Weiss <jpwcandide@sourceforge.net> 0.8.0-1
+- See Changelog, rev2072 onward, for the code changes.
+* Tue Nov 16 2010 John Weiss <jpwcandide@sourceforge.net> 0.7.2-1
+- Initial Version  (See ChangeLog, rev2070 and earlier, for the code changes.)
