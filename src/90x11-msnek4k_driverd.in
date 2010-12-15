@@ -28,8 +28,15 @@
 ############
 
 
-DAEMON=@bindir@/msnek4k_driverd
-CFGFILE=@sysconfdir@/msnek4k_driverd.conf
+# These next two variables are only required due to the behavior of the
+# 'configure' script
+prefix="@prefix@"
+exec_prefix="@exec_prefix@"
+
+# Configuration Variables.  Feel free to modify these.
+#
+DAEMON="@bindir@/msnek4k_driverd"
+CFGFILE="@sysconfdir@/msnek4k_driverd.conf"
 
 
 ############
