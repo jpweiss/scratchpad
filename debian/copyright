@@ -10,7 +10,7 @@ Upstream Author(s):
 
 Copyright:
 
-    <Copyright (C) 2010 by John Weiss>
+    <Copyright (C) 2010-2011 by John Weiss>
 
 License:
 
@@ -26,7 +26,7 @@ can be found in `/usr/share/common-licenses/Artistic'.
 
 The Debian packaging is:
 
-    Copyright (C) 2010 John Weiss <jpwcandide@sourceforge.net>
+    Copyright (C) 2010-2011 John Weiss <jpwcandide@sourceforge.net>
 
 and is licensed under the Artistic License, 
 see `/usr/share/common-licenses/Artistic'.

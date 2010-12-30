@@ -2,7 +2,7 @@
 // Implementation of a userspace driver for the keys on a "MS Natural(C)
 // Ergonomic Keyboard 4000" not supported by Linux at present.
 //
-// Copyright (C) 2010 by John Weiss
+// Copyright (C) 2010-2011 by John Weiss
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the Artistic License, included as the file
 // "LICENSE" in the source code archive.
@@ -67,7 +67,7 @@ using jpwTools::LinuxInputEvent;
 namespace g__ {
  const unsigned InactivitySleepSec=1;
 
- const string CopyrightInfo="Copyright (C) 2010 by John Weiss\n"
+ const string CopyrightInfo="Copyright (C) 2010-2011 by John Weiss\n"
      "This program is free software; you can redistribute it and/or modify\n"
      "it under the terms of the Artistic License.\n"
      "\n"
