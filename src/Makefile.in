@@ -23,7 +23,7 @@
 # optimization flags, since these usually differ from platform to platform.
 #
 #
-# Copyright (C) 2010 by John P. Weiss
+# Copyright (C) 2010-2011 by John P. Weiss
 #
 # This package is free software; you can redistribute it and/or modify
 # it under the terms of the Artistic License, included as the file
@@ -36,7 +36,7 @@
 # You should have received a copy of the file "LICENSE", containing
 # the License John Weiss originally placed this program under.
 #
-# $Id: make.syscfg.mk 2062 2010-11-10 18:52:49Z candide $
+# $Id: make.syscfg.mk 2088 2010-12-30 23:15:18Z candide $
 ##########
 #
 # Architecture.  Not used by all compilers.
