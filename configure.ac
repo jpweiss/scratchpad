@@ -7,7 +7,7 @@
 
 AC_PREREQ([2.65])
 AC_INIT([msnek4k_driverd],
-        [0.8.0],
+        [0.8.1],
         [jpwcandide@sourceforge.net],
         [msnek4k-driverd],
         [http://sourceforge.net/projects/msnek4kdriverd])

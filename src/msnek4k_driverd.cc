@@ -23,6 +23,11 @@ msnek4k_driverd_cc__="$Id$";
 #include <iostream>
 #include <csignal>
 
+// Required by the code that drops root privileges.
+#include <unistd.h>
+#include <cstring>
+#include <cerrno>
+
 // Required for keypress/release parsing.
 #include <sys/time.h>
 
@@ -366,6 +371,56 @@ bool ProgramOptions::validateParsedOptions(b_po_varmap_t& varMap)
 //
 
 
+void dropRootPrivileges(unsigned verbose=0)
+{
+    // Drop root privileges by changing the effective uid/gid to the real
+    // uid/gid.
+    const char* const c_errmsg1="FATAL ERROR:  Changing ";
+    const char* const c_errmsg2=" to ";
+    const char* const c_errmsg3=" failed!\nReason:  \"";
+    const char* const c_errmsg4="\"\n\nThis is a potential security hole.\n"
+        "Aborting Immediately.";
+
+    uid_t real_uid(getuid());
+    if(verbose) {
+        cout << "Dropping to UID==" << real_uid << endl;
+        if(verbose > 1) {
+            cout << "(from UID " << geteuid() << ")" << endl;
+        }
+    }
+    int droprootStat = seteuid(real_uid);
+    if(droprootStat < 0) {
+        string errmsg(c_errmsg1);
+        errmsg += "User ID";
+        errmsg += c_errmsg2;
+        errmsg += lexical_cast<uid_t>(real_uid);
+        errmsg += c_errmsg3;
+        errmsg += strerror(errno);
+        errmsg += c_errmsg4;
+        exit(9);
+    }
+
+    gid_t real_gid(getgid());
+    if(verbose) {
+        cout << "Dropping to GID==" << real_gid << endl;
+        if(verbose > 1) {
+            cout << "(from GID " << getegid() << ")" << endl;
+        }
+    }
+    droprootStat = setegid(real_gid);
+    if(droprootStat < 0) {
+        string errmsg(c_errmsg1);
+        errmsg += "Group ID";
+        errmsg += c_errmsg2;
+        errmsg += lexical_cast<gid_t>(real_gid);
+        errmsg += c_errmsg3;
+        errmsg += strerror(errno);
+        errmsg += c_errmsg4;
+        exit(9);
+    }
+}
+
+
 void noteSignalAndIgnore(int sig)
 {
     cerr << "Received signal: " << sig << ".  Ignoring." << endl;
@@ -563,6 +618,9 @@ int cxx_main(const string& myName,
     LinuxInputDevice kbdDev(opts.kbdDriverDev, ms::vendorId,
                             ms::nek4kProductId, ms::nek4kName,
                             required, forbidden);
+
+    // At this point, we no longer need to be root.
+    dropRootPrivileges(opts["verbose"].as<int>());
 
     // The Main Loop
 

@@ -40,8 +40,9 @@ EXTRA_DIST = $(nobase_doc_DATA) $(debian_build_files) \
 ##
 
 
-bindistdir_base=$(abs_top_srcdir)/bindist
-bindistdir=$(distdir)-$${arch}
+rr__tar = $(am__tar) --owner=root --group=root
+bindistdir_base = $(abs_top_srcdir)/bindist
+bindistdir = $(distdir)-$${arch}
 top_bindistdir = $(bindistdir_base)/$(bindistdir)
 bindist_archive = $(PACKAGE_TARNAME)_$(PACKAGE_VERSION)-$${arch}
 
@@ -59,7 +60,7 @@ bindist: bindist-install-recurse
 	arch="bin_`uname -m`" && \
 		cd $(top_bindistdir) && \
 		tardir=. && \
-		$(am__tar) | \
+		$(rr__tar) | \
 			GZIP=$(GZIP_ENV) \
 				gzip -c >$(bindistdir_base)/$(bindist_archive).tar.gz
 
@@ -67,5 +68,5 @@ bindist-bzip2: bindist-install-recurse
 	arch="bin_`uname -m`" && \
 		cd $(top_bindistdir) && \
 		tardir=. && \
-		$(am__tar) | \
+		$(rr__tar) | \
 			bzip2 -9 -c >$(bindistdir_base)/$(bindist_archive).tar.bz2

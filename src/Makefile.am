@@ -42,3 +42,13 @@ EXTRA_DIST = 90x11-msnek4k_driverd.in
 ##
 include $(top_srcdir)/make.syscfg.mk
 
+
+
+##
+## [jpw] Supplemental Buld Rules
+##
+
+
+# Make the binary setuid-root.
+install-exec-hook:
+	chmod 6711 $(DESTDIR)$(bindir)/msnek4k_driverd
