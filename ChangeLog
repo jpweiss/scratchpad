@@ -1,3 +1,51 @@
+2010-12-31 20:18  John Weiss
+
+	* [r2094] ChangeLog:
+	  - Updated the ChangeLog with this message.
+
+2010-12-31 20:18  John Weiss
+
+	* [r2093] Makefile.am, Makefile.in, TODO, configure, configure.ac,
+	  debian/changelog, msnek4k-driverd.spec,
+	  pkgTemplates/msnek4k-driverd.spec.in, src/Makefile.am,
+	  src/Makefile.in, src/msnek4k_driverd.cc:
+	  - Preparation for v0.8.1 release.
+	  - Updated:  Autoconf files.
+	  - New:
+	    + Binary is now installed suid-root.
+	    + Binary drops root privileges when no longer needed.
+	    + Rudimentary tests performed.
+2010-12-30 23:18  John Weiss
+
+	* [r2089] configure, src/Makefile.in:
+	  - Updating copyright years.
+
+2010-12-30 23:15  John Weiss
+
+	* [r2088] ax_jpwTools.m4, debian/copyright, make.syscfg.mk,
+	  src/90x11-msnek4k_driverd.in, src/LinuxInputDevice.cc,
+	  src/LinuxInputDevice.h, src/LinuxInputEvent.cc,
+	  src/LinuxInputEvent.h, src/X11Display.h, src/msnek4k_driverd.cc:
+	  - Updating copyright years.
+
+2010-12-15 23:36  John Weiss
+
+	* [r2082] examples/msnek4k_driverd.conf,
+	  src/90x11-msnek4k_driverd.in:
+	  - Minor bugfixes.
+
+2010-12-14 22:25  John Weiss
+
+	* [r2081] ChangeLog, Makefile.am, Makefile.in, configure,
+	  debian/changelog, manpage/Makefile.am, manpage/Makefile.in,
+	  msnek4k-driverd.spec, pkgTemplates/msnek4k-driverd.spec.in:
+	  - Updated the ChangeLog with this message.
+	  - Packaging files updated:
+	    + RPM specfile(s)
+	    + DEB changelog
+	    + The bindist package name now includes the version number.
+	  - Autoconf updates.
+
 2010-12-14 17:30  John Weiss
 	* [r2081] ChangeLog, Makefile.am, Makefile.in, configure,
 	  debian/changelog, manpage/Makefile.am, manpage/Makefile.in,
