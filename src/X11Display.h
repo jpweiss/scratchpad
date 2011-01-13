@@ -43,6 +43,10 @@ namespace jpwTools {
  {
      Display* m__x11DisplayPtr;
  public:
+     /**
+      * Exception class thrown when the \c X11Display(const string&) c'tor
+      * fails.
+      */
      struct FailToOpen : public std::runtime_error
      {
          explicit FailToOpen(const string& how)
@@ -51,7 +55,16 @@ namespace jpwTools {
      };
 
 
-     // C'tor
+     /// Constructor
+     /**
+      * \param displayName
+      * The X11 display to open.
+      * \throw FailToOpen
+      * \a displayName is not a vaild X11 display, or the specified display
+      * cannot be opened.
+      *
+      * \see XOpenDisplay (const char*)
+      */
      explicit X11Display(const string& displayName)
          : m__x11DisplayPtr(XOpenDisplay(displayName.c_str()))
      {
@@ -63,7 +76,12 @@ namespace jpwTools {
          }
      }
 
-     // D'tor
+     /// Destructor
+     /**
+      * Closes the X11 display encapsulated by this class.
+      *
+      * \see XCloseDisplay (Display*)
+      */
      ~X11Display()
      {
          if(m__x11DisplayPtr) {
@@ -71,7 +89,12 @@ namespace jpwTools {
          }
      }
 
-     // Allow access via implicit cast.
+     /// Allow access via implicit cast.
+     /**
+      * The X11 API calls all require a \c Display* to the X11 display to
+      * manipulate.  This cast operator allows you to use instances of \c
+      * X11Display in place of the \c Display* transparently.
+      */
      operator Display*() { return m__x11DisplayPtr; }
  };
 

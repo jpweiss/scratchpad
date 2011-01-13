@@ -103,6 +103,14 @@ AX_BOOST_PROGRAM_OPTIONS
 AX_JPW_REQUIRE([BOOST_PROGRAM_OPTIONS], [boost::program_options], [ax])
 
 
+# [jpw] Doxygen support
+DX_DOXYGEN_FEATURE(ON)
+DX_HTML_FEATURE(ON)
+DX_PS_FEATURE(OFF)
+DX_PDF_FEATURE(OFF)
+DX_INIT_DOXYGEN([msnek4k-driverd])
+
+
 # [jpw]  Nonstandard file:  "90x11-msnek4k_driverd".  It's not a
 # configuration file, but it requires @bindir@ and @sysconfdir@ to be
 # replaced.

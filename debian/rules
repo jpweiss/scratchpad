@@ -17,3 +17,7 @@
 
 clean:
 	-test -r Makefile && $(MAKE) distclean
+
+override_dh_fixperms:
+	dh_fixperms
+	chmod 6711 debian/msnek4k-driverd/usr/bin/msnek4k_driverd

@@ -36,6 +36,14 @@ EXTRA_DIST = $(nobase_doc_DATA) $(debian_build_files) \
 
 
 ##
+## [jpw]  Doxygen Support
+##
+
+
+include $(top_srcdir)/doxygen.am
+
+
+##
 ## [jpw] Rules & vars for binary-only distribution.
 ##
 

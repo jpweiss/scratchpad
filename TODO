@@ -1,3 +1,6 @@
 * Other Tasks:
   - Doxycomments
+  - (Re)Start the daemon from a package postinstall script.
+  - Get rid of DiabLogStream_Base::use_type.  Maybe use one or two boolean
+    flags.
   - Use 'komparator' to sync the directories.
