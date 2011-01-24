@@ -3,7 +3,7 @@
 .\" <http://shell.ipoline.com/~elmert/comp/docbook2X/> 
 .\" Please send any bug reports, improvements, comments, patches, 
 .\" etc. to Steve Cheng <steve@ggi-project.org>.
-.TH "MSNEK4K_DRIVERD" "1" "10 December 2010" "" ""
+.TH "MSNEK4K_DRIVERD" "1" "22 January 2011" "" ""
 
 .SH NAME
 msnek4k_driverd \- Driver for the MS Natural® Ergonomic Keyboard 4000
@@ -40,16 +40,14 @@ This is where "keysyms" come in. X11 contains a user-configurable mapping from c
 A "scancode" is an integer number that the \fBkeyboard itself\fR sends to the OS. The Linux kernel (not X11) may change these raw codes, but usually it passes them along unchanged. (The Linux kernel, incidentally, converts the scancodes to the keycodes used by X11 and most other programs.) In the case of the Microsoft Natural® Ergonomic Keyboard 4000, Linux \fBhas to\fR change the raw scancodes for certain keys from a number above 255 to an unused scancode in the range from 0 to 255. (Linux can't handle raw scancodes above 255.)
 .SS "QUICKSTART"
 .PP
-If you installed \fBmsnek4k_driverd\fR from a "\&.deb" or "\&.rpm" package, you don't have very much to do (as long as your favorite Linux distribution didn't repackage it in a weird way). \fBmsnek4k_driverd\fR will start when you (re)log in to KDE, GNOME, Xfce, or whatever other desktop you're using. It comes preconfigured with sane defaults. The EXAMPLES section below has another fairly common configuration (as well as some uncommon ones).
+If you installed \fBmsnek4k_driverd\fR from a "\&.deb" or "\&.rpm" package, the package's built-in postinstall script will start it for you. It comes preconfigured with sane defaults. The EXAMPLES section below has another fairly common configuration (as well as some uncommon ones).
 .PP
-(N.\~B.: For the moment, "\&.deb" and "\&.rpm" packages don't start \fBmsnek4k_driverd\fR after installation. You'll need to do that manually by running "sudo\~sh\~/etc/X11/Xsession.d/90x11-msnek4k_driverd" from the commandline.)
-.PP
-Merely running \fBmsnek4k_driverd\fR will not automagically map the "Zoom"-Rocker and "Spell" key to keysyms. You'll need to do that, yourself, either by using the "\fBxmodmap\fR" utility or by customizing your "msnek4k_driverd.xmodmap" file (see the FILES section below). Lastly, you'll obviously need to fire up your KDE/GNOME/whatever settings tool to create those keyboard shortcuts for the "Zoom"-Rocker and the "Spell" key.
+Merely running \fBmsnek4k_driverd\fR will not automagically map the "Zoom"-Rocker and "Spell" key to keysyms. You'll need to do that, yourself, either by using the "\fBxmodmap\fR" utility or by customizing one of the "msnek4k_driverd.xmodmap" files (see the FILES section below). Lastly, you'll obviously need to fire up your KDE/GNOME/whatever settings tool to create those keyboard shortcuts for the "Zoom"-Rocker and the "Spell" key.
 .SH "OPTIONS"
 .PP
 You generally won't need to deal with the commandline options. They're provided to allow you tweak a setting, testing it before modifying the configuration file. For most people, the defaults in the configuration file should work fine.
 .PP
-Many of these options correspond to a configuration file setting which the former overrides. Those options are not fully documented in this section. See the description of the corresponding configuration file settings, instead.
+Many of these options correspond to a configuration file setting which the option overrides. Those options are not fully documented in this section. See the description of the corresponding configuration file settings, instead.
 .TP
 \fB--help\fR
 Prints the usage message
@@ -127,6 +125,8 @@ As noted in the previous section, there are commandline options corresponding to
 \fBmsnek4k_driverd\fR requires a configuration file (at least at present). If you installed from a "\&.deb" or "\&.rpm" package, the default configuration file is (most likely) "/etc/msnek4k_driverd.conf". (See the "FILES" section for more details.) Use the "\fB--config\fR" commandline option to specify an alternate configuration file.
 .PP
 The configuration file follows a rather standard syntax. Settings have the form: "\fBsetting\fR\~=\~\fIvalue\fR". Any whitespace surrounding the '=' delimiter is ignored. (It isn't required, either). Every "\fIvalue\fR" must begin with a non-whitespace character (after that, a "\fIvalue\fR" can contain as much whitespace as you wish). The "\fIvalue\fR" ends at the end of the line or the first '#' character. The '#' character marks the beginning of a comment. Comments end at the end of the line. A comment can start anyplace in the line, not just at the beginning. Unfortunately, this also means that a '#' character can never appear in a "\fIvalue\fR".
+.PP
+After modifying the configuration file, you can use "SIGUSR1" to reread it without restarting \fBmsnek4k_driverd\fR\&. This only works with the configuration file that \fBmsnek4k_driverd\fR read when it started, however. See the "SIGNALS" section for more details.
 .PP
 The valid configuration file settings are as follows:
 
@@ -260,7 +260,7 @@ Normally, holding down a mouse button generates a single event. Releasing it gen
 .PP
 Setting "\fBZoom.isMouseWheel\fR\~=\~true" causes \fBmsnek4k_driverd\fR to generate a mouse \fBclick,\fR rather than a separate "mouse-button\~pressed" or "mouse-button\~released" event. When held in the up (or down) position, the "Zoom"-Rocker will produce repeated clicks, acting as if you're spinning the mouse wheel nonstop.
 .PP
-Remember: "\fBZoom.isMouseWheel\fR is ignored unless "\fBZoom.isMouseButton\fR\~=\~true".
+Remember: \fBZoom.isMouseWheel\fR is ignored unless "\fBZoom.isMouseButton\fR\~=\~true".
 
 .nf
 .fi
@@ -291,6 +291,40 @@ You will almost never need to use these two settings. They're only provided for 
 There is only one environment variable that \fBmsnek4k_driverd\fR uses: \fBDISPLAY\fR\&. The \fBdisplay\fR configuration file setting overrides it, while the \fB--display\fR commandline option overrides them both.
 .PP
 Feel free to modify \fBDISPLAY\fR in lieu of using the \fBdisplay\fR configuration file setting or the \fB--display\fR commandline option to change which X11 display \fBmsnek4k_driverd\fR sends keyboard (and/or mouse) events to.
+.SH "SIGNALS"
+.PP
+\fBmsnek4k_driverd\fR handles the following signals specially:
+.TP 0.2i
+\(bu
+SIGUSR1
+
+When \fBmsnek4k_driverd\fR receives this signal, it rereads the configuration file that it was started with. This allows you to modify your configuration file and have the changes take effect immediately. Simply run the following from a terminal: 
+
+.nf
+\~\~\~\~me@myhost:$ sudo\~pkill\~-SIGUSR1\~msnek4k_driverd
+.fi
+
+If you don't have \fBpkill\fR installed on your system, you can send a "SIGUSR1" to \fBmsnek4k_driverd\fR using the following set of commands: 
+
+.nf
+\~\~\~\~me@myhost:$ msnek4k_pid=`ps\~-ew\~|\~grep\~-v\~grep\~|\~\\
+\~\~\~\~\~\~\~\~grep\~msnek4k_driverd\~|\~awk\~\&'{print\~$1}'`
+\~\~\~\~me@myhost:$ sudo\~kill\~-SIGUSR1\~$msnek4k_pid
+.fi
+.TP 0.2i
+\(bu
+SIGHUP
+.TP 0.2i
+\(bu
+SIGINT
+.TP 0.2i
+\(bu
+SIGUSR2
+.TP 0.2i
+\(bu
+SIGPIPE
+
+\fBmsnek4k_driverd\fR ignores these 4 signals.
 .SH "FILES"
 .TP
 \fB\fI/etc/msnek4k_driverd.conf\fB\fR
@@ -366,28 +400,20 @@ Change or add the settings shown below to the following:
 \~\~\~\~Zoom.isMouseWheel = true
 .fi
 .PP
-Save the file and restart \fBmsnek4k_driverd\fR\&. Now, you can certainly restart \fBmsnek4k_driverd\fR by logging out of and logging back into KDE/GNOME/Xfce/etc. However, you can save yourself from the logout-login headache by running these commands in a terminal: 
+Save the file and reload the configuration file by running the following command in the terminal:
 
 .nf
-\~\~\~\~me@myhost:$ sudo\~kill\~`ps\~-ew\~|\~grep\~msnek4k_driverd\~|\~\\
-\~\~\~\~\~\~\~\~\~grep\~-v\~grep\~|\~awk\~\&'{print\~$1}'`
-\~\~\~\~me@myhost:$ ps\~-ew\~|\~grep\~msnek4k_driverd
-\~\~\~\~me@myhost:$ sudo\~sh\~/etc/X11/Xsession.d/90x11-msnek4k_driverd
-\~\~\~\~me@myhost:$ ps\~-ew\~|\~grep\~msnek4k_driverd
+\~\~\~\~me@myhost:$ sudo\~pkill\~-SIGUSR1\~msnek4k_driverd
 .fi
 .PP
-The second and fourth commands are just sanity checks, to make sure that you successfully killed, then started \fBmsnek4k_driverd\fR\&. You can omit them if you wish. 
-.PP
-If you have \fBpgrep\fR and \fBpkill\fR installed on your Linux system, you could run the following commands and save yourself some typing:
+If you don't have \fBpkill\fR installed on your system, you'll have to do a little bit more typing: 
 
 .nf
-\~\~\~\~me@myhost:$ sudo\~pkill\~msnek4k_driverd
-\~\~\~\~me@myhost:$ pgrep msnek4k_driverd
-\~\~\~\~me@myhost:$ sudo\~sh\~/etc/X11/Xsession.d/90x11-msnek4k_driverd
-\~\~\~\~me@myhost:$ pgrep\~msnek4k_driverd
+\~\~\~\~me@myhost:$ sudo\~kill\~-SIGUSR1\~`ps\~-ew\~|\~grep\~-v\~grep\~|\~\\
+\~\~\~\~\~\~\~\~grep\~msnek4k_driverd\~|\~awk\~\&'{print\~$1}'`
 .fi
 .PP
-After restarting, the "Zoom"-Rocker should now act like the mouse-wheel.
+After \fBmsnek4k_driverd\fR reloads the configuration file, the "Zoom"-Rocker should now act like the mouse-wheel.
 .PP
 \~
 .PP
@@ -403,7 +429,7 @@ The next example is a tad contrived, but potentially useful for artists or anyon
 .PP
 (The last line isn't strictly required. You could also delete or comment out any existing lines containing the \fBZoom.isMouseWheel\fR setting.)
 .PP
-Save the modified "\fI/etc/msnek4k_driverd.conf\fR" and restart \fBmsnek4k_driverd\fR using the steps from the previous example. 
+Save the modified "\fI/etc/msnek4k_driverd.conf\fR" and send "SIGUSR1" to \fBmsnek4k_driverd\fR using the steps from the previous example.
 .PP
 Holding "Zoom"-Rocker up or down will now be the same as pressing and holding the left or right mouse button, respectively. Releasing the "Zoom"-Rocker acts like releasing either button.
 .PP
@@ -426,7 +452,8 @@ One could create a "\fI$HOME/.msnek4k_driverd.xmodmap\fR" file containing these 
 \~\~\~\~keycode 183 = XF86RockerUp NoSymbol
 \~\~\~\~keycode 184 = XF86RockerDown NoSymbol
 .fi
-Don't forget to run "xmodmap\~$HOME/.msnek4k_driverd.xmodmap" to make these changes take effect. (Notice that you don't need to restart \fBmsnek4k_driverd\fR if you didn't change "\fI/etc/msnek4k_driverd.conf\fR".)
+.PP
+Don't forget to run "xmodmap\~$HOME/.msnek4k_driverd.xmodmap" to make these changes take effect. (Notice that you don't need to send "SIGUSR1" to \fBmsnek4k_driverd\fR if you didn't change "\fI/etc/msnek4k_driverd.conf\fR".)
 .PP
 Next, run \fBxev\fR in a terminal, move the "Zoom"-Rocker up, then down, then hit the "Spell" key. You should see output in the terminal like this: 
 

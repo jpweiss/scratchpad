@@ -26,8 +26,10 @@ m4_include([ax_jpwTools.m4])
 AX_JPW_USE_FHS_DEFAULTS
 
 # [jpw] We're building Debian and RPM packaging files.
+#       Remember:  Run 'REBUILD_PACKAGING_FILES=y ./configure' to "reinstall"
+#                  the generated packaging files.
 AX_JPW_CREATING_DEB_RPM([pkgTemplates],
-                        [debian.control],
+                        [debian.control debian.postinst],
                         [msnek4k-driverd.spec])
 
 

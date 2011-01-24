@@ -276,6 +276,9 @@ AC_DEFUN([AX_JPW_USE_FHS_DEFAULTS],
 ## Both arguments are optional, and should specify lists of *.in files
 ## required by the packaging software.
 ##
+## `configure' will also "install" the generated files if you set the envvar
+## REBUILD_PACKAGING_FILES to any nonempty string.
+##
 ## <path-to-.in-files>
 ##   This is the path containing the *.in files specified in the
 ##   <deb-file-list> and <rpm-file-list> arguments.
@@ -297,6 +300,7 @@ AC_DEFUN([AX_JPW_CREATING_DEB_RPM],
   jpw__deb_ftb="$2"
   jpw__rpm_ftb="$3"
   jpw__bpf_cmds=""
+  jpw__bpf_cflst=""
 
   AC_ARG_VAR([REBUILD_PACKAGING_FILES],
              [Used by maintainers to recreate static files.  Safe
@@ -304,9 +308,9 @@ AC_DEFUN([AX_JPW_CREATING_DEB_RPM],
 
   # Add the Debian packaging file(s), if there are any.
   if test "x$jpw__deb_ftb" != "x"; then
-    AC_CONFIG_FILES([${jpw__path_ftb}/${jpw__deb_ftb}])
     for jpw__deb_file in $jpw__deb_ftb; do
       jpw__deb_file_src="${jpw__path_ftb}/${jpw__deb_file}"
+      jpw__bpf_cflst="${jpw__bpf_cflst} ${jpw__deb_file_src}"
       jpw__deb_file_targ="debian/${jpw__deb_file#debian.}"
       jpw__deb_file_cp_cmd="cp $jpw__deb_file_src $jpw__deb_file_targ;"
       jpw__bpf_cmds="${jpw__bpf_cmds} ${jpw__deb_file_cp_cmd}"
@@ -319,12 +323,18 @@ AC_DEFUN([AX_JPW_CREATING_DEB_RPM],
 
   # Add the RPM *.spec file(s), if there are any.
   if test "x$jpw__rpm_ftb" != "x"; then
-    AC_CONFIG_FILES([${jpw__path_ftb}/${jpw__rpm_ftb}])
-    jpw__bpf_cmds="${jpw__bpf_cmds} cp ${jpw__path_ftb}/${jpw__rpm_ftb} ./;"
+    for jpw__rpm_file in $jpw__rpm_ftb; do
+      jpw__rpm_file_src="${jpw__path_ftb}/${jpw__rpm_file}"
+      jpw__bpf_cflst="${jpw__bpf_cflst} ${jpw__rpm_file_src}"
+      jpw__bpf_cmds="${jpw__bpf_cmds} cp ${jpw__path_ftb}/${jpw__rpm_ftb} ./;"
+    done
+    unset jpw__rpm_file
+    unset jpw__rpm_file_src
   fi
 
 
   # Now, add the "installation" commands, if we need them.
+  AC_CONFIG_FILES([${jpw__bpf_cflst}])
   AC_CONFIG_COMMANDS_PRE([if test -n "${REBUILD_PACKAGING_FILES}"; then
                             if test -n "$jpw__bpf_cmds"; then
                               eval "$jpw__bpf_cmds"

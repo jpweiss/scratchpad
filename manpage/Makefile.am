@@ -9,11 +9,10 @@
 
 ## [jpw]  Define targets and sources:
 ##
-msnek4k_mansrc = msnek4k_driverd.sgml \
-	msnek4k_driverd.lyx docbook-refentry.layout
+msnek4k_mansrc = msnek4k_driverd.sgml
 msnek4k_mantarg = msnek4k_driverd.1
 dist_man_MANS = $(msnek4k_mantarg)
-EXTRA_DIST = $(msnek4k_mansrc)
+EXTRA_DIST = $(msnek4k_mansrc) msnek4k_driverd.lyx docbook-refentry.layout
 
 CLEANFILES = manpage.*
 

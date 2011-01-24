@@ -72,6 +72,8 @@ using jpwTools::LinuxInputEvent;
 namespace g__ {
  const unsigned InactivitySleepSec=1;
 
+ const short ReparseCheckCount=60;
+
  const string CopyrightInfo="Copyright (C) 2010-2011 by John Weiss\n"
      "This program is free software; you can redistribute it and/or modify\n"
      "it under the terms of the Artistic License.\n"
@@ -104,9 +106,10 @@ namespace ms {
 //
 
 
-class ProgramOptions : public jpwTools::boost_helpers::ProgramOptions_Base
+class ProgramOptions
+    : public jpwTools::boost_helpers::ReloadableProgramOptions_Base
 {
-    typedef jpwTools::boost_helpers::ProgramOptions_Base Base_t;
+    typedef jpwTools::boost_helpers::ReloadableProgramOptions_Base Base_t;
 
 public:
     struct KbdMapping
@@ -139,11 +142,12 @@ public:
     //
     //     value<T>(m__myMemberVar)->default_value(...)
     //
-    // ...arg in the 'add_options()' call when defining your options.
+    // ...arg in the 'add_options()' call when defining your options to set a
+    // member's default value.
     //
     explicit ProgramOptions(const string& theProgramName,
                             const string& defaultCfgfile)
-        : Base_t(theProgramName, defaultCfgfile)
+        : Base_t(SIGUSR1, theProgramName, defaultCfgfile)
     {}
 
     // Complete the body of this function (see below).
@@ -436,10 +440,10 @@ void setupSignalHandling()
     // Signals that normally terminate the process:
     sigaction(SIGHUP, &sigspec, 0);
     sigaction(SIGINT, &sigspec, 0);
-    sigaction(SIGUSR1, &sigspec, 0);
     sigaction(SIGUSR2, &sigspec, 0);
     // Used only when the process creates pipes
     sigaction(SIGPIPE, &sigspec, 0);
+    // N.B.:  SIGUSR1 is used by ReloadableProgramOptions_Base.
 
     // Don't restart SIGALRMs
     sigspec.sa_flags = 0;
@@ -572,7 +576,7 @@ bool processKbdEvent(const LinuxInputEvent& kbdEvent,
 // This is where all of your main handling should go.
 int cxx_main(const string& myName,
              const string& /*myPath*/,
-             const ProgramOptions& opts)
+             ProgramOptions& opts)
 {
     // First things first:  daemonize yourself.
     jpwTools::process::DiabLogStream dlog_st;
@@ -586,10 +590,6 @@ int cxx_main(const string& myName,
         }
         jpwTools::process::daemonize(dlog_st);
     }
-
-    // The default on several signals is "terminate the process".  We don't
-    // necessarily want that.
-    setupSignalHandling();
 
     // X11/XTest Setup
     X11Display theDisplay(opts["display"].as<string>());
@@ -622,12 +622,27 @@ int cxx_main(const string& myName,
     // At this point, we no longer need to be root.
     dropRootPrivileges(opts["verbose"].as<int>());
 
+    // The default on several signals is "terminate the process".  We don't
+    // necessarily want that.
+    setupSignalHandling();
+
+    //
     // The Main Loop
+    //
 
     LinuxInputEvent kbdEvent;
+    short reparseCounter(g__::ReparseCheckCount);
     while(true)
     {
         if(!kbdEvent.read(kbdDev)) {
+            // A human-generated SIGUSR1 should happen rarely enough that we
+            // can wait to handle it until there's a lull in keyboard events.
+            --reparseCounter;
+            if(reparseCounter < 1) {
+                reparseCounter = g__::ReparseCheckCount;
+                opts.handleAnyRequiredReparse();
+            }
+
             sleep(g__::InactivitySleepSec);
             continue;
         }

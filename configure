@@ -2717,6 +2717,9 @@ ac_config_headers="$ac_config_headers config.h"
 ## Both arguments are optional, and should specify lists of *.in files
 ## required by the packaging software.
 ##
+## `configure' will also "install" the generated files if you set the envvar
+## REBUILD_PACKAGING_FILES to any nonempty string.
+##
 ## <path-to-.in-files>
 ##   This is the path containing the *.in files specified in the
 ##   <deb-file-list> and <rpm-file-list> arguments.
@@ -2748,20 +2751,22 @@ ac_config_headers="$ac_config_headers config.h"
 
 
 # [jpw] We're building Debian and RPM packaging files.
+#       Remember:  Run 'REBUILD_PACKAGING_FILES=y ./configure' to "reinstall"
+#                  the generated packaging files.
 
   jpw__path_ftb="pkgTemplates"
-  jpw__deb_ftb="debian.control"
+  jpw__deb_ftb="debian.control debian.postinst"
   jpw__rpm_ftb="msnek4k-driverd.spec"
   jpw__bpf_cmds=""
+  jpw__bpf_cflst=""
 
 
 
   # Add the Debian packaging file(s), if there are any.
   if test "x$jpw__deb_ftb" != "x"; then
-    ac_config_files="$ac_config_files ${jpw__path_ftb}/${jpw__deb_ftb}"
-
     for jpw__deb_file in $jpw__deb_ftb; do
       jpw__deb_file_src="${jpw__path_ftb}/${jpw__deb_file}"
+      jpw__bpf_cflst="${jpw__bpf_cflst} ${jpw__deb_file_src}"
       jpw__deb_file_targ="debian/${jpw__deb_file#debian.}"
       jpw__deb_file_cp_cmd="cp $jpw__deb_file_src $jpw__deb_file_targ;"
       jpw__bpf_cmds="${jpw__bpf_cmds} ${jpw__deb_file_cp_cmd}"
@@ -2774,13 +2779,19 @@ ac_config_headers="$ac_config_headers config.h"
 
   # Add the RPM *.spec file(s), if there are any.
   if test "x$jpw__rpm_ftb" != "x"; then
-    ac_config_files="$ac_config_files ${jpw__path_ftb}/${jpw__rpm_ftb}"
-
-    jpw__bpf_cmds="${jpw__bpf_cmds} cp ${jpw__path_ftb}/${jpw__rpm_ftb} ./;"
+    for jpw__rpm_file in $jpw__rpm_ftb; do
+      jpw__rpm_file_src="${jpw__path_ftb}/${jpw__rpm_file}"
+      jpw__bpf_cflst="${jpw__bpf_cflst} ${jpw__rpm_file_src}"
+      jpw__bpf_cmds="${jpw__bpf_cmds} cp ${jpw__path_ftb}/${jpw__rpm_ftb} ./;"
+    done
+    unset jpw__rpm_file
+    unset jpw__rpm_file_src
   fi
 
 
   # Now, add the "installation" commands, if we need them.
+  ac_config_files="$ac_config_files ${jpw__bpf_cflst}"
+
 
 
 
@@ -9353,8 +9364,7 @@ for ac_config_target in $ac_config_targets
 do
   case $ac_config_target in
     "config.h") CONFIG_HEADERS="$CONFIG_HEADERS config.h" ;;
-    "${jpw__path_ftb}/${jpw__deb_ftb}") CONFIG_FILES="$CONFIG_FILES ${jpw__path_ftb}/${jpw__deb_ftb}" ;;
-    "${jpw__path_ftb}/${jpw__rpm_ftb}") CONFIG_FILES="$CONFIG_FILES ${jpw__path_ftb}/${jpw__rpm_ftb}" ;;
+    "${jpw__bpf_cflst}") CONFIG_FILES="$CONFIG_FILES ${jpw__bpf_cflst}" ;;
     "depfiles") CONFIG_COMMANDS="$CONFIG_COMMANDS depfiles" ;;
     "Makefile") CONFIG_FILES="$CONFIG_FILES Makefile" ;;
     "src/Makefile") CONFIG_FILES="$CONFIG_FILES src/Makefile" ;;

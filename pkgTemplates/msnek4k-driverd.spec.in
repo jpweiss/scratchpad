@@ -96,9 +96,27 @@ echo BuildRoot=%{buildroot}
 
 %{__make}
 
-%postun
+
+%preun
+if [ -x /usr/bin/pkill ]; then
+    /usr/bin/pkill msnek4k_driverd
+else
+    pidold=`ps -ew | grep -v grep | grep msnek4k_driverd \
+        | awk '{ print $1 }'`
+    if [ -n "$pidold" ]; then
+        kill $pidold
+    fi
+fi
+if [ "$1" -gt 0 ]; then
+    . %{xsessiondir}/90x11-msnek4k_driverd
+fi
+
 
 %post
+if [ "$1" -eq 1 ]; then
+    . %{xsessiondir}/90x11-msnek4k_driverd
+fi
+
 
 %install
 %{__make} install DESTDIR=%{buildroot}

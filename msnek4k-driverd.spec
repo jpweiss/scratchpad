@@ -3,7 +3,7 @@
 Name: msnek4k-driverd
 Summary: A driver for the MS Natural Ergo Keyboard 4000
 Version: 0.8.1
-Release: 1
+Release: 2
 Source: http://sourceforge.net/projects/msnek4kdriverd/files/v%{version}/%{name}-%{version}.tar.gz
 URL: http://sourceforge.net/projects/msnek4kdriverd
 License: Artistic
@@ -96,9 +96,27 @@ echo BuildRoot=%{buildroot}
 
 %{__make}
 
-%postun
+
+%preun
+if [ -x /usr/bin/pkill ]; then
+    /usr/bin/pkill msnek4k_driverd
+else
+    pidold=`ps -flew | grep -v grep | grep msnek4k_driverd \
+        | awk '{ print $4 }'`
+    if [ -n "$pidold" ]; then
+        kill $pidold
+    fi
+fi
+if [ "$1" -gt 0 ]; then
+    . %{xsessiondir}/90x11-msnek4k_driverd
+fi
+
 
 %post
+if [ "$1" -eq 1 ]; then
+    . %{xsessiondir}/90x11-msnek4k_driverd
+fi
+
 
 %install
 %{__make} install DESTDIR=%{buildroot}

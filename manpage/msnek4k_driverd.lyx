@@ -535,20 +535,7 @@ status collapsed
 \begin_inset Quotes erd
 \end_inset
 
- package, you don't have very much to do (as long as your favorite Linux
- distribution didn't repackage it in a weird way).
- 
-\begin_inset Flex Ref:Command
-status collapsed
-
-\begin_layout Plain Layout
-msnek4k_driverd
-\end_layout
-
-\end_inset
-
- will start when you (re)log in to KDE, GNOME, Xfce, or whatever other desktop
- you're using.
+ package, the package's built-in postinstall script will start it for you.
  It comes preconfigured with sane defaults.
  The 
 \series bold
@@ -556,81 +543,6 @@ EXAMPLES
 \series default
  section below has another fairly common configuration (as well as some
  uncommon ones).
-\end_layout
-
-\begin_layout Standard
-(N.
-\begin_inset space ~
-\end_inset
-
-B.: For the moment, 
-\begin_inset Quotes eld
-\end_inset
-
-
-\begin_inset Flex Element:Literal
-status collapsed
-
-\begin_layout Plain Layout
-.deb
-\end_layout
-
-\end_inset
-
-
-\begin_inset Quotes erd
-\end_inset
-
- and 
-\begin_inset Quotes eld
-\end_inset
-
-
-\begin_inset Flex Element:Literal
-status collapsed
-
-\begin_layout Plain Layout
-.rpm
-\end_layout
-
-\end_inset
-
-
-\begin_inset Quotes erd
-\end_inset
-
- packages don't start 
-\begin_inset Flex Ref:Command
-status collapsed
-
-\begin_layout Plain Layout
-msnek4k_driverd
-\end_layout
-
-\end_inset
-
- after installation.
- You'll need to do that manually by running 
-\begin_inset Quotes eld
-\end_inset
-
-
-\family typewriter
-sudo
-\begin_inset space ~
-\end_inset
-
-sh
-\begin_inset space ~
-\end_inset
-
-/etc/X11/Xsession.d/90x11-msnek4k_driverd
-\family default
-
-\begin_inset Quotes erd
-\end_inset
-
- from the commandline.)
 \end_layout
 
 \begin_layout Standard
@@ -687,7 +599,7 @@ xmodmap
 \begin_inset Quotes erd
 \end_inset
 
- utility or by customizing your 
+ utility or by customizing one of the 
 \begin_inset Quotes eld
 \end_inset
 
@@ -705,7 +617,7 @@ msnek4k_driverd.xmodmap
 \begin_inset Quotes erd
 \end_inset
 
- file (see the 
+ files (see the 
 \series bold
 FILES
 \series default
@@ -751,7 +663,7 @@ You generally won't need to deal with the commandline options.
 
 \begin_layout Standard
 Many of these options correspond to a configuration file setting which the
- former overrides.
+ option overrides.
  Those options are not fully documented in this section.
  See the description of the corresponding configuration file settings, instead.
 \end_layout
@@ -1995,6 +1907,54 @@ value
 \end_inset
 
 .
+\end_layout
+
+\begin_layout Standard
+After modifying the configuration file, you can use 
+\begin_inset Quotes eld
+\end_inset
+
+
+\begin_inset Flex Element:Literal
+status collapsed
+
+\begin_layout Plain Layout
+SIGUSR1
+\end_layout
+
+\end_inset
+
+
+\begin_inset Quotes erd
+\end_inset
+
+ to reread it without restarting 
+\begin_inset Flex Ref:Command
+status collapsed
+
+\begin_layout Plain Layout
+msnek4k_driverd
+\end_layout
+
+\end_inset
+
+.
+ This only works with the configuration file that 
+\begin_inset Flex Ref:Command
+status collapsed
+
+\begin_layout Plain Layout
+msnek4k_driverd
+\end_layout
+
+\end_inset
+
+ read when it started, however.
+ See the "
+\series bold
+SIGNALS
+\series default
+" section for more details.
 \end_layout
 
 \begin_layout Standard
@@ -3857,10 +3817,6 @@ Zoom
 Remember:
 \series default
  
-\begin_inset Quotes eld
-\end_inset
-
-
 \begin_inset Flex Ref:Option
 status collapsed
 
@@ -4241,6 +4197,397 @@ msnek4k_driverd
  sends keyboard (and/or mouse) events to.
 \end_layout
 
+\begin_layout RefSection
+SIGNALS
+\end_layout
+
+\begin_layout Standard
+\begin_inset Flex Ref:Command
+status collapsed
+
+\begin_layout Plain Layout
+msnek4k_driverd
+\end_layout
+
+\end_inset
+
+ handles the following signals specially:
+\end_layout
+
+\begin_layout Itemize
+\begin_inset Flex Element:Literal
+status collapsed
+
+\begin_layout Plain Layout
+SIGUSR1
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_deeper
+\begin_layout Standard
+When 
+\begin_inset Flex Ref:Command
+status collapsed
+
+\begin_layout Plain Layout
+msnek4k_driverd
+\end_layout
+
+\end_inset
+
+ receives this signal, it rereads the configuration file that it was started
+ with.
+ This allows you to modify your configuration file and have the changes
+ take effect immediately.
+ Simply run the following from a terminal: 
+\begin_inset Flex Ref:Literal
+status open
+
+\begin_layout Plain Layout
+\begin_inset space ~
+\end_inset
+
+
+\begin_inset space ~
+\end_inset
+
+
+\begin_inset space ~
+\end_inset
+
+
+\begin_inset space ~
+\end_inset
+
+
+\begin_inset Flex Ref:Prompt
+status collapsed
+
+\begin_layout Plain Layout
+
+\family typewriter
+me@myhost:$ 
+\end_layout
+
+\end_inset
+
+sudo
+\begin_inset space ~
+\end_inset
+
+pkill
+\begin_inset space ~
+\end_inset
+
+-SIGUSR1
+\begin_inset space ~
+\end_inset
+
+msnek4k_driverd
+\begin_inset Newline newline
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+If you don't have 
+\begin_inset Flex Ref:Command
+status collapsed
+
+\begin_layout Plain Layout
+pkill
+\end_layout
+
+\end_inset
+
+ installed on your system, you can send a 
+\begin_inset Quotes eld
+\end_inset
+
+
+\begin_inset Flex Element:Literal
+status collapsed
+
+\begin_layout Plain Layout
+SIGUSR1
+\end_layout
+
+\end_inset
+
+
+\begin_inset Quotes erd
+\end_inset
+
+ to 
+\begin_inset Flex Ref:Command
+status collapsed
+
+\begin_layout Plain Layout
+msnek4k_driverd
+\end_layout
+
+\end_inset
+
+ using the following set of commands: 
+\begin_inset Flex Ref:Literal
+status open
+
+\begin_layout Plain Layout
+
+\family typewriter
+\begin_inset space ~
+\end_inset
+
+
+\begin_inset space ~
+\end_inset
+
+
+\begin_inset space ~
+\end_inset
+
+
+\begin_inset space ~
+\end_inset
+
+
+\family default
+
+\begin_inset Flex Ref:Prompt
+status collapsed
+
+\begin_layout Plain Layout
+
+\family typewriter
+me@myhost:$ 
+\end_layout
+
+\end_inset
+
+msnek4k_pid=`ps
+\begin_inset space ~
+\end_inset
+
+-ew
+\begin_inset space ~
+\end_inset
+
+|
+\begin_inset space ~
+\end_inset
+
+grep
+\begin_inset space ~
+\end_inset
+
+-v
+\begin_inset space ~
+\end_inset
+
+grep
+\begin_inset space ~
+\end_inset
+
+|
+\begin_inset space ~
+\end_inset
+
+
+\backslash
+
+\begin_inset Newline newline
+\end_inset
+
+
+\begin_inset space ~
+\end_inset
+
+
+\begin_inset space ~
+\end_inset
+
+
+\begin_inset space ~
+\end_inset
+
+
+\begin_inset space ~
+\end_inset
+
+
+\begin_inset space ~
+\end_inset
+
+
+\begin_inset space ~
+\end_inset
+
+
+\begin_inset space ~
+\end_inset
+
+
+\begin_inset space ~
+\end_inset
+
+grep
+\begin_inset space ~
+\end_inset
+
+msnek4k_driverd
+\begin_inset space ~
+\end_inset
+
+|
+\begin_inset space ~
+\end_inset
+
+awk
+\begin_inset space ~
+\end_inset
+
+'{print
+\begin_inset space ~
+\end_inset
+
+$1}'`
+\begin_inset Newline newline
+\end_inset
+
+
+\family typewriter
+
+\begin_inset space ~
+\end_inset
+
+
+\begin_inset space ~
+\end_inset
+
+
+\begin_inset space ~
+\end_inset
+
+
+\begin_inset space ~
+\end_inset
+
+
+\family default
+
+\begin_inset Flex Ref:Prompt
+status collapsed
+
+\begin_layout Plain Layout
+
+\family typewriter
+me@myhost:$ 
+\end_layout
+
+\end_inset
+
+sudo
+\begin_inset space ~
+\end_inset
+
+kill
+\begin_inset space ~
+\end_inset
+
+-SIGUSR1
+\begin_inset space ~
+\end_inset
+
+$msnek4k_pid
+\begin_inset Newline newline
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+\begin_inset Flex Element:Literal
+status collapsed
+
+\begin_layout Plain Layout
+SIGHUP
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Itemize
+\begin_inset Flex Element:Literal
+status collapsed
+
+\begin_layout Plain Layout
+SIGINT
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Itemize
+\begin_inset Flex Element:Literal
+status collapsed
+
+\begin_layout Plain Layout
+SIGUSR2
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Itemize
+\begin_inset Flex Element:Literal
+status collapsed
+
+\begin_layout Plain Layout
+SIGPIPE
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_deeper
+\begin_layout Standard
+\begin_inset Flex Ref:Command
+status collapsed
+
+\begin_layout Plain Layout
+msnek4k_driverd
+\end_layout
+
+\end_inset
+
+ ignores these 4 signals.
+\end_layout
+
+\end_deeper
 \begin_layout RefSection
 FILES
 \end_layout
@@ -5124,30 +5471,71 @@ Zoom.isMouseWheel = true
 \end_layout
 
 \begin_layout Standard
-Save the file and restart 
-\begin_inset Flex Ref:Command
+Save the file and reload the configuration file by running the following
+ command in the terminal:
+\begin_inset Flex Ref:Literal
+status open
+
+\begin_layout Plain Layout
+\begin_inset space ~
+\end_inset
+
+
+\begin_inset space ~
+\end_inset
+
+
+\begin_inset space ~
+\end_inset
+
+
+\begin_inset space ~
+\end_inset
+
+
+\begin_inset Flex Ref:Prompt
 status collapsed
 
 \begin_layout Plain Layout
+
+\family typewriter
+me@myhost:$ 
+\end_layout
+
+\end_inset
+
+sudo
+\begin_inset space ~
+\end_inset
+
+pkill
+\begin_inset space ~
+\end_inset
+
+-SIGUSR1
+\begin_inset space ~
+\end_inset
+
 msnek4k_driverd
 \end_layout
 
 \end_inset
 
-.
- Now, you can certainly restart 
+
+\end_layout
+
+\begin_layout Standard
+If you don't have 
 \begin_inset Flex Ref:Command
 status collapsed
 
 \begin_layout Plain Layout
-msnek4k_driverd
+pkill
 \end_layout
 
 \end_inset
 
- by logging out of and logging back into KDE/GNOME/Xfce/etc.
- However, you can save yourself from the logout-login headache by running
- these commands in a terminal: 
+ installed on your system, you'll have to do a little bit more typing: 
 \begin_inset Flex Ref:Literal
 status open
 
@@ -5191,6 +5579,10 @@ kill
 \begin_inset space ~
 \end_inset
 
+-SIGUSR1
+\begin_inset space ~
+\end_inset
+
 `ps
 \begin_inset space ~
 \end_inset
@@ -5207,7 +5599,11 @@ grep
 \begin_inset space ~
 \end_inset
 
-msnek4k_driverd
+-v
+\begin_inset space ~
+\end_inset
+
+grep
 \begin_inset space ~
 \end_inset
 
@@ -5253,19 +5649,11 @@ msnek4k_driverd
 \begin_inset space ~
 \end_inset
 
-
-\begin_inset space ~
-\end_inset
-
 grep
 \begin_inset space ~
 \end_inset
 
--v
-\begin_inset space ~
-\end_inset
-
-grep
+msnek4k_driverd
 \begin_inset space ~
 \end_inset
 
@@ -5286,150 +5674,6 @@ $1}'`
 \end_inset
 
 
-\family typewriter
-
-\begin_inset space ~
-\end_inset
-
-
-\begin_inset space ~
-\end_inset
-
-
-\begin_inset space ~
-\end_inset
-
-
-\begin_inset space ~
-\end_inset
-
-
-\family default
-
-\begin_inset Flex Ref:Prompt
-status collapsed
-
-\begin_layout Plain Layout
-
-\family typewriter
-me@myhost:$ 
-\end_layout
-
-\end_inset
-
-ps
-\begin_inset space ~
-\end_inset
-
--ew
-\begin_inset space ~
-\end_inset
-
-|
-\begin_inset space ~
-\end_inset
-
-grep
-\begin_inset space ~
-\end_inset
-
-msnek4k_driverd
-\begin_inset Newline newline
-\end_inset
-
-
-\family typewriter
-
-\begin_inset space ~
-\end_inset
-
-
-\begin_inset space ~
-\end_inset
-
-
-\begin_inset space ~
-\end_inset
-
-
-\begin_inset space ~
-\end_inset
-
-
-\family default
-
-\begin_inset Flex Ref:Prompt
-status collapsed
-
-\begin_layout Plain Layout
-
-\family typewriter
-me@myhost:$ 
-\end_layout
-
-\end_inset
-
-sudo
-\begin_inset space ~
-\end_inset
-
-sh
-\begin_inset space ~
-\end_inset
-
-/etc/X11/Xsession.d/90x11-msnek4k_driverd
-\begin_inset Newline newline
-\end_inset
-
-
-\family typewriter
-
-\begin_inset space ~
-\end_inset
-
-
-\begin_inset space ~
-\end_inset
-
-
-\begin_inset space ~
-\end_inset
-
-
-\begin_inset space ~
-\end_inset
-
-
-\family default
-
-\begin_inset Flex Ref:Prompt
-status collapsed
-
-\begin_layout Plain Layout
-
-\family typewriter
-me@myhost:$ 
-\end_layout
-
-\end_inset
-
-ps
-\begin_inset space ~
-\end_inset
-
--ew
-\begin_inset space ~
-\end_inset
-
-|
-\begin_inset space ~
-\end_inset
-
-grep
-\begin_inset space ~
-\end_inset
-
-msnek4k_driverd
 \end_layout
 
 \end_inset
@@ -5438,8 +5682,7 @@ msnek4k_driverd
 \end_layout
 
 \begin_layout Standard
-The second and fourth commands are just sanity checks, to make sure that
- you successfully killed, then started 
+After 
 \begin_inset Flex Ref:Command
 status collapsed
 
@@ -5449,207 +5692,7 @@ msnek4k_driverd
 
 \end_inset
 
-.
- You can omit them if you wish.
- 
-\end_layout
-
-\begin_layout Standard
-If you have 
-\begin_inset Flex Ref:Command
-status collapsed
-
-\begin_layout Plain Layout
-pgrep
-\end_layout
-
-\end_inset
-
- and 
-\begin_inset Flex Ref:Command
-status collapsed
-
-\begin_layout Plain Layout
-pkill
-\end_layout
-
-\end_inset
-
- installed on your Linux system, you could run the following commands and
- save yourself some typing:
-\begin_inset Flex Ref:Literal
-status open
-
-\begin_layout Plain Layout
-
-\family typewriter
-\begin_inset space ~
-\end_inset
-
-
-\begin_inset space ~
-\end_inset
-
-
-\begin_inset space ~
-\end_inset
-
-
-\begin_inset space ~
-\end_inset
-
-
-\family default
-
-\begin_inset Flex Ref:Prompt
-status collapsed
-
-\begin_layout Plain Layout
-
-\family typewriter
-me@myhost:$ 
-\end_layout
-
-\end_inset
-
-sudo
-\begin_inset space ~
-\end_inset
-
-pkill
-\begin_inset space ~
-\end_inset
-
-msnek4k_driverd
-\begin_inset Newline newline
-\end_inset
-
-
-\family typewriter
-
-\begin_inset space ~
-\end_inset
-
-
-\begin_inset space ~
-\end_inset
-
-
-\begin_inset space ~
-\end_inset
-
-
-\begin_inset space ~
-\end_inset
-
-
-\family default
-
-\begin_inset Flex Ref:Prompt
-status collapsed
-
-\begin_layout Plain Layout
-
-\family typewriter
-me@myhost:$ 
-\end_layout
-
-\end_inset
-
-pgrep msnek4k_driverd
-\begin_inset Newline newline
-\end_inset
-
-
-\family typewriter
-
-\begin_inset space ~
-\end_inset
-
-
-\begin_inset space ~
-\end_inset
-
-
-\begin_inset space ~
-\end_inset
-
-
-\begin_inset space ~
-\end_inset
-
-
-\family default
-
-\begin_inset Flex Ref:Prompt
-status collapsed
-
-\begin_layout Plain Layout
-
-\family typewriter
-me@myhost:$ 
-\end_layout
-
-\end_inset
-
-sudo
-\begin_inset space ~
-\end_inset
-
-sh
-\begin_inset space ~
-\end_inset
-
-/etc/X11/Xsession.d/90x11-msnek4k_driverd
-\begin_inset Newline newline
-\end_inset
-
-
-\family typewriter
-
-\begin_inset space ~
-\end_inset
-
-
-\begin_inset space ~
-\end_inset
-
-
-\begin_inset space ~
-\end_inset
-
-
-\begin_inset space ~
-\end_inset
-
-
-\family default
-
-\begin_inset Flex Ref:Prompt
-status collapsed
-
-\begin_layout Plain Layout
-
-\family typewriter
-me@myhost:$ 
-\end_layout
-
-\end_inset
-
-pgrep
-\begin_inset space ~
-\end_inset
-
-msnek4k_driverd
-\end_layout
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-After restarting, the 
+ reloads the configuration file, the 
 \begin_inset Quotes eld
 \end_inset
 
@@ -5834,7 +5877,25 @@ conf
 \begin_inset Quotes erd
 \end_inset
 
- and restart 
+ and send 
+\begin_inset Quotes eld
+\end_inset
+
+
+\begin_inset Flex Element:Literal
+status collapsed
+
+\begin_layout Plain Layout
+SIGUSR1
+\end_layout
+
+\end_inset
+
+
+\begin_inset Quotes erd
+\end_inset
+
+ to 
 \begin_inset Flex Ref:Command
 status collapsed
 
@@ -5845,7 +5906,6 @@ msnek4k_driverd
 \end_inset
 
  using the steps from the previous example.
- 
 \end_layout
 
 \begin_layout Standard
@@ -6066,6 +6126,10 @@ keycode 184 = XF86RockerDown NoSymbol
 
 \end_inset
 
+
+\end_layout
+
+\begin_layout Standard
 Don't forget to run 
 \begin_inset Quotes eld
 \end_inset
@@ -6089,7 +6153,25 @@ $HOME/.msnek4k_driverd.xmodmap
 \end_inset
 
  to make these changes take effect.
- (Notice that you don't need to restart 
+ (Notice that you don't need to send 
+\begin_inset Quotes eld
+\end_inset
+
+
+\begin_inset Flex Element:Literal
+status collapsed
+
+\begin_layout Plain Layout
+SIGUSR1
+\end_layout
+
+\end_inset
+
+
+\begin_inset Quotes erd
+\end_inset
+
+ to 
 \begin_inset Flex Ref:Command
 status collapsed
 
@@ -6215,13 +6297,10 @@ KeyPress event, serial 34, synthetic NO, window 0x6200001,
 \end_inset
 
 root 0x15a, subw 0x0, time 1402508986, (-354,436),
-
 \begin_inset Newline newline
 \end_inset
 
 
-\lang english
-
 \begin_inset space ~
 \end_inset
 
@@ -6242,7 +6321,6 @@ root 0x15a, subw 0x0, time 1402508986, (-354,436),
 \end_inset
 
 
-
 \begin_inset space ~
 \end_inset
 
@@ -6258,8 +6336,6 @@ root 0x15a, subw 0x0, time 1402508986, (-354,436),
 \begin_inset space ~
 \end_inset
 
-
-\lang english
 root:(484,458),
 \begin_inset Newline newline
 \end_inset
@@ -6297,7 +6373,6 @@ root:(484,458),
 \end_inset
 
 state 0x10, keycode 251 (keysym 0x1008ff23, XF86RockerUp),
-
 \begin_inset Newline newline
 \end_inset
 
@@ -6317,8 +6392,6 @@ state 0x10, keycode 251 (keysym 0x1008ff23, XF86RockerUp),
 \begin_inset space ~
 \end_inset
 
-
-\lang english
 
 \begin_inset space ~
 \end_inset
@@ -6508,7 +6581,6 @@ KeyRelease event, serial 35, synthetic NO, window 0x6200001,
 \end_inset
 
 root 0x15a, subw 0x0, time 1402509114, (-354,436),
-
 \begin_inset Newline newline
 \end_inset
 
@@ -6528,8 +6600,6 @@ root 0x15a, subw 0x0, time 1402509114, (-354,436),
 \begin_inset space ~
 \end_inset
 
-
-\lang english
 
 \begin_inset space ~
 \end_inset
@@ -6587,7 +6657,6 @@ root:(484,458),
 \end_inset
 
 state 0x10, keycode 251 (keysym 0x1008ff23, XF86RockerUp),
-
 \begin_inset Newline newline
 \end_inset
 
@@ -6607,8 +6676,6 @@ state 0x10, keycode 251 (keysym 0x1008ff23, XF86RockerUp),
 \begin_inset space ~
 \end_inset
 
-
-\lang english
 
 \begin_inset space ~
 \end_inset
@@ -6762,7 +6829,6 @@ KeyPress event, serial 35, synthetic NO, window 0x6200001,
 \end_inset
 
 root 0x15a, subw 0x0, time 1402510050, (-354,436),
-
 \begin_inset Newline newline
 \end_inset
 
@@ -6782,8 +6848,6 @@ root 0x15a, subw 0x0, time 1402510050, (-354,436),
 \begin_inset space ~
 \end_inset
 
-
-\lang english
 
 \begin_inset space ~
 \end_inset
@@ -6841,7 +6905,6 @@ root:(484,458),
 \end_inset
 
 state 0x10, keycode 252 (keysym 0x1008ff24, XF86RockerDown),
-
 \begin_inset Newline newline
 \end_inset
 
@@ -6861,8 +6924,6 @@ state 0x10, keycode 252 (keysym 0x1008ff24, XF86RockerDown),
 \begin_inset space ~
 \end_inset
 
-
-\lang english
 
 \begin_inset space ~
 \end_inset
@@ -7052,7 +7113,6 @@ KeyRelease event, serial 35, synthetic NO, window 0x6200001,
 \end_inset
 
 root 0x15a, subw 0x0, time 1402510178, (-354,436),
-
 \begin_inset Newline newline
 \end_inset
 
@@ -7072,8 +7132,6 @@ root 0x15a, subw 0x0, time 1402510178, (-354,436),
 \begin_inset space ~
 \end_inset
 
-
-\lang english
 
 \begin_inset space ~
 \end_inset
@@ -7131,7 +7189,6 @@ root:(484,458),
 \end_inset
 
 state 0x10, keycode 252 (keysym 0x1008ff24, XF86RockerDown),
-
 \begin_inset Newline newline
 \end_inset
 
@@ -7151,8 +7208,6 @@ state 0x10, keycode 252 (keysym 0x1008ff24, XF86RockerDown),
 \begin_inset space ~
 \end_inset
 
-
-\lang english
 
 \begin_inset space ~
 \end_inset
@@ -7246,7 +7301,6 @@ XLookupString gives 0 bytes:
 \end_inset
 
 XFilterEvent returns: False
-
 \begin_inset Newline newline
 \end_inset
 
@@ -7254,8 +7308,6 @@ XFilterEvent returns: False
 \begin_inset Newline newline
 \end_inset
 
-
-\lang english
 
 \begin_inset space ~
 \end_inset
@@ -7309,7 +7361,6 @@ KeyPress event, serial 46, synthetic NO, window 0x6200001,
 \end_inset
 
 root 0x15a, subw 0x0, time 1404289170, (67,104),
-
 \begin_inset Newline newline
 \end_inset
 
@@ -7329,8 +7380,6 @@ root 0x15a, subw 0x0, time 1404289170, (67,104),
 \begin_inset space ~
 \end_inset
 
-
-\lang english
 
 \begin_inset space ~
 \end_inset
@@ -7388,7 +7437,6 @@ root:(905,126),
 \end_inset
 
 state 0x10, keycode 250 (keysym 0x1008ff7c, XF86Spell),
-
 \begin_inset Newline newline
 \end_inset
 
@@ -7408,8 +7456,6 @@ state 0x10, keycode 250 (keysym 0x1008ff7c, XF86Spell),
 \begin_inset space ~
 \end_inset
 
-
-\lang english
 
 \begin_inset space ~
 \end_inset
@@ -7599,7 +7645,6 @@ KeyRelease event, serial 47, synthetic NO, window 0x6200001,
 \end_inset
 
 root 0x15a, subw 0x0, time 1404289274, (67,104),
-
 \begin_inset Newline newline
 \end_inset
 
@@ -7619,8 +7664,6 @@ root 0x15a, subw 0x0, time 1404289274, (67,104),
 \begin_inset space ~
 \end_inset
 
-
-\lang english
 
 \begin_inset space ~
 \end_inset
@@ -7678,7 +7721,6 @@ root:(905,126),
 \end_inset
 
 state 0x10, keycode 250 (keysym 0x1008ff7c, XF86Spell),
-
 \begin_inset Newline newline
 \end_inset
 
@@ -7698,8 +7740,6 @@ state 0x10, keycode 250 (keysym 0x1008ff7c, XF86Spell),
 \begin_inset space ~
 \end_inset
 
-
-\lang english
 
 \begin_inset space ~
 \end_inset

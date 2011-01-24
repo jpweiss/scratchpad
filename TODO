@@ -1,6 +1,39 @@
 * Other Tasks:
   - Doxycomments
-  - (Re)Start the daemon from a package postinstall script.
-  - Get rid of DiabLogStream_Base::use_type.  Maybe use one or two boolean
-    flags.
-  - Use 'komparator' to sync the directories.
+  - Manpage:
+    + Pkg installation now starts things up for you, etc.
+    + Can now use SIGUSR1 to restart after changing the cfgfile.
+    + Can progbably simplify quite a bit of older explanation.
+* Release v0.9.0:
+  - Commit to both local and SF repos.
+  - Do a snapshot-sourceforge commit (based on the last one).
+  - Finish doxycomments
+  - Tests:
+    + Reloading the conf file on SIGUSR1
+    + DONE: .deb stop on remove
+    + DONE: .deb start on install
+    + .deb restart on upgrade
+    + .rpm stop on remove
+    + .rpm start on install
+    + .rpm restart on upgrade
+     
+
+* SF Commit Log:
+** Rev 2103 (jpwToolkit)
+- Doxygen tweaks:
+  + Escaped some sensitive characters in the doxycomments (as per the Doxygen
+    manual).
+  + Now generating a graphical class heirarchy, collaboration graph, and
+    call/caller graph.
+  + Added more doxycomments.
+- ProgramOptions_Base changes:
+  + C'tor is now a protected member.
+  + Reorganized the members.
+  + Fleshed out more doxycomments.
+- New Class:  ReloadableProgramOptions_Base
+  + Subclasses ProgramOptions_Base
+  + The c'tor takes an additional arg, a signal, and registers a static member
+    signal-handler for it.  The signal-handler toggles a "reload required"
+    flag.
+  + A handler member fn. checks the "reload required" flag and calls
+    "reparse()" if needed.
