@@ -193,6 +193,7 @@ AM_FFLAGS += $(COMPILE_TYPE_COMMON)
 #DEBUG_FLAGS = 
 #COMPILE_TYPE_COMMON += $(DEBUG) #$(PROFILE) #$(DEBUG_FLAGS)
 #COMPILE_TYPE += $(DISABLE_INLINE)
+#COMPILE_TYPE += -D_BUILDING_LIB -D_ENABLE_LIB_TRACING
 
 ### Uncomment for profiling, coverage, and/or memleak debugging:
 

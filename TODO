@@ -1,15 +1,9 @@
 * Other Tasks:
   - Doxycomments
-  - Manpage:
-    + Pkg installation now starts things up for you, etc.
-    + Can now use SIGUSR1 to restart after changing the cfgfile.
-    + Can progbably simplify quite a bit of older explanation.
 * Release v0.9.0:
-  - Commit to both local and SF repos.
   - Do a snapshot-sourceforge commit (based on the last one).
   - Finish doxycomments
   - Tests:
-    + Reloading the conf file on SIGUSR1
     + DONE: .deb stop on remove
     + DONE: .deb start on install
     + .deb restart on upgrade
@@ -37,3 +31,34 @@
     flag.
   + A handler member fn. checks the "reload required" flag and calls
     "reparse()" if needed.
+** Rev 2104
+- Fine-tuning some of the Doxygen settings.
+- New Feature:  Configfile Reload on SIGUSR1
+  + Updated src to use ReloadableProgramOptions_Base
+  + Updated manpage accordingly.
+- Added:  Package Postinstall/Preremove Scripts
+  + Will start the daemon on package install, restart on upgrade, and
+    stop on removal.
+  + Updated manpage accordingly.
+- Bugfixes to:
+  + Manpage Makefile
+  + Custom Autoconf macro
+- Autoconf/Automake updates.
+** Rev 2107 (jpwToolkit)
+- New helper class for printing out or converting a boost::any to a string.
+- FIXED:  Configfile Reloading
+  + Configfile parsing split out of ProgramOptions_Base::parse() into a new
+    member.  ProgramOptions_Base::showConfigHelp() also changed as a result.
+  + Refactor:  Member variables_map, ProgramOptions_Base::m__opts, renamed to
+    m__optVals.
+  + New ProgramOptions_Base for merging a
+    boost::program_options::variables_map into
+    ProgramOptions_Base::m__optVals.
+  + reparse() moved to ReloadableProgramOptions_Base.
+  + Added member fn. to ProgramOptions_Base to pretty-print
+    ProgramOptions_Base::m__optVals.
+** Rev 2107 (jpwToolkit)
+- BUGFIX:
+  + Had to add the ability to "notify" the
+    boost::program_options::variables_map in parse_cfgfile().  Otherwise,
+    configfile reparsing doesn't always work.

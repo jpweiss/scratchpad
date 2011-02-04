@@ -79,8 +79,8 @@ am__installdirs = "$(DESTDIR)$(bindir)" "$(DESTDIR)$(etcx11ddir)" \
 PROGRAMS = $(bin_PROGRAMS)
 am_msnek4k_driverd_OBJECTS = LinuxInputEvent.$(OBJEXT) \
 	LinuxInputDevice.$(OBJEXT) Trace.$(OBJEXT) \
-	Daemonizer.$(OBJEXT) ProgramOptions_Base.$(OBJEXT) \
-	msnek4k_driverd.$(OBJEXT)
+	Daemonizer.$(OBJEXT) Any.$(OBJEXT) \
+	ProgramOptions_Base.$(OBJEXT) msnek4k_driverd.$(OBJEXT)
 msnek4k_driverd_OBJECTS = $(am_msnek4k_driverd_OBJECTS)
 am__DEPENDENCIES_1 =
 msnek4k_driverd_DEPENDENCIES = $(am__DEPENDENCIES_1)
@@ -250,8 +250,8 @@ msnek4k_driverd_SOURCES = X11Display.h \
 	LinuxInputEvent.h LinuxInputEvent.cc \
 	LinuxInputDevice.h LinuxInputDevice.cc \
 	Trace.cc Daemonizer.cc \
-	ProgramOptions_Base.cc msnek4k_driverd.cc \
-	LibTrace.h Trace.h Daemonizer.h ProgramOptions_Base.h
+	Any.cc ProgramOptions_Base.cc msnek4k_driverd.cc \
+	Any.h LibTrace.h Trace.h Daemonizer.h ProgramOptions_Base.h
 
 msnek4k_driverd_LDADD = $(BOOST_PROGRAM_OPTIONS_LIB)
 etcx11ddir = $(ETC_X11_PATH)
@@ -474,6 +474,7 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Any.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Daemonizer.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/LinuxInputDevice.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/LinuxInputEvent.Po@am__quote@
@@ -750,6 +751,7 @@ uninstall-am: uninstall-binPROGRAMS uninstall-etcx11dDATA \
 #DEBUG_FLAGS = 
 #COMPILE_TYPE_COMMON += $(DEBUG) #$(PROFILE) #$(DEBUG_FLAGS)
 #COMPILE_TYPE += $(DISABLE_INLINE)
+#COMPILE_TYPE += -D_BUILDING_LIB -D_ENABLE_LIB_TRACING
 
 ### Uncomment for profiling, coverage, and/or memleak debugging:
 

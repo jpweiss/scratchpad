@@ -14,8 +14,8 @@ msnek4k_driverd_SOURCES = X11Display.h \
 	LinuxInputEvent.h LinuxInputEvent.cc \
 	LinuxInputDevice.h LinuxInputDevice.cc \
 	Trace.cc Daemonizer.cc \
-	ProgramOptions_Base.cc msnek4k_driverd.cc \
-	LibTrace.h Trace.h Daemonizer.h ProgramOptions_Base.h
+	Any.cc ProgramOptions_Base.cc msnek4k_driverd.cc \
+	Any.h LibTrace.h Trace.h Daemonizer.h ProgramOptions_Base.h
 msnek4k_driverd_LDADD = $(BOOST_PROGRAM_OPTIONS_LIB)
 
 

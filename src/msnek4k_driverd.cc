@@ -70,9 +70,7 @@ using jpwTools::LinuxInputEvent;
 
 
 namespace g__ {
- const unsigned InactivitySleepSec=1;
-
- const short ReparseCheckCount=60;
+ const unsigned ReadFail_SleepSec=1;
 
  const string CopyrightInfo="Copyright (C) 2010-2011 by John Weiss\n"
      "This program is free software; you can redistribute it and/or modify\n"
@@ -296,10 +294,29 @@ bool ProgramOptions::validateParsedOptions(b_po_varmap_t& varMap)
     // Sanity-check:  make sure that certain variables are present.  They
     // should be, but we'll do this check to prevent the
     // boost::program_options engine from segfaulting
-    if( varMap.empty() ||
-        varMap["Zoom.isMouseButton"].empty() ||
-        varMap["Zoom.isMouseWheel"].empty() )
+    if(varMap.empty())
     {
+        cerr << "No options or settings parsed." << endl;
+        return false;
+    }
+    // N.B.:  Should be able to remove the following.
+    //        There seems to be some bug in boost::program_options that does
+    //        weird things to a variables_map when you call 'notify()' on it
+    //        w/o parsing anything into it first.  My guess is that's why the
+    //        default value of some variables were "disappearing."
+    else if(varMap["Zoom.isMouseButton"].empty() ||
+            varMap["Zoom.isMouseWheel"].empty() ||
+            varMap["verbose"].empty())
+    {
+        cerr << "Internal Error:  Setting:  \"";
+        if(varMap["Zoom.isMouseButton"].empty()) {
+            cerr << "Zoom.isMouseButton";
+        } else if(varMap["Zoom.isMouseButton"].empty()) {
+            cerr << "Zoom.isMouseWheel";
+        } else {
+            cerr << "verbose";
+        }
+        cerr << "\" is empty.  It should have a default value." << endl;
         return false;
     }
 
@@ -362,6 +379,11 @@ bool ProgramOptions::validateParsedOptions(b_po_varmap_t& varMap)
             "erroneously set to \"true\"?";
         errmsg += "\nMouse buttons are numbered from 1 to 10.";
         throw boost::program_options::invalid_option_value(errmsg);
+    }
+
+    // For debugging purposes
+    if(varMap["verbose"].as<int>() > 2) {
+        print_variables_map(cerr);
     }
 
     return true;
@@ -631,22 +653,15 @@ int cxx_main(const string& myName,
     //
 
     LinuxInputEvent kbdEvent;
-    short reparseCounter(g__::ReparseCheckCount);
     while(true)
     {
         if(!kbdEvent.read(kbdDev)) {
-            // A human-generated SIGUSR1 should happen rarely enough that we
-            // can wait to handle it until there's a lull in keyboard events.
-            --reparseCounter;
-            if(reparseCounter < 1) {
-                reparseCounter = g__::ReparseCheckCount;
-                opts.handleAnyRequiredReparse();
-            }
-
-            sleep(g__::InactivitySleepSec);
+            sleep(g__::ReadFail_SleepSec);
             continue;
         }
 
+        // Reread the cfgfile, if needed.  Then handle the keyboard event.
+        opts.handleAnyRequiredReparse(dlog_st);
         processKbdEvent(kbdEvent, theDisplay, opts);
     }
 }
@@ -665,7 +680,7 @@ int main(int argc, char* argv[])
 
     // Call cxx_main(), which is where almost all of your code should go.
     try {
-        jpwTools::Trace::tracingEnabled=true;
+        //jpwTools::Trace::tracingEnabled=true;
 
         ProgramOptions myOpts(myName, (ACPATH_SYSCONFDIR "/"));
         myOpts.setVersion(PACKAGE_VERSION, g__::CopyrightInfo);
