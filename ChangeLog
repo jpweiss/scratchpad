@@ -1,3 +1,9 @@
+2011-02-09 16:20  John Weiss
+
+	* [r2113] ChangeLog, Doxygen, doxygen.tags
+	- Doxygen now using short-filenames (the long ones caused problems
+  	  with 'tar').
+
 2011-02-09 16:15  John Weiss
 
 	* [r2112] ChangeLog, TODO, configure.ac, configure,
