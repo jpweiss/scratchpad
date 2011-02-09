@@ -36,7 +36,7 @@
 # You should have received a copy of the file "LICENSE", containing
 # the License John Weiss originally placed this program under.
 #
-# $Id: make.syscfg.mk 2088 2010-12-30 23:15:18Z candide $
+# $Id: make.syscfg.mk 2109 2011-02-04 02:08:40Z candide $
 ##########
 #
 # Architecture.  Not used by all compilers.

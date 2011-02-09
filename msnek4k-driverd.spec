@@ -97,6 +97,12 @@ echo BuildRoot=%{buildroot}
 %{__make}
 
 
+%post
+if [ "$1" -eq 1 ]; then
+    . %{xsessiondir}/90x11-msnek4k_driverd
+fi
+
+
 %preun
 if [ -x /usr/bin/pkill ]; then
     /usr/bin/pkill msnek4k_driverd
@@ -108,12 +114,6 @@ else
     fi
 fi
 if [ "$1" -gt 0 ]; then
-    . %{xsessiondir}/90x11-msnek4k_driverd
-fi
-
-
-%post
-if [ "$1" -eq 1 ]; then
     . %{xsessiondir}/90x11-msnek4k_driverd
 fi
 

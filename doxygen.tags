@@ -410,6 +410,13 @@
       <anchor>a209736781e5d3427d4773c936317b14d</anchor>
       <arglist></arglist>
     </member>
+    <member kind="typedef">
+      <type>std::map&lt; std::string, b_po_varval_t &gt;</type>
+      <name>optval_map_t</name>
+      <anchorfile>classjpwTools_1_1boost__helpers_1_1ProgramOptions__Base.html</anchorfile>
+      <anchor>a57da0e6a334de09e49102db3eaef670f</anchor>
+      <arglist></arglist>
+    </member>
     <member kind="function">
       <type>void</type>
       <name>setVersion</name>
@@ -437,13 +444,6 @@
       <anchorfile>classjpwTools_1_1boost__helpers_1_1ProgramOptions__Base.html</anchorfile>
       <anchor>abcb430111b94150aae4d2093714d235e</anchor>
       <arglist>(int argc, char *argv[])</arglist>
-    </member>
-    <member kind="function">
-      <type>bool</type>
-      <name>reparse</name>
-      <anchorfile>classjpwTools_1_1boost__helpers_1_1ProgramOptions__Base.html</anchorfile>
-      <anchor>a96151242a3fadac95b55307d3c7d4fed</anchor>
-      <arglist>()</arglist>
     </member>
     <member kind="function">
       <type>const b_po_varval_t &amp;</type>
@@ -557,6 +557,27 @@
       <anchor>addc5c803783fa4c3f48581dff4b4d564</anchor>
       <arglist>(uint16_t val, const char *varName, bool nonzero=false)</arglist>
     </member>
+    <member kind="function" protection="protected">
+      <type>void</type>
+      <name>print_variables_map</name>
+      <anchorfile>classjpwTools_1_1boost__helpers_1_1ProgramOptions__Base.html</anchorfile>
+      <anchor>a62b9e8ba52d895b910f49ce66776573d</anchor>
+      <arglist>(std::ostream &amp;ost)</arglist>
+    </member>
+    <member kind="function" protection="protected">
+      <type>void</type>
+      <name>parse_cfgfile</name>
+      <anchorfile>classjpwTools_1_1boost__helpers_1_1ProgramOptions__Base.html</anchorfile>
+      <anchor>a377ee05efc9083a94577eee7e806eb4a</anchor>
+      <arglist>(const string &amp;configfile, b_po_varmap_t &amp;vMap, bool notifyRequired=false)</arglist>
+    </member>
+    <member kind="function" protection="protected">
+      <type>bool</type>
+      <name>updateVariables</name>
+      <anchorfile>classjpwTools_1_1boost__helpers_1_1ProgramOptions__Base.html</anchorfile>
+      <anchor>a705194ca73d3417572474f203645f47d</anchor>
+      <arglist>(b_po_varmap_t &amp;vMap)</arglist>
+    </member>
   </compound>
   <compound kind="class">
     <name>jpwTools::boost_helpers::ReloadableProgramOptions_Base</name>
@@ -571,10 +592,24 @@
     </member>
     <member kind="function">
       <type>bool</type>
+      <name>reparse</name>
+      <anchorfile>classjpwTools_1_1boost__helpers_1_1ReloadableProgramOptions__Base.html</anchorfile>
+      <anchor>a96151242a3fadac95b55307d3c7d4fed</anchor>
+      <arglist>()</arglist>
+    </member>
+    <member kind="function">
+      <type>bool</type>
       <name>handleAnyRequiredReparse</name>
       <anchorfile>classjpwTools_1_1boost__helpers_1_1ReloadableProgramOptions__Base.html</anchorfile>
       <anchor>af4c69d1f2860b20f8273b3b6fab89c06</anchor>
       <arglist>()</arglist>
+    </member>
+    <member kind="function">
+      <type>void</type>
+      <name>handleAnyRequiredReparse</name>
+      <anchorfile>classjpwTools_1_1boost__helpers_1_1ReloadableProgramOptions__Base.html</anchorfile>
+      <anchor>a1fe8e6b625e180fa611b064b1b31ce72</anchor>
+      <arglist>(std::ostream &amp;ost)</arglist>
     </member>
     <member kind="function" protection="protected">
       <type></type>
@@ -582,6 +617,24 @@
       <anchorfile>classjpwTools_1_1boost__helpers_1_1ReloadableProgramOptions__Base.html</anchorfile>
       <anchor>a769e8ab4cda71f10966bcee13c4e3e86</anchor>
       <arglist>(int reloadSignal, const string &amp;theProgramName, const string &amp;defaultCfgfile=&quot;&quot;, int lineLength=78)</arglist>
+    </member>
+  </compound>
+  <compound kind="class">
+    <name>jpwTools::boost_helpers::boost_any::BadLexicalAnyCast</name>
+    <filename>classjpwTools_1_1boost__helpers_1_1boost__any_1_1BadLexicalAnyCast.html</filename>
+    <member kind="function">
+      <type></type>
+      <name>BadLexicalAnyCast</name>
+      <anchorfile>classjpwTools_1_1boost__helpers_1_1boost__any_1_1BadLexicalAnyCast.html</anchorfile>
+      <anchor>a05c2653852a2144397fdef0166cb4dfd</anchor>
+      <arglist>(const any &amp;arg)</arglist>
+    </member>
+    <member kind="function" virtualness="virtual">
+      <type>virtual const char *</type>
+      <name>what</name>
+      <anchorfile>classjpwTools_1_1boost__helpers_1_1boost__any_1_1BadLexicalAnyCast.html</anchorfile>
+      <anchor>aff06f49065b54a8a86e02e9a2441a8ba</anchor>
+      <arglist>() const </arglist>
     </member>
   </compound>
   <compound kind="class">

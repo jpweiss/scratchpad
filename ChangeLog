@@ -1,3 +1,74 @@
+2011-02-09 16:15  John Weiss
+
+	* [r2112] ChangeLog, TODO, configure.ac, configure,
+	  debian/changelog, doxygen.tags, msnek4k-driverd.spec,
+	  pkgTemplates/msnek4k-driverd.spec.in, src/Makefile.in
+	  - Updates to this file.
+	  - Preparation for v0.9.0 release.
+	  - Updated:  Autoconf files.
+	  - Fixed Postinstall/Preremove scriptlets in the RPM specfile.
+
+2011-02-04 02:08  John Weiss
+
+	* [r2109] TODO, make.syscfg.mk, src/Any.cc, src/Any.h,
+	  src/Makefile.am, src/Makefile.in, src/msnek4k_driverd.cc:
+	  - Added "Any.*" files, containing tools for printing out a
+	    boost::any without runtime knowledge of the stored type.
+	  - More reorganization & redesign of 'ProgramOptions_Base' and
+	    'ReloadableProgramOptions_Base'.
+	  - Added:  Package Postinstall/Preremove Scripts
+	    + Will start the daemon on package install, restart on upgrade,
+	      and stop on removal.
+	    + Updated manpage accordingly.
+	  - validateParsedOptions() calls print_variables_map() when
+	    verbosity is 3 or larger.
+	  - Removed the inactivity-wait, since the read from the kbd event
+	    device blocks.
+	  - Now correctly reparsing the configfile.
+	    + Had to add the ability to "notify" the
+	      boost::program_options::variables_map in parse_cfgfile().
+	      Otherwise, configfile reparsing doesn't always work.
+	  - Doxygen tweaks:
+	    + Escaped some sensitive characters in the doxycomments (as
+	      per the Doxygen manual).
+	    + Now generating a graphical class heirarchy, collaboration
+	      graph, and call/caller graph.
+
+2011-01-24 01:33  John Weiss
+
+	* [r2104] Doxyfile, TODO, ax_jpwTools.m4, configure, configure.ac,
+	  debian/changelog, debian/docs, debian/postinst, debian/prerm,
+	  debian/rules, doxygen.tags, manpage/Makefile.am,
+	  manpage/Makefile.in, manpage/msnek4k_driverd.1,
+	  manpage/msnek4k_driverd.lyx, manpage/msnek4k_driverd.sgml,
+	  msnek4k-driverd.spec, pkgTemplates/debian.postinst.in,
+	  pkgTemplates/msnek4k-driverd.spec.in, src/msnek4k_driverd.cc:
+	  - ProgramOptions_Base changed and reorganized:
+	    + C'tor is now a protected member.
+	    + Now has a subclass, "ReloadableProgramOptions_Base";
+	      implements configfile reloading on a c'tor-specified
+	      signal.
+	  - Fine-tuning some of the Doxygen settings.
+	  - New Feature:  Configfile Reload on SIGUSR1
+	    + Updated src to use ReloadableProgramOptions_Base
+	    + Updated manpage accordingly.
+	  - Added:  Package Postinstall/Preremove Scripts
+	    + Will start the daemon on package install, restart on upgrade,
+	      and stop on removal.
+	    + Updated manpage accordingly.
+	  - Bugfixes to:
+	    + Manpage Makefile
+	    + Custom Autoconf macro
+	  - Autoconf/Automake updates.
+
+2011-01-13 00:01  John Weiss
+
+	* [r2098] Doxyfile, Makefile.am, Makefile.in, TODO, aclocal.m4,
+	  configure, configure.ac, debian/rules, doxygen.am,
+	  manpage/Makefile.in, src/Makefile.in, src/X11Display.h:
+	  - Adding Doxygen support.
+	  - Improved doxycomments.
+
 2010-12-31 20:18  John Weiss
 
 	* [r2094] ChangeLog:
@@ -15,6 +86,7 @@
 	    + Binary is now installed suid-root.
 	    + Binary drops root privileges when no longer needed.
 	    + Rudimentary tests performed.
+
 2010-12-30 23:18  John Weiss
 
 	* [r2089] configure, src/Makefile.in:
@@ -45,17 +117,6 @@
 	    + DEB changelog
 	    + The bindist package name now includes the version number.
 	  - Autoconf updates.
-
-2010-12-14 17:30  John Weiss
-	* [r2081] ChangeLog, Makefile.am, Makefile.in, configure,
-	  debian/changelog, manpage/Makefile.am, manpage/Makefile.in,
-	  msnek4k-driverd.spec, pkgTemplates/msnek4k-driverd.spec.in:
-	- Updated the ChangeLog with this message.
-	- Packaging files updated:
-	  + RPM specfile(s)
-	  + DEB changelog
-	  + The bindist package name now includes the version number.
-	- Autoconf updates.
 
 2010-12-12 03:00  John Weiss
 
