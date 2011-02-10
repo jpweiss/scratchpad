@@ -3,7 +3,7 @@
 .\" <http://shell.ipoline.com/~elmert/comp/docbook2X/> 
 .\" Please send any bug reports, improvements, comments, patches, 
 .\" etc. to Steve Cheng <steve@ggi-project.org>.
-.TH "MSNEK4K_DRIVERD" "1" "22 January 2011" "" ""
+.TH "MSNEK4K_DRIVERD" "1" "10 February 2011" "" ""
 
 .SH NAME
 msnek4k_driverd \- Driver for the MS Natural® Ergonomic Keyboard 4000
@@ -27,7 +27,7 @@ Zoom Down
 The \fBmsnek4k_driverd\fR daemon bridges the gap by converting the raw device scancodes to X11 keycodes and/or mouse button events (via the XTest extension). When installed as packaged, you shouldn't need to do anything to run \fBmsnek4k_driverd\fR\&. X11 should run it as part of its normal session-startup tasks.
 .PP
 Note: the remainder of this manual refers to the ... thing ... in the middle of the keyboard that generates the "Zoom Up" and "Zoom Down" scancodes as "the 'Zoom'-Rocker".
-.SS "SCANCODES? KEYCODES? KEYSYMS? X11?!?"
+.SS "Scancodes? Keycodes? Keysyms? X11?!?"
 .PP
 For those who already know what X11 is, how it handles the keyboard, and how it recieves keyboard input from the kernel, skip this section. Everyone else should read on.
 .PP
@@ -38,7 +38,7 @@ X11 assigns a number (usually) between 8 and 255 to every key on the keyboard. T
 This is where "keysyms" come in. X11 contains a user-configurable mapping from combinations of keycodes to keysyms. A unique (set of) keycode(s) translates to one keysym, and vice-versa. For example, X11 traditionally converts the keycode, "9", to the keysym "\fBTab\fR". "\fBXF86AudioPlay\fR" is a keysym. So are "\fBq\fR" and "\fBQ\fR" (i.\~e.\~there's a keysym for every letter and number). When you set KDE and GNOME shortcuts, you're actually telling them what to do when they get a \fBkeysym\fR\&.
 .PP
 A "scancode" is an integer number that the \fBkeyboard itself\fR sends to the OS. The Linux kernel (not X11) may change these raw codes, but usually it passes them along unchanged. (The Linux kernel, incidentally, converts the scancodes to the keycodes used by X11 and most other programs.) In the case of the Microsoft Natural® Ergonomic Keyboard 4000, Linux \fBhas to\fR change the raw scancodes for certain keys from a number above 255 to an unused scancode in the range from 0 to 255. (Linux can't handle raw scancodes above 255.)
-.SS "QUICKSTART"
+.SS "Quickstart"
 .PP
 If you installed \fBmsnek4k_driverd\fR from a "\&.deb" or "\&.rpm" package, the package's built-in postinstall script will start it for you. It comes preconfigured with sane defaults. The EXAMPLES section below has another fairly common configuration (as well as some uncommon ones).
 .PP
@@ -381,26 +381,39 @@ This is the user's personal "override" file. (You have to create it; it won't au
 .PP
 Non-expert users should refer to the manpage for the \fBxmodmap\fR utility and look at the file, "\fI/etc/X11/msnek4k_driverd.xmodmap\fR", as an example of how to define their own "\fI$HOME/.msnek4k_driverd.xmodmap\fR".
 .SH "EXAMPLES"
+.SS "Notes for the Less-Experienced User:"
 .PP
-The first example is how to use the "Zoom"-Rocker as a mouse-wheel.
+(Power-users, please skip this subsection.)
 .PP
-Start by opening the configuration file, "\fI/etc/msnek4k_driverd.conf\fR", in your favorite editor, running as "root". For example, open your favorite terminal program (\fBgnome-terminal\fR, \fBkonsole\fR, \fBxterm\fR, ...) and run the following from the commandline: 
+Customizing \fBmsnek4k_driverd\fR requires you to use the terminal. If the word "terminal" or the idea of a commandline prompt means nothing to you or is intimidating, you \fBmight\fR be able to get away with the following:
+.TP 0.2i
+\(bu
+If your desktop menu(s) have an editor that you can, "run as Administrator", you can use that to edit the configuration file, "\fI/etc/msnek4k_driverd.conf\fR".
+.TP 0.2i
+\(bu
+You can "restart" \fBmsnek4k_driverd\fR by logging out and logging back in.
+.PP
+But why go through the hassle of logging out & logging back in?
+.PP
+\~
+.PP
+If you're \fBnot intimidated\fR by the commandline, open your favorite terminal program (\fBgnome-terminal\fR, \fBkonsole\fR, \fBxterm\fR, ...) now. (You'll usually find it in the "System" or "Settings" menu of your desktop.)
+.PP
+To edit the configuration file, "\fI/etc/msnek4k_driverd.conf\fR" as the system administrator (a.k.a. "running as root"), use one of the following: 
 
 .nf
-\~\~\~\~me@myhost:$ sudo\~nano\~/etc/msnek4k_driverd.conf
+\~\~\~\~me@myhost:$ sudo\~gnome-text-editor\~/etc/msnek4k_driverd.conf
 .fi
 .PP
-Change or add the settings shown below to the following: 
+or: 
 
 .nf
-\~\~\~\~ZoomUp.x11Keycode = 4
-\~\~\~\~ZoomDown.x11Keycode = 5
-
-\~\~\~\~Zoom.isMouseButton = true
-\~\~\~\~Zoom.isMouseWheel = true
+\~\~\~\~me@myhost:$ su\~root\~gnome-text-editor\~/etc/msnek4k_driverd.conf
 .fi
 .PP
-Save the file and reload the configuration file by running the following command in the terminal:
+On most Linux distributions, including Debian and Ubuntu, you'll use the first one. If, however, your Linux distribution does not have the \fBsudo\fR command installed (or if it's not configured), use the command \fBsu\~root\fR in its place. (Also, feel free to replace \fBgnome-text-editor\fR with your favorite text editor. If you don't have a favorite and \fBgnome-text-editor\fR isn't installed on your system, try \fBkate\fR, \fBnedit\fR, \fBxedit\fR, or even a non-GUI editor like \fBnano\fR or \fBpico\fR\&. \fBDo not use a word processor\fR, however.)
+.PP
+To reload the configuration file, you will send \fBmsnek4k_driverd\fR the "SIGUSR1" signal, by running the following command in the terminal:
 
 .nf
 \~\~\~\~me@myhost:$ sudo\~pkill\~-SIGUSR1\~msnek4k_driverd
@@ -412,10 +425,24 @@ If you don't have \fBpkill\fR installed on your system, you'll have to do a litt
 \~\~\~\~me@myhost:$ sudo\~kill\~-SIGUSR1\~`ps\~-ew\~|\~grep\~-v\~grep\~|\~\\
 \~\~\~\~\~\~\~\~grep\~msnek4k_driverd\~|\~awk\~\&'{print\~$1}'`
 .fi
+.SS "\&"Zoom\&"-Rocker Mouse-Wheel"
 .PP
-After \fBmsnek4k_driverd\fR reloads the configuration file, the "Zoom"-Rocker should now act like the mouse-wheel.
+The first example is how to use the "Zoom"-Rocker as a mouse-wheel, which is, besides the default configuration, another common configuration.
 .PP
-\~
+Start by opening the configuration file, "\fI/etc/msnek4k_driverd.conf\fR", in your favorite editor, running as "root". 
+.PP
+Change or add the settings shown below to the following: 
+
+.nf
+\~\~\~\~ZoomUp.x11Keycode = 4
+\~\~\~\~ZoomDown.x11Keycode = 5
+
+\~\~\~\~Zoom.isMouseButton = true
+\~\~\~\~Zoom.isMouseWheel = true
+.fi
+.PP
+Save the file and reload the configuration file by sending \fBmsnek4k_driverd\fR the "SIGUSR1" signal (as described above). After \fBmsnek4k_driverd\fR reloads the configuration file, the "Zoom"-Rocker should now act like the mouse-wheel.
+.SS "\&"Zoom\&"-Rocker as Left & Right Mouse Buttons"
 .PP
 The next example is a tad contrived, but potentially useful for artists or anyone else who has to hold down a mouse button for extended periods of time. The steps are nearly identical to those in the previous example, with one exception. When you edit "\fI/etc/msnek4k_driverd.conf\fR", make these changes: 
 
@@ -432,8 +459,7 @@ The next example is a tad contrived, but potentially useful for artists or anyon
 Save the modified "\fI/etc/msnek4k_driverd.conf\fR" and send "SIGUSR1" to \fBmsnek4k_driverd\fR using the steps from the previous example.
 .PP
 Holding "Zoom"-Rocker up or down will now be the same as pressing and holding the left or right mouse button, respectively. Releasing the "Zoom"-Rocker acts like releasing either button.
-.PP
-\~
+.SS "Changing the X11 Keysyms"
 .PP
 Lastly, here is an example for customizing keysyms.
 .PP

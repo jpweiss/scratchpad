@@ -2,8 +2,8 @@
 
 Name: msnek4k-driverd
 Summary: A driver for the MS Natural Ergo Keyboard 4000
-Version: 0.8.1
-Release: 2
+Version: 0.9.0
+Release: 1
 Source: http://sourceforge.net/projects/msnek4kdriverd/files/v%{version}/%{name}-%{version}.tar.gz
 URL: http://sourceforge.net/projects/msnek4kdriverd
 License: Artistic
@@ -97,25 +97,36 @@ echo BuildRoot=%{buildroot}
 %{__make}
 
 
-%post
-if [ "$1" -eq 1 ]; then
-    . %{xsessiondir}/90x11-msnek4k_driverd
-fi
-
-
 %preun
-if [ -x /usr/bin/pkill ]; then
-    /usr/bin/pkill msnek4k_driverd
-else
-    pidold=`ps -flew | grep -v grep | grep msnek4k_driverd \
-        | awk '{ print $4 }'`
-    if [ -n "$pidold" ]; then
-        kill $pidold
+if [ "$1" -eq 0 ]; then
+    # This is an erase.
+    if [ -x /usr/bin/pkill ]; then
+        /usr/bin/pkill msnek4k_driverd
+    else
+        pidold=`ps -ew | grep -v grep | grep msnek4k_driverd \
+            | awk '{ print $1 }'`
+        if [ -n "$pidold" ]; then
+            kill $pidold
+        fi
     fi
 fi
-if [ "$1" -gt 0 ]; then
-    . %{xsessiondir}/90x11-msnek4k_driverd
+
+
+%post
+if [ "$1" -gt 1 ]; then
+    # This is an upgrade.  Kill all running daemons.
+    if [ -x /usr/bin/pkill ]; then
+        /usr/bin/pkill msnek4k_driverd
+    else
+        pidold=`ps -ew | grep -v grep | grep msnek4k_driverd \
+            | awk '{ print $1 }'`
+        if [ -n "$pidold" ]; then
+            kill $pidold
+        fi
+    fi
 fi
+# Whether an install or upgrade, start the daemon.
+. %{xsessiondir}/90x11-msnek4k_driverd
 
 
 %install
@@ -134,6 +145,8 @@ rm -rf %{buildroot}/*
     %{_mandir}/*
 
 %changelog
+* Fri Feb 11 2011 John Weiss <jpwcandide@sourceforge.net> 0.9.0-1
+- See Changelog, rev2082 onward, for the code changes.
 * Fri Dec 31 2010 John Weiss <jpwcandide@sourceforge.net> 0.8.1-1
 - See Changelog, rev2082 onward, for the code changes.
 * Fri Dec 10 2010 John Weiss <jpwcandide@sourceforge.net> 0.8.0-1

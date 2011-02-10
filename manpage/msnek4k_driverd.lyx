@@ -5241,27 +5241,55 @@ $HOME/.msnek4k_driverd.xmodmap
 \end_layout
 
 \begin_layout RefSection
-Examples
+EXAMPLES
+\end_layout
+
+\begin_layout RefSubsection
+Notes for the Less-Experienced User:
 \end_layout
 
 \begin_layout Standard
-The first example is how to use the 
+(Power-users, please skip this subsection.)
+\end_layout
+
+\begin_layout Standard
+Customizing 
+\begin_inset Flex Ref:Command
+status collapsed
+
+\begin_layout Plain Layout
+msnek4k_driverd
+\end_layout
+
+\end_inset
+
+ requires you to use the terminal.
+ If the word 
 \begin_inset Quotes eld
 \end_inset
 
-
-\family typewriter
-Zoom
-\family default
-
+terminal
 \begin_inset Quotes erd
 \end_inset
 
--Rocker as a mouse-wheel.
+ or the idea of a commandline prompt means nothing to you or is intimidating,
+ you 
+\emph on
+might
+\emph default
+ be able to get away with the following:
 \end_layout
 
-\begin_layout Standard
-Start by opening the configuration file, 
+\begin_layout Itemize
+If your desktop menu(s) have an editor that you can, 
+\begin_inset Quotes eld
+\end_inset
+
+run as Administrator
+\begin_inset Quotes erd
+\end_inset
+
+, you can use that to edit the configuration file, 
 \begin_inset Quotes eld
 \end_inset
 
@@ -5281,16 +5309,48 @@ conf
 \begin_inset Quotes erd
 \end_inset
 
-, in your favorite editor, running as 
+.
+\end_layout
+
+\begin_layout Itemize
+You can 
 \begin_inset Quotes eld
 \end_inset
 
-root
+restart
 \begin_inset Quotes erd
 \end_inset
 
-.
- For example, open your favorite terminal program (
+ 
+\begin_inset Flex Ref:Command
+status collapsed
+
+\begin_layout Plain Layout
+msnek4k_driverd
+\end_layout
+
+\end_inset
+
+ by logging out and logging back in.
+\end_layout
+
+\begin_layout Standard
+But why go through the hassle of logging out & logging back in?
+\end_layout
+
+\begin_layout Standard
+\begin_inset space ~
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+If you're 
+\emph on
+not intimidated
+\emph default
+ by the commandline, open your favorite terminal program (
 \begin_inset Flex Ref:Command
 status collapsed
 
@@ -5321,7 +5381,57 @@ xterm
 \end_inset
 
 , \SpecialChar \ldots{}
-) and run the following from the commandline: 
+) now.
+ (You'll usually find it in the 
+\begin_inset Quotes eld
+\end_inset
+
+System
+\begin_inset Quotes erd
+\end_inset
+
+ or 
+\begin_inset Quotes eld
+\end_inset
+
+Settings
+\begin_inset Quotes erd
+\end_inset
+
+ menu of your desktop.)
+\end_layout
+
+\begin_layout Standard
+To edit the configuration file, 
+\begin_inset Quotes eld
+\end_inset
+
+
+\begin_inset Flex Ref:Filename
+status collapsed
+
+\begin_layout Plain Layout
+/etc/msnek4k_driverd.
+\bar no
+conf
+\end_layout
+
+\end_inset
+
+
+\begin_inset Quotes erd
+\end_inset
+
+ as the system administrator (a.k.a.
+ 
+\begin_inset Quotes eld
+\end_inset
+
+running as root
+\begin_inset Quotes erd
+\end_inset
+
+), use one of the following: 
 \begin_inset Flex Ref:Literal
 status open
 
@@ -5361,7 +5471,10 @@ sudo
 \begin_inset space ~
 \end_inset
 
-nano
+
+gnome-text-editor
+\lang english
+
 \begin_inset space ~
 \end_inset
 
@@ -5374,7 +5487,7 @@ nano
 \end_layout
 
 \begin_layout Standard
-Change or add the settings shown below to the following: 
+or: 
 \begin_inset Flex Ref:Literal
 status open
 
@@ -5398,71 +5511,34 @@ status open
 
 
 \family default
-ZoomUp.x11Keycode = 4
-\begin_inset Newline newline
+
+\begin_inset Flex Ref:Prompt
+status collapsed
+
+\begin_layout Plain Layout
+
+\family typewriter
+me@myhost:$ 
+\end_layout
+
 \end_inset
 
+su
 
 \begin_inset space ~
 \end_inset
 
+root
+\begin_inset space ~
+\end_inset
+
+gnome-text-editor
+\lang english
 
 \begin_inset space ~
 \end_inset
 
-
-\begin_inset space ~
-\end_inset
-
-
-\begin_inset space ~
-\end_inset
-
-ZoomDown.x11Keycode = 5
-\begin_inset Newline newline
-\end_inset
-
-
-\begin_inset Newline newline
-\end_inset
-
-
-\begin_inset space ~
-\end_inset
-
-
-\begin_inset space ~
-\end_inset
-
-
-\begin_inset space ~
-\end_inset
-
-
-\begin_inset space ~
-\end_inset
-
-Zoom.isMouseButton = true
-\begin_inset Newline newline
-\end_inset
-
-
-\begin_inset space ~
-\end_inset
-
-
-\begin_inset space ~
-\end_inset
-
-
-\begin_inset space ~
-\end_inset
-
-
-\begin_inset space ~
-\end_inset
-
-Zoom.isMouseWheel = true
+/etc/msnek4k_driverd.conf
 \end_layout
 
 \end_inset
@@ -5471,8 +5547,151 @@ Zoom.isMouseWheel = true
 \end_layout
 
 \begin_layout Standard
-Save the file and reload the configuration file by running the following
- command in the terminal:
+On most Linux distributions, including Debian and Ubuntu, you'll use the
+ first one.
+ If, however, your Linux distribution does not have the 
+\begin_inset Flex Ref:Command
+status collapsed
+
+\begin_layout Plain Layout
+
+sudo
+\end_layout
+
+\end_inset
+
+ command installed (or if it's not configured), use the command 
+\begin_inset Flex Ref:Command
+status collapsed
+
+\begin_layout Plain Layout
+
+su
+\begin_inset space ~
+\end_inset
+
+root
+\end_layout
+
+\end_inset
+
+ in its place.
+ (Also, feel free to replace 
+\begin_inset Flex Ref:Command
+status collapsed
+
+\begin_layout Plain Layout
+
+gnome-text-editor
+\end_layout
+
+\end_inset
+
+ with your favorite text editor.
+ If you don't have a favorite and 
+\begin_inset Flex Ref:Command
+status collapsed
+
+\begin_layout Plain Layout
+
+gnome-text-editor
+\end_layout
+
+\end_inset
+
+ isn't installed on your system, try 
+\begin_inset Flex Ref:Command
+status collapsed
+
+\begin_layout Plain Layout
+
+kate
+\end_layout
+
+\end_inset
+
+, 
+\begin_inset Flex Ref:Command
+status collapsed
+
+\begin_layout Plain Layout
+
+nedit
+\end_layout
+
+\end_inset
+
+, 
+\begin_inset Flex Ref:Command
+status collapsed
+
+\begin_layout Plain Layout
+
+xedit
+\end_layout
+
+\end_inset
+
+, or even a non-GUI editor like 
+\begin_inset Flex Ref:Command
+status collapsed
+
+\begin_layout Plain Layout
+
+nano
+\end_layout
+
+\end_inset
+
+ or 
+\begin_inset Flex Ref:Command
+status collapsed
+
+\begin_layout Plain Layout
+
+pico
+\end_layout
+
+\end_inset
+
+.
+ 
+\emph on
+Do not use a word processor
+\emph default
+, however.)
+\end_layout
+
+\begin_layout Standard
+To reload the configuration file, you will send 
+\begin_inset Flex Ref:Command
+status collapsed
+
+\begin_layout Plain Layout
+msnek4k_driverd
+\end_layout
+
+\end_inset
+
+ the 
+\begin_inset Quotes eld
+\end_inset
+
+
+\begin_inset Flex Element:Literal
+status collapsed
+
+\begin_layout Plain Layout
+SIGUSR1
+\end_layout
+
+\end_inset
+
+
+\begin_inset Quotes erd
+\end_inset
+
+ signal, by running the following command in the terminal:
 \begin_inset Flex Ref:Literal
 status open
 
@@ -5681,8 +5900,199 @@ $1}'`
 
 \end_layout
 
+\begin_layout RefSubsection
+\begin_inset Quotes eld
+\end_inset
+
+
+\family typewriter
+Zoom
+\family default
+
+\begin_inset Quotes erd
+\end_inset
+
+-Rocker Mouse-Wheel
+\end_layout
+
 \begin_layout Standard
-After 
+The first example is how to use the 
+\begin_inset Quotes eld
+\end_inset
+
+
+\family typewriter
+Zoom
+\family default
+
+\begin_inset Quotes erd
+\end_inset
+
+-Rocker as a mouse-wheel, which is, besides the default configuration, another
+ common configuration.
+\end_layout
+
+\begin_layout Standard
+Start by opening the configuration file, 
+\begin_inset Quotes eld
+\end_inset
+
+
+\begin_inset Flex Ref:Filename
+status collapsed
+
+\begin_layout Plain Layout
+/etc/msnek4k_driverd.
+\bar no
+conf
+\end_layout
+
+\end_inset
+
+
+\begin_inset Quotes erd
+\end_inset
+
+, in your favorite editor, running as 
+\begin_inset Quotes eld
+\end_inset
+
+root
+\begin_inset Quotes erd
+\end_inset
+
+.
+ 
+\end_layout
+
+\begin_layout Standard
+Change or add the settings shown below to the following: 
+\begin_inset Flex Ref:Literal
+status open
+
+\begin_layout Plain Layout
+
+\family typewriter
+\begin_inset space ~
+\end_inset
+
+
+\begin_inset space ~
+\end_inset
+
+
+\begin_inset space ~
+\end_inset
+
+
+\begin_inset space ~
+\end_inset
+
+
+\family default
+ZoomUp.x11Keycode = 4
+\begin_inset Newline newline
+\end_inset
+
+
+\begin_inset space ~
+\end_inset
+
+
+\begin_inset space ~
+\end_inset
+
+
+\begin_inset space ~
+\end_inset
+
+
+\begin_inset space ~
+\end_inset
+
+ZoomDown.x11Keycode = 5
+\begin_inset Newline newline
+\end_inset
+
+
+\begin_inset Newline newline
+\end_inset
+
+
+\begin_inset space ~
+\end_inset
+
+
+\begin_inset space ~
+\end_inset
+
+
+\begin_inset space ~
+\end_inset
+
+
+\begin_inset space ~
+\end_inset
+
+Zoom.isMouseButton = true
+\begin_inset Newline newline
+\end_inset
+
+
+\begin_inset space ~
+\end_inset
+
+
+\begin_inset space ~
+\end_inset
+
+
+\begin_inset space ~
+\end_inset
+
+
+\begin_inset space ~
+\end_inset
+
+Zoom.isMouseWheel = true
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Save the file and reload the configuration file by sending 
+\begin_inset Flex Ref:Command
+status collapsed
+
+\begin_layout Plain Layout
+msnek4k_driverd
+\end_layout
+
+\end_inset
+
+ the 
+\begin_inset Quotes eld
+\end_inset
+
+
+\begin_inset Flex Element:Literal
+status collapsed
+
+\begin_layout Plain Layout
+SIGUSR1
+\end_layout
+
+\end_inset
+
+
+\begin_inset Quotes erd
+\end_inset
+
+ signal (as described above).
+ After 
 \begin_inset Flex Ref:Command
 status collapsed
 
@@ -5707,11 +6117,19 @@ Zoom
 -Rocker should now act like the mouse-wheel.
 \end_layout
 
-\begin_layout Standard
-\begin_inset space ~
+\begin_layout RefSubsection
+\begin_inset Quotes eld
 \end_inset
 
 
+\family typewriter
+Zoom
+\family default
+
+\begin_inset Quotes erd
+\end_inset
+
+-Rocker as Left & Right Mouse Buttons
 \end_layout
 
 \begin_layout Standard
@@ -5938,11 +6356,8 @@ Zoom
 -Rocker acts like releasing either button.
 \end_layout
 
-\begin_layout Standard
-\begin_inset space ~
-\end_inset
-
-
+\begin_layout RefSubsection
+Changing the X11 Keysyms
 \end_layout
 
 \begin_layout Standard

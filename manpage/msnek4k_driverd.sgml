@@ -111,20 +111,31 @@ This setting is required if the <envar>DISPLAY</envar> environment variable is n
 </literallayout></para><variablelist>
 <varlistentry><term><filename>$HOME/.msnek4k_driverd.xmodmap</filename></term><listitem><para>User keysym definitions for <command>msnek4k_driverd</command>.</para></listitem></varlistentry></variablelist><para>This is the user's personal "override" file. (You have to create it; it won't automagically poof into existence.)</para>
 <para>Non-expert users should refer to the manpage for the <command>xmodmap</command> utility and look at the file, "<filename>/etc/X11/msnek4k_driverd.xmodmap</filename>", as an example of how to define their own "<filename>$HOME/.msnek4k_driverd.xmodmap</filename>".</para></refsect1><refsect1>
-<title>Examples</title>
-<para>The first example is how to use the "Zoom"-Rocker as a mouse-wheel.</para>
-<para>Start by opening the configuration file, "<filename>/etc/msnek4k_driverd.conf</filename>", in your favorite editor, running as "root". For example, open your favorite terminal program (<command>gnome-terminal</command>, <command>konsole</command>, <command>xterm</command>, ...) and run the following from the commandline: <literallayout>&nbsp;&nbsp;&nbsp;&nbsp;<prompt>me@myhost:$ </prompt>sudo&nbsp;nano&nbsp;/etc/msnek4k_driverd.conf</literallayout></para>
+<title>EXAMPLES</title>
+<refsect2>
+<title>Notes for the Less-Experienced User:</title>
+<para>(Power-users, please skip this subsection.)</para>
+<para>Customizing <command>msnek4k_driverd</command> requires you to use the terminal. If the word "terminal" or the idea of a commandline prompt means nothing to you or is intimidating, you <emphasis>might</emphasis> be able to get away with the following:</para><itemizedlist>
+<listitem><para>If your desktop menu(s) have an editor that you can, "run as Administrator", you can use that to edit the configuration file, "<filename>/etc/msnek4k_driverd.conf</filename>".</para></listitem><listitem><para>You can "restart" <command>msnek4k_driverd</command> by logging out and logging back in.</para></listitem></itemizedlist><para>But why go through the hassle of logging out &amp; logging back in?</para>
+<para>&nbsp;</para>
+<para>If you're <emphasis>not intimidated</emphasis> by the commandline, open your favorite terminal program (<command>gnome-terminal</command>, <command>konsole</command>, <command>xterm</command>, ...) now. (You'll usually find it in the "System" or "Settings" menu of your desktop.)</para>
+<para>To edit the configuration file, "<filename>/etc/msnek4k_driverd.conf</filename>" as the system administrator (a.k.a. "running as root"), use one of the following: <literallayout>&nbsp;&nbsp;&nbsp;&nbsp;<prompt>me@myhost:$ </prompt>sudo&nbsp;gnome-text-editor&nbsp;/etc/msnek4k_driverd.conf</literallayout></para>
+<para>or: <literallayout>&nbsp;&nbsp;&nbsp;&nbsp;<prompt>me@myhost:$ </prompt>su&nbsp;root&nbsp;gnome-text-editor&nbsp;/etc/msnek4k_driverd.conf</literallayout></para>
+<para>On most Linux distributions, including Debian and Ubuntu, you'll use the first one. If, however, your Linux distribution does not have the <command>sudo</command> command installed (or if it's not configured), use the command <command>su&nbsp;root</command> in its place. (Also, feel free to replace <command>gnome-text-editor</command> with your favorite text editor. If you don't have a favorite and <command>gnome-text-editor</command> isn't installed on your system, try <command>kate</command>, <command>nedit</command>, <command>xedit</command>, or even a non-GUI editor like <command>nano</command> or <command>pico</command>. <emphasis>Do not use a word processor</emphasis>, however.)</para>
+<para>To reload the configuration file, you will send <command>msnek4k_driverd</command> the "<literal>SIGUSR1</literal>" signal, by running the following command in the terminal:<literallayout>&nbsp;&nbsp;&nbsp;&nbsp;<prompt>me@myhost:$ </prompt>sudo&nbsp;pkill&nbsp;-SIGUSR1&nbsp;msnek4k_driverd</literallayout></para>
+<para>If you don't have <command>pkill</command> installed on your system, you'll have to do a little bit more typing: <literallayout>&nbsp;&nbsp;&nbsp;&nbsp;<prompt>me@myhost:$ </prompt>sudo&nbsp;kill&nbsp;-SIGUSR1&nbsp;`ps&nbsp;-ew&nbsp;|&nbsp;grep&nbsp;-v&nbsp;grep&nbsp;|&nbsp;\
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;grep&nbsp;msnek4k_driverd&nbsp;|&nbsp;awk&nbsp;'{print&nbsp;$1}'`
+</literallayout></para></refsect2><refsect2>
+<title>"Zoom"-Rocker Mouse-Wheel</title>
+<para>The first example is how to use the "Zoom"-Rocker as a mouse-wheel, which is, besides the default configuration, another common configuration.</para>
+<para>Start by opening the configuration file, "<filename>/etc/msnek4k_driverd.conf</filename>", in your favorite editor, running as "root". </para>
 <para>Change or add the settings shown below to the following: <literallayout>&nbsp;&nbsp;&nbsp;&nbsp;ZoomUp.x11Keycode = 4
 &nbsp;&nbsp;&nbsp;&nbsp;ZoomDown.x11Keycode = 5
 
 &nbsp;&nbsp;&nbsp;&nbsp;Zoom.isMouseButton = true
 &nbsp;&nbsp;&nbsp;&nbsp;Zoom.isMouseWheel = true</literallayout></para>
-<para>Save the file and reload the configuration file by running the following command in the terminal:<literallayout>&nbsp;&nbsp;&nbsp;&nbsp;<prompt>me@myhost:$ </prompt>sudo&nbsp;pkill&nbsp;-SIGUSR1&nbsp;msnek4k_driverd</literallayout></para>
-<para>If you don't have <command>pkill</command> installed on your system, you'll have to do a little bit more typing: <literallayout>&nbsp;&nbsp;&nbsp;&nbsp;<prompt>me@myhost:$ </prompt>sudo&nbsp;kill&nbsp;-SIGUSR1&nbsp;`ps&nbsp;-ew&nbsp;|&nbsp;grep&nbsp;-v&nbsp;grep&nbsp;|&nbsp;\
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;grep&nbsp;msnek4k_driverd&nbsp;|&nbsp;awk&nbsp;'{print&nbsp;$1}'`
-</literallayout></para>
-<para>After <command>msnek4k_driverd</command> reloads the configuration file, the "Zoom"-Rocker should now act like the mouse-wheel.</para>
-<para>&nbsp;</para>
+<para>Save the file and reload the configuration file by sending <command>msnek4k_driverd</command> the "<literal>SIGUSR1</literal>" signal (as described above). After <command>msnek4k_driverd</command> reloads the configuration file, the "Zoom"-Rocker should now act like the mouse-wheel.</para></refsect2><refsect2>
+<title>"Zoom"-Rocker as Left &amp; Right Mouse Buttons</title>
 <para>The next example is a tad contrived, but potentially useful for artists or anyone else who has to hold down a mouse button for extended periods of time. The steps are nearly identical to those in the previous example, with one exception. When you edit "<filename>/etc/msnek4k_driverd.conf</filename>", make these changes: <literallayout>&nbsp;&nbsp;&nbsp;&nbsp;ZoomUp.x11Keycode = 1
 &nbsp;&nbsp;&nbsp;&nbsp;ZoomDown.x11Keycode = 3
 
@@ -132,8 +143,8 @@ This setting is required if the <envar>DISPLAY</envar> environment variable is n
 &nbsp;&nbsp;&nbsp;&nbsp;Zoom.isMouseWheel = false</literallayout></para>
 <para>(The last line isn't strictly required. You could also delete or comment out any existing lines containing the <option>Zoom.isMouseWheel</option> setting.)</para>
 <para>Save the modified "<filename>/etc/msnek4k_driverd.conf</filename>" and send "<literal>SIGUSR1</literal>" to <command>msnek4k_driverd</command> using the steps from the previous example.</para>
-<para>Holding "Zoom"-Rocker up or down will now be the same as pressing and holding the left or right mouse button, respectively. Releasing the "Zoom"-Rocker acts like releasing either button.</para>
-<para>&nbsp;</para>
+<para>Holding "Zoom"-Rocker up or down will now be the same as pressing and holding the left or right mouse button, respectively. Releasing the "Zoom"-Rocker acts like releasing either button.</para></refsect2><refsect2>
+<title>Changing the X11 Keysyms</title>
 <para>Lastly, here is an example for customizing keysyms.</para>
 <para>Suppose the file "<filename>/etc/msnek4k_driverd.conf</filename>" contains the following settings:<literallayout>&nbsp;&nbsp;&nbsp;&nbsp;Spell.x11Keycode = 154
 &nbsp;&nbsp;&nbsp;&nbsp;ZoomUp.x11Keycode = 183
@@ -193,6 +204,6 @@ This setting is required if the <envar>DISPLAY</envar> environment variable is n
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;same_screen YES,
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;XLookupString gives 0 bytes:
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;XFilterEvent returns: False </literallayout></para>
-<para>If any output is missing, check for typos in the "<filename>/etc/msnek4k_driverd.conf</filename>" or "<filename>$HOME/.msnek4k_driverd.xmodmap</filename>" file.</para></refsect1><refsect1>
+<para>If any output is missing, check for typos in the "<filename>/etc/msnek4k_driverd.conf</filename>" or "<filename>$HOME/.msnek4k_driverd.xmodmap</filename>" file.</para></refsect2></refsect1><refsect1>
 <title>SEE ALSO</title>
 <para><citerefentry><refentrytitle>xmodmap</refentrytitle><manvolnum>1</manvolnum></citerefentry>, <citerefentry><refentrytitle>xev</refentrytitle><manvolnum>1</manvolnum></citerefentry></para></refsect1></refentry></article>

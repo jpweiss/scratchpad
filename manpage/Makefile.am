@@ -21,8 +21,12 @@ CLEANFILES = manpage.*
 ## [jpw] Rules for building the manpage
 ##
 
-# Remappings for the single-quote, double-quote, right-arrow, and (R)
-# characters, in UTF-8 encoding.
+# The First 'perl' Command:
+#   Remaps the UTF-8 encoded single-quote, double-quote, right-arrow, and (R)
+#   characters.
+# The Second 'perl' Command:
+#   'docbook2man' forcibly uppercases the text of subsection headings, for
+#   some reason.  This perl changes them to properly-capitalized headings.
 $(msnek4k_mantarg):  $(msnek4k_mansrc)
 	perl -p -i -e 's/&hellip;/.../g;' \
 		-e 's/\xC2\xAE/\xAE/g;' \
@@ -32,4 +36,8 @@ $(msnek4k_mantarg):  $(msnek4k_mansrc)
 		-e 's/&[lr]dquo;/"/g;' \
 		-e 's/&[lr]squo;/'"'"'/g;' $?
 	docbook2man $?
-
+	perl -p -i -e 'if (m/^\.SS/) { \
+		  s/\b([[:upper:]]+)\b/ucfirst(lc($$1))/ge; \
+		  s/^\.Ss/.SS/i; \
+		  s/\b(A[ns]?|For|From|Of|The|With)\b/lc($$1)/ge; \
+		1; }' $@

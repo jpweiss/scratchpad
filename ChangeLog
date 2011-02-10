@@ -1,3 +1,14 @@
+2011-02-10 16:00  John Weiss
+
+	* [r2114] ChangeLog, manpage/Makefile.am, manpage/Makefile.in,
+	manpage/msnek4k_driverd.1, manpage/msnek4k_driverd.lyx,
+	manpage/msnek4k_driverd.sgml, msnek4k-driverd.spec
+	- Added a "newbie" subsection to the EXAMPLES section of the
+  	  manpage.   Reorganized the EXAMPLES section, as well.
+	- Enhanced the manpage-Makefile to deal with a misfeature in
+	  docbook2man (it forcibly uppercases the text in subsection
+	  headings, which is not what I want).
+
 2011-02-09 16:20  John Weiss
 
 	* [r2113] ChangeLog, Doxygen, doxygen.tags
