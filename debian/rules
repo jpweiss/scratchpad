@@ -59,5 +59,5 @@ override_dh_fixperms:
 #        So, I'll brute-force it.
 override_dh_installdeb:
 	dh_installdeb
-	-cp debian/conffiles ${acINSTALLROOT}/DEBIAN/
+	cp -f debian/conffiles ${acINSTALLROOT}/DEBIAN/
 

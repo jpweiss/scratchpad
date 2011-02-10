@@ -25,7 +25,7 @@ CLEANFILES = debian/files debian/*.debhelper.log
 package_template_files = *.spec pkgTemplates/*.in
 ## [jpw]  Note that we can't use debian/*, or we'll drag in files created
 ## during the package build.  And that's a Bad Thing.
-debian_build_files = debian/changelog debian/compat \
+debian_build_files = debian/changelog debian/compat debian/conffiles \
 	debian/control debian/copyright debian/docs debian/rules
 
 ## [jpw]  I don't get why I need to specify the stuff in $(nobase_doc_DATA)

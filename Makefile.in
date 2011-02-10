@@ -258,7 +258,7 @@ autoconf_automake_files = COPYING WARRANTY INSTALL NEWS AUTHORS \
 nobase_doc_DATA = $(autoconf_automake_files) examples/*
 CLEANFILES = debian/files debian/*.debhelper.log
 package_template_files = *.spec pkgTemplates/*.in
-debian_build_files = debian/changelog debian/compat \
+debian_build_files = debian/changelog debian/compat debian/conffiles \
 	debian/control debian/copyright debian/docs debian/rules
 
 EXTRA_DIST = $(nobase_doc_DATA) $(debian_build_files) \
