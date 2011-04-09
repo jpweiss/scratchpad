@@ -430,7 +430,7 @@ sub verify_listfile_archive($$$) {
         }
     }
     close TBV_IN;
-    check_syscmd_status "tar -jtf";
+    check_syscmd_status("tar -jtf");
 
     my @omission_list = sort(keys(%omission_set));
     my $n_omissions = scalar(@omission_list);
