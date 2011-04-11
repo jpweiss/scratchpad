@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Copyright (C) 2003-2009 by John P. Weiss
+# Copyright (C) 2003-2011 by John P. Weiss
 #
 # This package is free software; you can redistribute it and/or modify
 # it under the terms of the Artistic License, included as the file
@@ -24,7 +24,7 @@
 ############
 
 
-MYVERSION='1_9_3'
+MYVERSION='2_0_0'
 
 BIN_DIR=${PWD}
 
@@ -36,8 +36,10 @@ BIN_DIR=${PWD}
 ############
 
 
+#DEVEL="" # Set this var in the environment to run this script in development
+          # mode.
+
 CONFIG_FILE=''
-DEVEL=''
 VERBOSE_CRON=''
 AR_DIR=''
 AR_PREFIX=''
