@@ -44,9 +44,9 @@ VERBOSE_CRON=''
 AR_DIR=''
 AR_PREFIX=''
 WRK_DIR=''
-INCR_CRON_SH='./cron/pkgBackup.incr.sh'
+INCR_CRON_SH='./cron/pkgBackup.incr'
 INCR_CRON_INSTALLPATH="/etc/cron.weekly"
-FULL_CRON_SH='./cron/pkgBackup.full.sh'
+FULL_CRON_SH='./cron/pkgBackup.full'
 FULL_CRON_INSTALLPATH="/etc/cron.monthly"
 DO_FULL_NOW=''
 
