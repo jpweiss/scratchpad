@@ -1,15 +1,3 @@
-- The Big One:
-
-  Finish 'debUtils.pm'
-
-  Since I'm not using a debian-based distro at the moment, I'm kinda
-  flying blind here.  The only bit of info I've got is this:
-  * "admindir=/var/lib/dpkg", but can be set from the commandline of
-    "dpkg".
-  * Files in the "admindir" seem to contain the list of package member
-    files.
-  * Package install time is... where?  I haven't found out yet...
-
 - "install.sh" does not handle cron installations without an
   /etc/cron.{weekly,monthly}.  For these installations, it would be
   very nice to add two lines to the global 'crontab' file.
