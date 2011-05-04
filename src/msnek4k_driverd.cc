@@ -34,12 +34,16 @@ msnek4k_driverd_cc__="$Id$";
 // Requires -lXtst
 #include <X11/extensions/XTest.h>
 
+// Required for XkbGetAutoRepeatRate
+#include <X11/XKBlib.h>
+
 #include <boost/lexical_cast.hpp>
 
 #include "X11Display.h"
 #include "LinuxInputDevice.h"
 #include "LinuxInputEvent.h"
 #include "Daemonizer.h"
+#include "Timer.h"
 // Requires '-lboost_program_options-mt'
 #include "ProgramOptions_Base.h"
 
@@ -70,7 +74,7 @@ using jpwTools::LinuxInputEvent;
 
 
 namespace g__ {
- const unsigned ReadFail_SleepSec=1;
+ const double ReloadCfgfile_secs=1.0;
 
  const string CopyrightInfo="Copyright (C) 2010-2011 by John Weiss\n"
      "This program is free software; you can redistribute it and/or modify\n"
@@ -648,21 +652,53 @@ int cxx_main(const string& myName,
     // necessarily want that.
     setupSignalHandling();
 
+    // To make this driver more responsive, we'll poll the input device and
+    // time out periodically.  For the timeout interval, we'll use 10 times
+    // the X keyboard auto-repeat delay.
+    //
+    // Why the X keyboard auto-repeat delay?  It's user-controlled, and it
+    // already encapsulates a measure of "keyboard responsiveness".
+    //
+    // Why 2?  The timeout should be short enough to keep this process active,
+    // but long enough to keep it from chewing up CPU.  So, it should be a
+    // longer than the X keyboard auto-repeat delay by some factor.
+
+    unsigned xkbGARRdummy;
+    unsigned pollTimeoutInterval;
+    XkbGetAutoRepeatRate(theDisplay, XkbUseCoreKbd,
+                         &pollTimeoutInterval, &xkbGARRdummy);
+    pollTimeoutInterval *= 2;
+    if(!pollTimeoutInterval) {
+        // Use a default of 1 second.
+        pollTimeoutInterval = 1;
+    }
+
     //
     // The Main Loop
     //
 
+    jpwTools::Timer reloadCfgTimer;
     LinuxInputEvent kbdEvent;
+
     while(true)
     {
-        if(!kbdEvent.read(kbdDev)) {
-            sleep(g__::ReadFail_SleepSec);
-            continue;
-        }
+        // Wait for something to happen on the keyboard device.
+        if(kbdDev.poll(pollTimeoutInterval))
+        {
+            // Get the keyboard event.
+            if(kbdEvent.read(kbdDev)) {
+                processKbdEvent(kbdEvent, theDisplay, opts);
+            }
 
-        // Reread the cfgfile, if needed.  Then handle the keyboard event.
-        opts.handleAnyRequiredReparse(dlog_st);
-        processKbdEvent(kbdEvent, theDisplay, opts);
+            // Reread the config. file, if needed.  We won't do this every
+            // keyboard event.  After all, if the user is holding down the
+            // Zoom Rocker, they won't be editing the config. file or running
+            // 'kill -USR1' on this process.  ^_^
+            if(g__::ReloadCfgfile_secs <= reloadCfgTimer.elapsed()) {
+                opts.handleAnyRequiredReparse(dlog_st);
+                reloadCfgTimer.stop();
+            }
+        }
     }
 }
 

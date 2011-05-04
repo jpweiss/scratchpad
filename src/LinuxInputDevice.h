@@ -23,8 +23,18 @@
 #include <string>
 #include <vector>
 
+#include <boost/scoped_array.hpp>
+
 #include <stdint.h>
 #include <unistd.h> // For Unix/POSIX 'read()' fn.
+
+
+// Forward Declarations
+//
+extern "C" {
+    struct pollfd;
+    typedef struct pollfd C_pollfd_t;
+}
 
 
 // Enclosing namespace
@@ -33,6 +43,7 @@ namespace jpwTools {
  // Using decls.
  //
  using std::string;
+ using boost::scoped_array;
 
 
  // Class LinuxInputDevice
@@ -45,8 +56,9 @@ namespace jpwTools {
   * In addition, this class has a function for scanning the \c
   * "/dev/input/event*" devices for a matching device.
   */
- struct LinuxInputDevice
+ class LinuxInputDevice
  {
+ public:
      typedef std::vector<uint32_t> cap_flag_vec_t;
      static const cap_flag_vec_t m__NULL_VEC;
 
@@ -83,6 +95,15 @@ namespace jpwTools {
      /// Closes the file description if it was ever opened.
      ~LinuxInputDevice();
 
+     /// Polls the input device.
+     /**
+      * \param timeout_msecs
+      * A positive nonzero timeout value for the call to \c poll.  Don't make
+      * this too small when calling from a loop, or your loop will chew up
+      * CPU.
+      */
+     bool poll(int timeout_msecs);
+
      /// Read an object.
      /**
       * Reads a block of data the size of the object directly into the
@@ -96,11 +117,26 @@ namespace jpwTools {
      template<typename T>
      ssize_t reinterpret_read(T* objPtr)
      {
-         return read(m__fd, reinterpret_cast<void*>(objPtr), sizeof(T));
+         return read(getFd(), reinterpret_cast<void*>(objPtr), sizeof(T));
      }
 
  private:
-     int m__fd;
+     scoped_array<C_pollfd_t> m__pFds_sca;
+
+     /// Returns the file descriptor stored in \c 'm__pFds_sca'
+     /**
+      * Exists solely to avoid including "poll.h" in this header file.
+      *
+      * Forward-declaring the C-struct, \c 'struct pollfd' lets one declare
+      * \c 'm__pFds_sca', the member \c boost::scoped_array of \c 'struct
+      * pollfd' without the header.  One cannot, obviously, access its
+      * members.
+      *
+      * Normally, one would just move the definitions of any member functions
+      * needing the filehandle into the source file.  \c reinterpret_read(),
+      * however, doesn't have that option, as it's a template function.
+      */
+     int getFd() const;
 
      /// Calls the Unix/POSIX \c open() function for reading, throwing a
      /// std::ios_base::failure on error.

@@ -31,6 +31,7 @@ LinuxInputDevice_cc__="$Id: class.cc 2037 2010-10-26 22:27:48Z candide $";
 #include <dirent.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <poll.h>
 
 #include <linux/input.h>
 
@@ -69,6 +70,25 @@ const LinuxInputDevice::cap_flag_vec_t LinuxInputDevice::m__NULL_VEC;
 
 
 typedef vector<string> stringvec_t;
+
+
+/////////////////////////
+
+//
+// Class LinuxInputDevice::PollableFDList
+//
+
+
+/*
+struct LinuxInputDevice::PollableFDList
+{
+    explicit PollableFDList(unsigned size)
+        : m__po
+
+private:
+    struct pollfd* m__pollfdArray
+};
+*/
 
 
 /////////////////////////
@@ -125,6 +145,14 @@ inline bool matchedCapabilities(uint32_t* capabilities_bitmask,
 //
 // LinuxInputDevice Member Functions
 //
+
+
+LinuxInputDevice::~LinuxInputDevice()
+{
+    if(m__pFds_sca[0].fd >= 0) {
+        close(m__pFds_sca[0].fd);
+    }
+}
 
 
 inline int LinuxInputDevice::openUnixReadFd(const string& filename)
@@ -338,6 +366,10 @@ inline int LinuxInputDevice::scanForDevice(uint16_t targVendor,
 }
 
 
+// Constructor must go here to take advantage of inlining the two functions
+// above.
+//
+
 LinuxInputDevice::LinuxInputDevice(const string& filename,
                                    uint16_t targVendor,
                                    uint16_t targProduct,
@@ -346,16 +378,19 @@ LinuxInputDevice::LinuxInputDevice(const string& filename,
                                    requiredCapabilities,
                                    const cap_flag_vec_t&
                                    forbiddenCapabilities)
-    : m__fd(-1)
+    : m__pFds_sca(new C_pollfd_t[1])
 {
+    m__pFds_sca[0].fd = -1;
+    m__pFds_sca[0].events = POLLRDNORM;
+
     if( (filename == "auto") && targVendor && targProduct )
     {
-        m__fd = scanForDevice(targVendor,
-                              targProduct,
-                              fallback_byName,
-                              requiredCapabilities,
-                              forbiddenCapabilities);
-        if(m__fd < 0) {
+        m__pFds_sca[0].fd = scanForDevice(targVendor,
+                                          targProduct,
+                                          fallback_byName,
+                                          requiredCapabilities,
+                                          forbiddenCapabilities);
+        if(m__pFds_sca[0].fd < 0) {
             cerr << endl
                  << "Scanning for the "
                  << msnek4kDevname
@@ -371,16 +406,24 @@ LinuxInputDevice::LinuxInputDevice(const string& filename,
             exit(1);
         }
     } else {
-        m__fd = openUnixReadFd(filename);
+        m__pFds_sca[0].fd = openUnixReadFd(filename);
     }
 }
 
 
-LinuxInputDevice::~LinuxInputDevice()
+int LinuxInputDevice::getFd() const
 {
-    if(m__fd >= 0) {
-        close(m__fd);
-    }
+    return m__pFds_sca[0].fd;
+}
+
+
+bool LinuxInputDevice::poll(int timeout_msecs)
+{
+    int pollStatus = ::poll(m__pFds_sca.get(), 1, timeout_msecs);
+
+    // Check m__pFds_sca for errors?  What should we do if we have one?
+
+    return (pollStatus > 0);
 }
 
 
