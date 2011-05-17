@@ -1,3 +1,43 @@
+2011-05-17 19:16  candide
+
+	* [r2168] ChangeLog, configure.ac:
+	  - Updates to this file.
+	  - Preparation for the v1.0.0 release.
+
+2011-05-17 18:53  candide
+
+	* [r2166] ChangeLog, aclocal.m4, ax_jpwTools.m4, config.h.in,
+	  configure, configure.ac, debian/control, msnek4k-driverd.spec,
+	  pkgTemplates/debian.control.in,
+	  pkgTemplates/msnek4k-driverd.spec.in, src/Makefile.am,
+	  src/Makefile.in, src/msnek4k_driverd.cc:
+	  - Cosmetic fixups to the ChangeLog.
+	  - Updates to autoconf-, automake-, and configure-generated
+	    files.
+	  - New Autoconf macros added, mainly around static linking
+	    support.
+	  - Now statically-linking the boost::program_options library,
+	    eliminating a runtime dependency from the *.rpm and *.deb
+	    packages.
+	  - In "ReloadableProgramOptions_Base", renamed
+	    'handleAnyRequiredReparse()' to 'reparseIfPending()', which
+	    makes a bit more sense from a code-readability-perspective.
+
+2011-05-04 11:04  candide
+
+	* [r2149] ChangeLog, src/LinuxInputDevice.cc,
+	  src/LinuxInputDevice.h, src/Timer.h, src/msnek4k_driverd.cc:
+	  - Modified the main loop:  Now uses polling to check if there is
+	    data on the kbd device.  By polling and timing out
+	    periodically, msnek4k_driverd can "remain active" w/o
+	    consuming much CPU.  This, in turn, makes msnek4k_driverd more
+	    responsive after long periods of inactivity.
+	    .
+	    The call to 'poll' has a timeout 2 times the X keyboard
+	    auto-repeat activation delay, (A) making it tunable, and (B)
+	    giving it a responsiveness close to (but slower than) X
+	    keyboard repeat.
+
 2011-02-10 17:25  John Weiss
 
 	* [r2115] ChangeLog, Makefile.am, Makefile.in, Makefile,
@@ -520,5 +560,6 @@
 	  Project created.
 	.
 	.
-	**** This ChangeLog generated using svn2cl ****
+	**** This ChangeLog generated using:                         ****
+	****     'svn2cl -i -r HEAD:$minRev -o updated.ChangeLog'    ****
 
