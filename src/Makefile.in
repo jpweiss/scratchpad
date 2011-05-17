@@ -82,8 +82,7 @@ am_msnek4k_driverd_OBJECTS = LinuxInputEvent.$(OBJEXT) \
 	Daemonizer.$(OBJEXT) Any.$(OBJEXT) \
 	ProgramOptions_Base.$(OBJEXT) msnek4k_driverd.$(OBJEXT)
 msnek4k_driverd_OBJECTS = $(am_msnek4k_driverd_OBJECTS)
-am__DEPENDENCIES_1 =
-msnek4k_driverd_DEPENDENCIES = $(am__DEPENDENCIES_1)
+msnek4k_driverd_LDADD = $(LDADD)
 DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
@@ -253,7 +252,6 @@ msnek4k_driverd_SOURCES = X11Display.h \
 	Any.cc ProgramOptions_Base.cc msnek4k_driverd.cc \
 	Any.h LibTrace.h Trace.h Daemonizer.h ProgramOptions_Base.h
 
-msnek4k_driverd_LDADD = $(BOOST_PROGRAM_OPTIONS_LIB)
 etcx11ddir = $(ETC_X11_PATH)
 # N.B.:  'etcx11d_DATA' requires 'etcx11ddir'
 etcx11d_DATA = $(top_srcdir)/examples/msnek4k_driverd.xmodmap

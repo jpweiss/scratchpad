@@ -71,6 +71,116 @@ AC_DEFUN([AX_JPW_REQUIRE],
 ])
 
 
+## AX_JPW_ADD_LIB_STATIC([<Lib>], [<DefineUnquoted>])
+##
+## Adds the library <Lib> to the list of libraries to link, but using static 
+## linking.
+##
+## A '-l' is prepented to <Lib> and the resulting string added to the left of
+## "LIBS"
+##
+## {Optional}
+## "<DefineUnquoted>" is a flag.  If set to 'y', the "HAVE_LIB<Lib>" cpp
+## constant will be defined.  If set to any other value, the
+## "HAVE_LIB<DefineUnquoted>" cpp constant will be defined.
+##
+##
+## {Dev.Note.:  Because of how AC_DEFINE_UNQUOTED & AS_TR_CPP and other m4
+##              macros work, we need to pass our arguments directly to the
+##              m4-macros.  Otherwise, we won't get the correct behavior
+##              when running auto(re)conf.}
+##
+AC_DEFUN([AX_JPW_ADD_LIB_STATIC],
+[
+  LIBS="-Wl,-Bstatic $1 -Wl,-Bdynamic $LIBS"
+  m4_ifval([$2],
+           [m4_if([$2], [y],
+                  [AH_CHECK_LIB([$1])
+                   AC_DEFINE_UNQUOTED(AS_TR_CPP(HAVE_LIB$1))],
+                  [AH_CHECK_LIB([$2])
+                   AC_DEFINE_UNQUOTED(AS_TR_CPP(HAVE_LIB$2))]
+                  )],
+           [])
+])
+
+
+## AX_JPW_ADD_BOOST_PROGRAM_OPTIONS([<static>], [<is_mt>])
+##
+## Invokes the following:
+## 
+##     AX_BOOST_PROGRAM_OPTIONS
+##     AX_JPW_REQUIRE([BOOST_PROGRAM_OPTIONS], [boost::program_options], [ax])
+##
+## ...then adds $BOOST_PROGRAM_OPTIONS_LIB to "LIBS".
+##
+## {Optional}
+## "<static>" is a flag.  If set (to anything), the library will be added
+## using AX_JPW_ADD_LIB_STATIC
+##
+## {Optional}
+## "<not_mt>" is a flag.  If set (to anything), the non-reentrant version of
+## the library is added instead of the multithreaded one
+##
+##
+## {Dev.Note.:  Because of how m4 macros work, we need to pass our
+##              arguments directly to the m4-macros.  Otherwise, we 
+##              won't get the correct behavior when running auto(re)conf.}
+##
+AC_DEFUN([AX_JPW_ADD_BOOST_PROGRAM_OPTIONS],
+[
+  AX_BOOST_PROGRAM_OPTIONS
+  AX_JPW_REQUIRE([BOOST_PROGRAM_OPTIONS], [boost::program_options], [ax])
+
+  jpw__b_po_lib="$BOOST_PROGRAM_OPTIONS_LIB"
+  m4_ifval([$2],
+           [jpw__b_po_lib=`echo $jpw__b_po_lib | sed -e 's/-mt$//'`],
+           [])
+
+  m4_ifval([$1],
+           [AX_JPW_ADD_LIB_STATIC([$jpw__b_po_lib],
+                                  [boost_program_options])],
+           [LIBS="$jpw__b_po_lib $LIBS"])
+])
+
+
+## AX_JPW_CHECK_LIB([<Function>],
+##                  [<Lib>],
+##                  [<staticLinking>],
+##                  [<OtherLibs>])
+##
+## Invokes:
+##     AC_CHECK_LIB(<Lib>, <Function>, [CUST_ADD], [CUST_ERR], <OtherLibs>)
+##
+## ...where "CUST_ADD" and "CUST_ERR" are custom operations described below.
+##
+## "CUST_ERR" is a call to "AC_MSG_ERROR" using the error message:
+##     "Failed to the <Lib> library.  Cannot continue."
+## 
+## "CUST_ADD" performs the same operations as AC_CHECK_LIB, with one 
+## special addition.  If the argument "<staticLinking>" is not empty, the
+## libraries added will be statically-linked.
+##
+## {Dev.Note.:  Because of how AC_CHECK_LIB works, we need to pass our
+##              arguments directly to AC_CHECK_LIB and the other m4-macros.
+##              Otherwise, we won't get the correct behavior when running
+##              auto(re)conf.}
+##
+AC_DEFUN([AX_JPW_CHECK_LIB],
+[
+  jpw__tstErrMsg="Error:  Failed to find the \"$jpw__tstLib\" library.
+                  Cannot continue."
+
+  m4_ifval([$3],
+           [AC_CHECK_LIB([$1], [$2],
+                         [AX_JPW_ADD_LIB_STATIC([$1], y)],
+                         [AC_MSG_ERROR([$jpw__tstErrMsg])], [$4])
+           ],
+           [AC_CHECK_LIB([$1], [$2], [],
+                         [AC_MSG_ERROR([$jpw__tstErrMsg])], [$4])
+           ])
+])
+
+
 ## AX_JPW_SET_VAR_DEFAULT([<varname>],
 ##                        [<default-value>])
 ##

@@ -16,7 +16,7 @@ msnek4k_driverd_SOURCES = X11Display.h \
 	Trace.cc Daemonizer.cc \
 	Any.cc ProgramOptions_Base.cc msnek4k_driverd.cc \
 	Any.h LibTrace.h Trace.h Daemonizer.h ProgramOptions_Base.h
-msnek4k_driverd_LDADD = $(BOOST_PROGRAM_OPTIONS_LIB)
+
 
 
 ## [jpw] Can't use dist_bin_SCRIPTS here, since that would install things to

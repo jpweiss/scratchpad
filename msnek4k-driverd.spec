@@ -8,7 +8,6 @@ Source: http://sourceforge.net/projects/msnek4kdriverd/files/v%{version}/%{name}
 URL: http://sourceforge.net/projects/msnek4kdriverd
 License: Artistic
 Group: X11
-Requires: boost >= 1.33.1
 Requires: libXtst.so.6
 
 BuildRoot: %{_tmppath}/%{name}-buildroot
@@ -145,8 +144,10 @@ rm -rf %{buildroot}/*
     %{_mandir}/*
 
 %changelog
+* Fri May 17 2011 John Weiss <jpwcandide@sourceforge.net> 1.0.0-1
+- See Changelog, rev2149 onward, for the code changes.
 * Fri Feb 11 2011 John Weiss <jpwcandide@sourceforge.net> 0.9.0-1
-- See Changelog, rev2082 onward, for the code changes.
+- See Changelog, rev2098 onward, for the code changes.
 * Fri Dec 31 2010 John Weiss <jpwcandide@sourceforge.net> 0.8.1-1
 - See Changelog, rev2082 onward, for the code changes.
 * Fri Dec 10 2010 John Weiss <jpwcandide@sourceforge.net> 0.8.0-1

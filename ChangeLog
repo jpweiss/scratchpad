@@ -10,7 +10,7 @@
 	  manpage/msnek4k_driverd.1, manpage/msnek4k_driverd.lyx,
 	  manpage/msnek4k_driverd.sgml, msnek4k-driverd.spec
 	  - Added a "newbie" subsection to the EXAMPLES section of the
-	    manpage.   Reorganized the EXAMPLES section, as well.
+	    manpage.  Reorganized the EXAMPLES section, as well.
 	  - Enhanced the manpage-Makefile to deal with a misfeature in
 	    docbook2man (it forcibly uppercases the text in subsection
 	    headings, which is not what I want).
@@ -518,4 +518,7 @@
 
 	* [r1980] .:
 	  Project created.
+	.
+	.
+	**** This ChangeLog generated using svn2cl ****
 

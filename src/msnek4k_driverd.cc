@@ -690,12 +690,12 @@ int cxx_main(const string& myName,
                 processKbdEvent(kbdEvent, theDisplay, opts);
             }
 
-            // Reread the config. file, if needed.  We won't do this every
-            // keyboard event.  After all, if the user is holding down the
-            // Zoom Rocker, they won't be editing the config. file or running
-            // 'kill -USR1' on this process.  ^_^
+            // Check if the config. file needs to be reread.  We won't do this
+            // every keyboard event.  After all, if the user is holding down
+            // the Zoom Rocker, they can't be running 'kill -USR1' on this
+            // process over and over again.  ^_^
             if(g__::ReloadCfgfile_secs <= reloadCfgTimer.elapsed()) {
-                opts.handleAnyRequiredReparse(dlog_st);
+                opts.reparseIfPending(dlog_st);
                 reloadCfgTimer.stop();
             }
         }
