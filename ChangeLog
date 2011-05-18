@@ -1,10 +1,17 @@
-2011-05-17 19:16  candide
+2011-05-17 20:18  John Weiss
+
+	* [r2169] ChangeLog, configure, debian/changelog,
+	  msnek4k-driverd.spec, pkgTemplates/msnek4k-driverd.spec.in:
+	  - Updates to changelogs and version numbers, in preparation for
+	    the v1.0.0 release.
+
+2011-05-17 19:16  John Weiss
 
 	* [r2168] ChangeLog, configure.ac:
 	  - Updates to this file.
 	  - Preparation for the v1.0.0 release.
 
-2011-05-17 18:53  candide
+2011-05-17 18:53  John Weiss
 
 	* [r2166] ChangeLog, aclocal.m4, ax_jpwTools.m4, config.h.in,
 	  configure, configure.ac, debian/control, msnek4k-driverd.spec,
@@ -23,7 +30,7 @@
 	    'handleAnyRequiredReparse()' to 'reparseIfPending()', which
 	    makes a bit more sense from a code-readability-perspective.
 
-2011-05-04 11:04  candide
+2011-05-04 11:04  John Weiss
 
 	* [r2149] ChangeLog, src/LinuxInputDevice.cc,
 	  src/LinuxInputDevice.h, src/Timer.h, src/msnek4k_driverd.cc:
@@ -560,6 +567,7 @@
 	  Project created.
 	.
 	.
-	**** This ChangeLog generated using:                         ****
-	****     'svn2cl -i -r HEAD:$minRev -o updated.ChangeLog'    ****
+	**** This ChangeLog generated using:                ****
+	****     'svn2cl -i -a -r ${last}:${rel_first} \    ****
+	****          -o ChangeLog.updates.txt'             ****
 

@@ -1,6 +1,12 @@
+msnek4k-driverd (0.9.0-2) unstable; urgency=low
+
+  * See Changelog, rev2149 onward, for the code changes.
+
+ -- John Weiss <jpwcandide@sourceforge.net>  Tue, 17 May 2011 20:05:13 -0400
+
 msnek4k-driverd (0.9.0-1) unstable; urgency=low
 
-  * See Changelog, rev2095 onward, for the code changes.
+  * See Changelog, rev2095-2148, for the code changes.
 
  -- John Weiss <jpwcandide@sourceforge.net>  Wed, 09 Feb 2011 15:52:45 -0500
 
