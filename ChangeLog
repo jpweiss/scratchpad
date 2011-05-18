@@ -1,18 +1,35 @@
-2011-05-17 20:50  John Weiss
+2011-05-17 18:31  John Weiss
+
+	* [r2172] ChangeLog:
+	  - Updated this file with v1.0.0 pre-release bugfixes.
+
+2011-05-18 18:26  John Weiss
+
+	* [r2171] debian/changelog, debian/postinst, debian/prerm,
+	  msnek4k-driverd.spec, pkgTemplates/debian.postinst.in,
+	  pkgTemplates/msnek4k-driverd.spec.in, src/Makefile.am,
+	  src/Makefile.in:
+	  - Bugfix:  New file, "Timer.h", not added to the source package.
+	  - Added status messages to the package install/remove scriptlets.
+	    Not only tracks what's going on for users, but aids debugging
+	    the packages themselves.
+	  - Wrong version number on the debian package.
+
+2011-05-17 20:48  John Weiss
 
 	* [r2170] ChangeLog, README:
 	  - Removed the boilerplate from the README and added a note for
 	    developers and anyone else interested in (a) the SF source
 	    code repository; (b) the ChangeLog.
 
-2011-05-17 20:25  John Weiss
+2011-05-17 20:23  John Weiss
 
 	* [r2169] ChangeLog, configure, debian/changelog,
 	  msnek4k-driverd.spec, pkgTemplates/msnek4k-driverd.spec.in:
 	  - Updates to changelogs and version numbers, in preparation for
 	    the v1.0.0 release.
 
-2011-05-17 19:16  John Weiss
+2011-05-17 19:24  John Weiss
 
 	* [r2168] ChangeLog, configure.ac:
 	  - Updates to this file.
