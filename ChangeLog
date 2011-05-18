@@ -1,4 +1,11 @@
-2011-05-17 20:18  John Weiss
+2011-05-17 20:50  John Weiss
+
+	* [r2170] ChangeLog, README:
+	  - Removed the boilerplate from the README and added a note for
+	    developers and anyone else interested in (a) the SF source
+	    code repository; (b) the ChangeLog.
+
+2011-05-17 20:25  John Weiss
 
 	* [r2169] ChangeLog, configure, debian/changelog,
 	  msnek4k-driverd.spec, pkgTemplates/msnek4k-driverd.spec.in:
