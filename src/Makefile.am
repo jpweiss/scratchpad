@@ -10,7 +10,7 @@
 ## [jpw]  Define targets and sources:
 ##
 bin_PROGRAMS = msnek4k_driverd
-msnek4k_driverd_SOURCES = X11Display.h \
+msnek4k_driverd_SOURCES = Timer.h X11Display.h \
 	LinuxInputEvent.h LinuxInputEvent.cc \
 	LinuxInputDevice.h LinuxInputDevice.cc \
 	Trace.cc Daemonizer.cc \

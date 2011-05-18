@@ -99,6 +99,7 @@ echo BuildRoot=%{buildroot}
 %preun
 if [ "$1" -eq 0 ]; then
     # This is an erase.
+    echo "Stopping the 'msnek4k_driverd' daemon..." >&2
     if [ -x /usr/bin/pkill ]; then
         /usr/bin/pkill msnek4k_driverd
     else
@@ -114,6 +115,7 @@ fi
 %post
 if [ "$1" -gt 1 ]; then
     # This is an upgrade.  Kill all running daemons.
+    echo "Stopping the previous version of 'msnek4k_driverd' ..." >&2
     if [ -x /usr/bin/pkill ]; then
         /usr/bin/pkill msnek4k_driverd
     else
@@ -125,6 +127,7 @@ if [ "$1" -gt 1 ]; then
     fi
 fi
 # Whether an install or upgrade, start the daemon.
+echo "Starting the 'msnek4k_driverd' daemon ..." >&2
 . %{xsessiondir}/90x11-msnek4k_driverd
 
 
