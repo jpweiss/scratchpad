@@ -1,6 +1,6 @@
-#!/usr/bin/perl 
+#!/usr/bin/perl
 #
-# Copyright (C) 2004-2008 by John P. Weiss
+# Copyright (C) 2004-2010 by John P. Weiss
 #
 # This package is free software; you can redistribute it and/or modify
 # it under the terms of the Artistic License, included as the file
@@ -127,7 +127,7 @@ sub main {
         my %pkgs=();
         my %dirs=( 'none' => 0 );
         %pkgs = get_pkglist;
-        #@diffpkg = get_modified_pkgfiles(%pkgs, %dirs, 
+        #@diffpkg = get_modified_pkgfiles(%pkgs, %dirs,
         #                                 $_SkipModifiedPkgfiles_re);
         print "( @diffpkg )\n";
         exit 0;

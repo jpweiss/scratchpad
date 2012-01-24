@@ -1,6 +1,6 @@
-#!/usr/bin/perl 
+#!/usr/bin/perl
 #
-# Copyright (C) 2003-2008 by John P. Weiss
+# Copyright (C) 2003-2010 by John P. Weiss
 #
 # This package is free software; you can redistribute it and/or modify
 # it under the terms of the Artistic License, included as the file
@@ -102,11 +102,11 @@ sub read_backup_dates($) {
             "Returning fixed date instead.\n";
         return ("Last.Full" => "20040102",
                 "Last.Incremental" => "20040603",
-                "All.Incremental" => ["20040103", 
-                                      "20040202", 
-                                      "20040304", 
-                                      "20040403", 
-                                      "20040506", 
+                "All.Incremental" => ["20040103",
+                                      "20040202",
+                                      "20040304",
+                                      "20040403",
+                                      "20040506",
                                       "20040603"]);
     }
 
@@ -180,12 +180,12 @@ sub make_listfile_tar_args($$$$$;@) {
     # Append tarball suffix.
     $tarball .= $_TarSuffix;
     if ($_Verbose) {
-        return ($archive_file_pre, "-v", "-jcp", "--file=$tarball", 
+        return ($archive_file_pre, "-v", "-jcp", "--file=$tarball",
                  "--label=$archive_label",
                  "--files-from=$tar_filelist",
                 @_);
     } # else
-    return ($archive_file_pre, "-jcp", "--file=$tarball", 
+    return ($archive_file_pre, "-jcp", "--file=$tarball",
             "--label=$archive_label",
             "--files-from=$tar_filelist",
             @_);
@@ -205,13 +205,13 @@ sub make_gtar_backup_args($$$\@) {
     }
     $ar_infix .= "-$today";
 
-    my @excludeopts = map({ "--exclude='" . $_ . "'" 
+    my @excludeopts = map({ "--exclude='" . $_ . "'"
                             } @$ref_excludelist);
 
-    my @tarargs = make_listfile_tar_args($ar_dir, $ar_name, 
-                                         $ar_infix, 
+    my @tarargs = make_listfile_tar_args($ar_dir, $ar_name,
+                                         $ar_infix,
                                          ("backup-" . $today),
-                                         "none", 
+                                         "none",
                                          "--ignore-opts",
                                          @excludeopts);
 
@@ -246,7 +246,7 @@ sub exec_tar(@) {
     print "Archiving with command: \"$_tar_bin @tar_args\"\n"
         if ($_UnitTest || $_Verbose);
     # This can return errors when deleted files are still in the archive
-    # list. 
+    # list.
     unless ($_UnitTest && $_NoExec) {
         system($_tar_bin, @tar_args);
         check_syscmd_status("tar");
@@ -286,7 +286,7 @@ sub write_archive_filelist($@) {
 
 # Since the arguments to this command don't have separate variables, I'll
 # outline them:
-# 
+#
 #     do_full_pathlist_backup(<arfile_path>, <arfile_name_prefix>,
 #                             <ar_specfile>));
 #
@@ -294,13 +294,13 @@ sub write_archive_filelist($@) {
 # to backup.
 sub do_full_pathlist_backup($$$) {
     my $today = datestamp();
-    my @tar_args=make_listfile_tar_args($_[0], $_[1], 
-                                        ($_PathBakInfix 
+    my @tar_args=make_listfile_tar_args($_[0], $_[1],
+                                        ($_PathBakInfix
                                          . $_FullBakInfix
                                          . "-"
                                          . $today
                                          ),
-                                        ("all" . $_PathBakInfix . 
+                                        ("all" . $_PathBakInfix .
                                          "-backup-" . $today),
                                         $_[2],
                                         "--no-recursion");
@@ -323,7 +323,7 @@ sub do_full_pathlist_backup($$$) {
 # to backup.
 sub do_full_filelist_backup($$$) {
     my $today = datestamp();
-    my @tar_args=make_listfile_tar_args($_[0], $_[1], 
+    my @tar_args=make_listfile_tar_args($_[0], $_[1],
                                         $_FullBakInfix."-".$today,
                                         ("backup-" . $today), $_[2]);
 
@@ -335,7 +335,7 @@ sub do_full_filelist_backup($$$) {
     exec_tar(@tar_args);
 
     # Write the full backup date to the state-file, overwriting its original
-    # contents. 
+    # contents.
     write_backup_dates($statefile, $today);
 }
 
@@ -350,7 +350,7 @@ sub do_full_filelist_backup($$$) {
 # to backup.
 sub do_incremental_filelist_backup($$$) {
     my $today = datestamp();
-    my @tar_args=make_listfile_tar_args($_[0], $_[1], 
+    my @tar_args=make_listfile_tar_args($_[0], $_[1],
                                         $_IncrBakInfix."-".$today,
                                         ("backup-" . $today), $_[2]);
 
@@ -375,9 +375,9 @@ sub do_incremental_filelist_backup($$$) {
 
     # Write the full backup date to the state-file, using "today" for the new
     # "latest incremental backup" time.
-    write_backup_dates($statefile, 
+    write_backup_dates($statefile,
                        $backup_state{"Last"}{"Full"},
-                       $today, 
+                       $today,
                        @{$backup_state{"All"}{"Incremental"}});
 }
 
@@ -423,7 +423,7 @@ sub verify_listfile_archive($$$) {
         chomp $file;
         if (defined($omission_set{$file})) {
             delete $omission_set{$file};
-        } 
+        }
         else {
             # Odd... it's in the list, but not in the tarball...
             push(@surplus_list, $file);
@@ -500,22 +500,22 @@ tarBackupUtils - Package for performing backups via GNU tar.
 
 =item write_archive_filelist I<listfile_name> (I<filenames> ...)
 
-=item do_full_pathlist_backup I<arfile_path>, I<arfile_prefix>, 
-I<listfile_name>
-                 
-=item do_full_filelist_backup I<arfile_path>, I<arfile_prefix>, 
+=item do_full_pathlist_backup I<arfile_path>, I<arfile_prefix>,
 I<listfile_name>
 
-=item do_incremental_filelist_backup I<arfile_path>, I<arfile_prefix>, 
+=item do_full_filelist_backup I<arfile_path>, I<arfile_prefix>,
 I<listfile_name>
-                 
+
+=item do_incremental_filelist_backup I<arfile_path>, I<arfile_prefix>,
+I<listfile_name>
+
 =item verify_listfile_archive I<tarfile>, I<listfile_dirList>,
-I<listfile_dirList> 
+I<listfile_dirList>
 
-=item do_full_gtar_backup I<arfile_path>, I<arfile_prefix>, 
+=item do_full_gtar_backup I<arfile_path>, I<arfile_prefix>,
 I<@excludelist>, I<@filelist>
 
-=item do_incremental_gtar_backup I<arfile_path>, I<arfile_prefix>, 
+=item do_incremental_gtar_backup I<arfile_path>, I<arfile_prefix>,
 I<@excludelist>, I<@filelist>
 
 =back
@@ -534,11 +534,11 @@ package.
 
 =item *
 
-do_full_pathlist_backup I<arfile_path>, I<arfile_prefix>, 
+do_full_pathlist_backup I<arfile_path>, I<arfile_prefix>,
 I<listfile_name>
 
 Perform a full backup of all of the paths specified in I<listfile_name> (which
-was written by an earlier call to 
+was written by an earlier call to
 L<write_archive_filelist()|/"write_archive_filelist">).  I<arfile_path> is the
 directory in which to create the archive.  I<arfile_prefix> is the name of the
 archive, which will be appended with appropriate suffixes.
@@ -546,14 +546,14 @@ archive, which will be appended with appropriate suffixes.
 This function expects the file I<listfile_name> to contain a list of only
 directories.  It will do a non-recursive, full backup.  The suffixes in the
 archive's name will reflect this.
-         
+
 =item *
 
-do_full_filelist_backup I<arfile_path>, I<arfile_prefix>, 
+do_full_filelist_backup I<arfile_path>, I<arfile_prefix>,
 I<listfile_name>
 
 Perform a full backup of all of the files specified in I<listfile_name> (which
-was written by an earlier call to 
+was written by an earlier call to
 L<write_archive_filelist()|/"write_archive_filelist">).  I<arfile_path> is the
 directory in which to create the archive.  I<arfile_prefix> is the name of the
 archive, which will be appended with appropriate suffixes.
@@ -564,11 +564,11 @@ reflect this, as well as the fact that this is a full backup.
 
 =item *
 
-do_incremental_filelist_backup I<arfile_path>, I<arfile_prefix>, 
+do_incremental_filelist_backup I<arfile_path>, I<arfile_prefix>,
 I<listfile_name>
 
 Perform an incremental backup of all of the files specified in
-I<listfile_name> (which was written by an earlier call to 
+I<listfile_name> (which was written by an earlier call to
 L<write_archive_filelist()|/"write_archive_filelist">).  I<arfile_path> is the
 directory in which to create the archive.  I<arfile_prefix> is the name of the
 archive, which will be appended with appropriate suffixes.
@@ -581,26 +581,26 @@ incremental backup.
 =item *
 
 verify_listfile_archive I<tarfile>, I<listfile_name_dirs>,
-I<listfile_name_files> 
+I<listfile_name_files>
 
 Verify that the archive I<tarfile> contains all of the files or directories
 specified in the files I<listfile_name_files> or
 I<listfile_name_dirs>, respectively.  The function uses the name of I<tarfile>
 to determine which I<listfile_*> arg to use.
 
-Call this function after a call to 
-L<do_full_pathlist_backup()|/"do_full_pathlist_backup"> or 
-L<do_full_filelist_backup()|/"do_full_filelist_backup"> 
+Call this function after a call to
+L<do_full_pathlist_backup()|/"do_full_pathlist_backup"> or
+L<do_full_filelist_backup()|/"do_full_filelist_backup">
 to double-check that C<tar> did indeed archive everything that you told it to.
 
 =item *
 
-do_full_gtar_backup I<arfile_path>, I<arfile_prefix>, I<@excludelist>, 
+do_full_gtar_backup I<arfile_path>, I<arfile_prefix>, I<@excludelist>,
 I<@filelist>
 
 =item *
 
-do_incremental_gtar_backup I<arfile_path>, I<arfile_prefix>, 
+do_incremental_gtar_backup I<arfile_path>, I<arfile_prefix>,
 I<@excludelist>, I<@filelist>
 
 Performs either an incremental or full backup of the files and directories in

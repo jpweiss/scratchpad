@@ -1,6 +1,6 @@
-#!/usr/bin/perl 
+#!/usr/bin/perl
 #
-# Copyright (C) 2003-2008 by John P. Weiss
+# Copyright (C) 2003-2010 by John P. Weiss
 #
 # This package is free software; you can redistribute it and/or modify
 # it under the terms of the Artistic License, included as the file
@@ -38,12 +38,12 @@ BEGIN {
     @ISA         = qw(Exporter);
 
     # Default exports.
-    @EXPORT = qw(build_master_lists update_master_lists 
+    @EXPORT = qw(build_master_lists update_master_lists
                  read_master_fileset write_master_fileset);
     # Permissable exports.
     # your exported package globals go here,
     # as well as any optionally exported functions
-    @EXPORT_OK = qw($_Verbose $_UnitTest 
+    @EXPORT_OK = qw($_Verbose $_UnitTest
                     @_Exclude_fs);
 
     # Tagged groups of exports.
@@ -64,10 +64,10 @@ use jpwTools;
 
 our $_Verbose;  $_Verbose = 0;
 our $_UnitTest; $_UnitTest = 0;
-our @_Exclude_fs; @_Exclude_fs=("proc", 
-                                "iso9660", 
-                                "nfs", 
-                                "afs", 
+our @_Exclude_fs; @_Exclude_fs=("proc",
+                                "iso9660",
+                                "nfs",
+                                "afs",
                                 "usbdevfs",
                                 "devpts");
 
@@ -106,7 +106,7 @@ sub myFinder(\%\%$@) {
     my $ref_fileset = shift;
     my $ref_dirset = shift;
     my $findopts = shift;
-    unless ( (ref($ref_fileset) eq "HASH") && 
+    unless ( (ref($ref_fileset) eq "HASH") &&
              (ref($ref_dirset) eq "HASH") ) {
         die "Syntax Error: Incorrect function call";
     }
@@ -148,9 +148,9 @@ sub myFinder(\%\%$@) {
         print "Filesystem search complete.\n";
     }
     if ($_UnitTest) {
-        my $tmp=keys(%$ref_dirset); 
-        print "Found $tmp directories "; 
-        $tmp=keys(%$ref_fileset); 
+        my $tmp=keys(%$ref_dirset);
+        print "Found $tmp directories ";
+        $tmp=keys(%$ref_fileset);
         print "and $tmp files.\n";
     }
 }
@@ -176,13 +176,13 @@ sub write_and_diff_master_fileset($\%\%\%$$$;@) {
     # You'd call this from the main script, in place of
     # write_master_fileset(), like so:
     #
-    # write_and_diff_master_fileset($_MasterLists_File, 
+    # write_and_diff_master_fileset($_MasterLists_File,
     #                               %master_fileset, %master_dirset,
     #                               %changed_pkgfiles,
     #                               ($scan_rpms || $build_master_list),
     #                               $update_master_lists,
     #                               $diff_against_master,
-    #                               "Contents", "Symlink", 
+    #                               "Contents", "Symlink",
     #                               "Permissions", "Other", '');
 
     if ($isNewMasterList) {
@@ -200,7 +200,7 @@ sub write_and_diff_master_fileset($\%\%\%$$$;@) {
 
     # Save the files.
     if ($isNewMasterList || $isChangedMasterList) {
-        write_master_fileset($masterFName, 
+        write_master_fileset($masterFName,
                              %$ref_master_fileset, %$ref_master_dirset);
     }
 
@@ -233,13 +233,13 @@ sub build_master_lists(\%\%) {
     $fsarg .= join(' -o -fstype ', @_Exclude_fs);
     $fsarg .= " \\) -prune";
 
-    myFinder(%$ref_fileset, 
-             %$ref_dirset, 
+    myFinder(%$ref_fileset,
+             %$ref_dirset,
              "$fsarg -o -print");
 
     # On pruning the @_Exclude_Dirs:
     # Originally, I had code like this in here:
-    # 
+    #
     #    my $prunearg="\\( -name ";
     #    $prunearg .= join(' -o -name ', (@_Exclude_Dirs, @_Include_Dirs));
     #    $prunearg .= " \\) -prune ";
@@ -253,7 +253,7 @@ sub build_master_lists(\%\%) {
     # later decided that this was a bad idea.
     #
     # This particular form of backup script has a specific purpose.
-    # It identifies any disk content that comes from an RPM/DEB package 
+    # It identifies any disk content that comes from an RPM/DEB package
     # and eliminates it from your list of Things To Backup.  The
     # @_Exclude_Dirs and @_Include_Dirs are sysadmin-fine-tuning,
     # independent of what came from an RPM/DEB package and what didn't.
@@ -282,8 +282,8 @@ sub update_master_lists(\%\%$) {
         $ndirs = -scalar(values(%$ref_dirset));
         $nfiles = -scalar(values(%$ref_fileset));
     }
-    myFinder(%$ref_fileset, 
-             %$ref_dirset, 
+    myFinder(%$ref_fileset,
+             %$ref_dirset,
              "$fsarg -o \\( $timearg \\) -print",
              "append");
     if ($_UnitTest || $_Verbose) {
@@ -296,9 +296,9 @@ sub update_master_lists(\%\%$) {
 
 sub read_master_fileset($\%\%) {
     my ($filename,
-        $ref_fileset, 
+        $ref_fileset,
         $ref_dirset) = @_;
-    unless ( (ref($ref_fileset) eq "HASH") && 
+    unless ( (ref($ref_fileset) eq "HASH") &&
              (ref($ref_dirset) eq "HASH") ) {
         die "Syntax Error: Incorrect function call";
     }
@@ -328,7 +328,7 @@ sub read_master_fileset($\%\%) {
 
 sub write_master_fileset($\%\%) {
     my ($filename,
-        $ref_fileset, 
+        $ref_fileset,
         $ref_dirset) = @_;
 
     chmod(0660, $filename);

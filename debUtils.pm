@@ -1,6 +1,6 @@
-#!/usr/bin/perl 
+#!/usr/bin/perl
 #
-# Copyright (C) 2003-2008 by John P. Weiss
+# Copyright (C) 2003-2010 by John P. Weiss
 #
 # This package is free software; you can redistribute it and/or modify
 # it under the terms of the Artistic License, included as the file
@@ -27,10 +27,10 @@
 
 
 # Deduced empirically from the size and install time of the "kubuntu-docs"
-# package and the mtime of the file "/usr/share/doc-base/kubuntu-systemdocs". 
+# package and the mtime of the file "/usr/share/doc-base/kubuntu-systemdocs".
 # (The actual est. install rate was 62516/31, from a KUbuntu installation on a
 # virtual machine.)
-# 
+#
 # A faster or slower hard drive may need a different value here.  Ditto for
 # slower CPUs.
 my $_PkgInstall_BytesPerSec = 2000;
@@ -57,7 +57,7 @@ BEGIN {
     @ISA         = qw(Exporter);
 
     # Default exports.
-    @EXPORT = qw(get_pkglist 
+    @EXPORT = qw(get_pkglist
                  isChangeTypeAlias setChangeTypeAliases
                  isSupportedChangeType
                  get_changed_since_install
@@ -129,7 +129,7 @@ INIT {
     # Find the first executable instance of "dpkg-query" in the list of
     # paths.
     unless (-x $_deb_bin) {
-        foreach my $path ("/bin/", "/sbin/", 
+        foreach my $path ("/bin/", "/sbin/",
                           "/usr/bin/", "/usr/sbin/",
                           "/usr/local/bin/", "/usr/local/sbin/")
         {
@@ -151,7 +151,7 @@ sub process_pkgspec(\%$;$$) {
 
     # Split apart the data from the lines retrieved by get_pkglist().
     # '${Package}\t${Version}\t${Revision}\t${Installed-Size}\t${Status}\n'
-    # 
+    #
     chomp $spec_txt;
     my @dpkg_parts = split("\t", $spec_txt);
 
@@ -170,7 +170,7 @@ sub process_pkgspec(\%$;$$) {
     # rest.
     my $pkgName = $dpkg_parts[0];
     # Note the forced-conversion of "size" to a number.
-    my @pkgspecs = ($pkgName, $dpkg_parts[1], "", 
+    my @pkgspecs = ($pkgName, $dpkg_parts[1], "",
                     $dpkg_parts[2], 0, $dpkg_parts[3]+0);
 
     # We need to parse the DEB-provided version and break off the version
@@ -183,7 +183,7 @@ sub process_pkgspec(\%$;$$) {
     unless ($pkgFullVer =~ m/^${_deb_simple_version_re}$/o) {
         if ( ($pkgFullVer =~ m/^${_deb_version_re}$/o)
              || ($pkgFullVer =~ m/^${_deb_yr_versioned_re}$/o)
-             || ($pkgFullVer =~ m/^${_deb_odd_version_re}$/o) ) 
+             || ($pkgFullVer =~ m/^${_deb_odd_version_re}$/o) )
         {
             $pkgspecs[1] = $1;
             $pkgspecs[2] = $2;
@@ -228,7 +228,7 @@ sub process_pkgspec(\%$;$$) {
         $pkgspecs[4] += int($pkgSize / $_PkgInstall_BytesPerSec);
         if ($_UnitTest && $_Verbose) {
             print ($pkgspecs[0], ":\tEstimated Install Duration: ",
-                   int($pkgSize / $_PkgInstall_BytesPerSec), 
+                   int($pkgSize / $_PkgInstall_BytesPerSec),
                    "\n");
         }
     }
@@ -253,13 +253,13 @@ sub set_if_older(\%$$$) {
     if ($_UnitTest && $_Verbose) {
         print ("'$filename'; $t_state; $pkgInstallTime; delta=",
                $t_state-$pkgInstallTime,"\n");
-    } 
+    }
 
     # If this was already set with a time, we'll override it.
     my $has_priorTime = defined($ref_fileset->{$filename});
 
     if ($t_state > $pkgInstallTime) {
-        unless ( $has_priorTime && 
+        unless ( $has_priorTime &&
                  ($pkgInstallTime < $ref_fileset->{$filename}) )
         { # I.e. unless(curInstallTime < previousInstallTime)
             $ref_fileset->{$filename} = $pkgInstallTime;
@@ -272,8 +272,8 @@ sub set_if_older(\%$$$) {
     #
     # If an earlier call to this function set $ref_filesetVal, compare our
     # present install time to the one stored earlier.
-    if ( $has_priorTime && 
-         ($pkgInstallTime > $ref_fileset->{$filename}) ) 
+    if ( $has_priorTime &&
+         ($pkgInstallTime > $ref_fileset->{$filename}) )
     {
         # This install time is later than both the previous one and the file's
         # $t_state.  Nuke the old setting.
@@ -296,8 +296,8 @@ sub set_if_older(\%$$$) {
 
 sub get_pkglist(;$) {
     my $updatedSince = 0;
-    if (scalar(@_)) { 
-        $updatedSince = shift; 
+    if (scalar(@_)) {
+        $updatedSince = shift;
         --$updatedSince; # Make the cutoff 1 second before this date
     }
 
@@ -318,7 +318,7 @@ sub get_pkglist(;$) {
     #   mostly-uninstalled packages.  We want to ignore that.
     # - Want ${Installed-Size} instead of ${Size}.  The RPM %{SIZE} field
     #   is the installed size, from what I can tell..
-    # 
+    #
     my $fmt='${Package}\t${Version}\t${Revision}\t${Installed-Size}'.
         '\t${Status}\n';
     if($_UnitTest || $_Verbose) {
@@ -435,7 +435,7 @@ sub get_changed_since_install(\%\%\%$$$) {
         my $pkg = @$ref_pkgspecs[0];
         # Since we're using the package install time as a threshold, we can
         # get away with just adding the delta to it.  ($installTime_delta ==
-        # the user-provided "Flex_Pkg_InstallTime" option). 
+        # the user-provided "Flex_Pkg_InstallTime" option).
         my $pkgInstallTime = @$ref_pkgspecs[4] + $installTime_delta;
         if ($_UnitTest || $_Verbose) {
             print "\tchecking package: $pkg\n";
@@ -452,7 +452,7 @@ sub get_changed_since_install(\%\%\%$$$) {
             # Skip anything that isn't a filename with an absolute path.
             # Also skip the spurrious "/." path output at the top of every
             # listing.
-            next if ( ($fn eq "") || 
+            next if ( ($fn eq "") ||
                       ($fn !~ m<^/>) ||
                       ($fn eq "/.") );
 
@@ -480,7 +480,7 @@ sub get_changed_since_install(\%\%\%$$$) {
             if (! -e $fn) {
                 if ($_UnitTest && $_Verbose) {
                     print "\t\tFile no longer exists: '$fn'\n";
-                } 
+                }
                 $mf_Deleted{$fn} = 1;
                 next;
             }
@@ -507,7 +507,7 @@ sub get_changed_since_install(\%\%\%$$$) {
             }
 
             # mtime/ctime/atime use on Linux:
-            # 
+            #
             # The field st_atime (==fstats[8]) is changed by file accesses,
             # e.g. by execve, mknod, pipe, utime and read (of more than zero
             # bytes).  Guaranteed to change, it's not very useful for making a
@@ -533,22 +533,22 @@ sub get_changed_since_install(\%\%\%$$$) {
                 next if ($fstats[9] == $fstats[10]);
                 # Only modifications we track for directories are permission
                 # changes.
-                if ($_UnitTest && $_Verbose) { 
+                if ($_UnitTest && $_Verbose) {
                     print "\t\tDir ctime: ";
-                } 
-                set_if_older(%mf_Permissions, $fn, 
+                }
+                set_if_older(%mf_Permissions, $fn,
                              $fstats[10], $pkgInstallTime);
                 next;
             }
 
             # Contents modification trumps all others.
             if ($isFile) {
-                if ($_UnitTest && $_Verbose) { 
+                if ($_UnitTest && $_Verbose) {
                     print "\t\tFile mtime: ";
-                } 
-                unless (set_if_older(%mf_Contents, $fn, 
+                }
+                unless (set_if_older(%mf_Contents, $fn,
                                      $fstats[9], $pkgInstallTime)) {
-                    if ($_UnitTest && $_Verbose) { 
+                    if ($_UnitTest && $_Verbose) {
                         print "\t\tFile ctime: ";
                     }
                     set_if_older(%mf_Permissions, $fn,
@@ -559,14 +559,14 @@ sub get_changed_since_install(\%\%\%$$$) {
 
             # Is this a symlink older than the install date?
             if ($isSymLink) {
-                if ($_UnitTest && $_Verbose) { 
+                if ($_UnitTest && $_Verbose) {
                     print "\t\tSymLink mtime: ";
-                } 
-                unless (set_if_older(%mf_Symlink, $fn, 
+                }
+                unless (set_if_older(%mf_Symlink, $fn,
                                      $fstats[9], $pkgInstallTime)) {
-                    if ($_UnitTest && $_Verbose) { 
+                    if ($_UnitTest && $_Verbose) {
                         print "\t\tSymLink ctime: ";
-                    } 
+                    }
                     set_if_older(%mf_Symlink, $fn,
                                  $fstats[10], $pkgInstallTime);
                 }
@@ -574,15 +574,15 @@ sub get_changed_since_install(\%\%\%$$$) {
             }
 
             # Are we some other type of file that's changed since the install
-            # date? 
-            if ($_UnitTest && $_Verbose) { 
+            # date?
+            if ($_UnitTest && $_Verbose) {
                 print "\t\tOther mtime: ";
-            } 
-            unless (set_if_older(%mf_Other, $fn, 
+            }
+            unless (set_if_older(%mf_Other, $fn,
                                  $fstats[9], $pkgInstallTime)) {
-                if ($_UnitTest && $_Verbose) { 
+                if ($_UnitTest && $_Verbose) {
                     print "\t\tOther ctime: ";
-                } 
+                }
                 set_if_older(%mf_Other, $fn,
                              $fstats[10], $pkgInstallTime);
             }
@@ -596,15 +596,15 @@ sub get_changed_since_install(\%\%\%$$$) {
     } #end foreach $pkg
 
     if ($_UnitTest) {
-        my $tmp=keys(%$ref_dirset); 
-        print "Not part of a package: $tmp directories "; 
-        $tmp=keys(%$ref_fileset); 
+        my $tmp=keys(%$ref_dirset);
+        print "Not part of a package: $tmp directories ";
+        $tmp=keys(%$ref_fileset);
         print "and $tmp files.\n";
     }
-    if ($_Verbose && $n_dirs && $n_files) { 
+    if ($_Verbose && $n_dirs && $n_files) {
         print "Pruned ";
         if ($n_dirs) {
-            my $dels = $n_dirs - scalar(keys(%$ref_dirset)); 
+            my $dels = $n_dirs - scalar(keys(%$ref_dirset));
             print ("$dels directories (out of $n_dirs total, or ",
                    (100*($dels/$n_dirs)),"\%)");
             if ($n_files) {
@@ -612,7 +612,7 @@ sub get_changed_since_install(\%\%\%$$$) {
             }
         }
         if ($n_files) {
-            my $dels = $n_files - scalar(keys(%$ref_fileset)); 
+            my $dels = $n_files - scalar(keys(%$ref_fileset));
             print ("$dels files (out of $n_files total, or ",
                    (100*($dels/$n_files)), "\%)");
         }
@@ -713,7 +713,7 @@ sub write_pkgset($\%;$) {
     # Print the entire hash.  Don't forget that a hash can only contain
     # scalars or references.  Hence the list dereference here.
     print OFS ("pkgset=(\n");
-    foreach my $k1 (sort(keys(%$ref_pkgset))) { 
+    foreach my $k1 (sort(keys(%$ref_pkgset))) {
         foreach my $k2 (reverse(sort(keys(%{$ref_pkgset->{$k1}})))) {
             print OFS (join("\t", @{$ref_pkgset->{$k1}{$k2}}), "\n");
         }
@@ -923,7 +923,7 @@ Writes the package information in I<%packages> to the specified I<filename>.
 The I<%packages> hash has the same structure as the one returned by
 C<get_pkglist>.
 
-=back 
+=back
 
 =cut
 

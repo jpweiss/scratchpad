@@ -1,6 +1,6 @@
-#!/usr/bin/perl 
+#!/usr/bin/perl
 #
-# Copyright (C) 2003-2004 by John P. Weiss
+# Copyright (C) 2003-2010 by John P. Weiss
 #
 # This package is free software; you can redistribute it and/or modify
 # it under the terms of the Artistic License, included as the file
@@ -29,7 +29,7 @@ BEGIN {
     if ($0 =~ m|\A(.*)/([^/]+\Z)|) {
         if ($1 ne ".") {
             $_WrapperRunPath = $1;
-            push @INC, $1; 
+            push @INC, $1;
         }
     }
 }

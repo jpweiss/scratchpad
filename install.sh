@@ -78,7 +78,7 @@ usage() {
     echo "$0 - Semi-user-friendly setup of rpmBackup/debBackup."
     echo ""
     echo "You must run this script from the directory where the"
-    echo "backup scripts reside.  \"$0\" will ask you some" 
+    echo "backup scripts reside.  \"$0\" will ask you some"
     echo "questions to assist customizing the config file and automated"
     echo "cron-job scripts to your site."
     echo ""
@@ -140,7 +140,7 @@ do_pod2man() {
         pod2man --section=3pm ${pm} | gzip -c > man.devel/${pm%.pm}.3pm.gz
     done
 
-    if [ -e ./pkgBackup.8.gz ]; then 
+    if [ -e ./pkgBackup.8.gz ]; then
         return
     fi
     pod2man --section=8 pkgBackup.pl | gzip -c > pkgBackup.8.gz
@@ -164,7 +164,7 @@ create_tarball() {
 read_cfg_defaults() {
     while read varnm sep val; do
         # Can't use '-z' op when the string contains a '=' char
-        if [ "x${sep}" != "x=" ]; then 
+        if [ "x${sep}" != "x=" ]; then
             continue
         fi
         case $varnm in
@@ -310,7 +310,7 @@ check_directoryExists() {
             return 0
         fi
         # else  -n "$dir"
-    elif [ -d ${dir} ]; then 
+    elif [ -d ${dir} ]; then
         return 0
     fi
 
@@ -646,7 +646,7 @@ if [ ! -x ./pkgBackup.pl -o \
      ! -f ./pkgBackup.conf \
     ]; then
     echo "You must run this script from the directory where the"
-    echo "\"pkgBackup.pl\" script and the default \"pkgBackup.conf\"" 
+    echo "\"pkgBackup.pl\" script and the default \"pkgBackup.conf\""
     echo "files reside."
     echo ""
     usage
@@ -671,7 +671,7 @@ tarball=''
 if [ -n "$1" ]; then
     install=''
 fi
-while [ -n "$1" ]; do 
+while [ -n "$1" ]; do
     case $1 in
         --help|-h)
             usage
@@ -731,7 +731,7 @@ if [ $? -ne 0 ]; then
 fi
 
 # Edit the cron job runners.
-for script in "${FULL_CRON_SH}" "${INCR_CRON_SH}"; do 
+for script in "${FULL_CRON_SH}" "${INCR_CRON_SH}"; do
     edit_runner_sh "${script}" "${using_custom_config_file}"
     if [ $? -ne 0 ]; then
         terminate

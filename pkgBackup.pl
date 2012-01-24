@@ -1,6 +1,6 @@
-#!/usr/bin/perl 
+#!/usr/bin/perl
 #
-# Copyright (C) 2003-2008 by John P. Weiss
+# Copyright (C) 2003-2010 by John P. Weiss
 #
 # This package is free software; you can redistribute it and/or modify
 # it under the terms of the Artistic License, included as the file
@@ -50,9 +50,9 @@ my $_MyRealName="pkgBackup.pl";
 my $_MyPath;
 BEGIN {
     if ($0 =~ m|\A(.*)/([^/]+\Z)|) {
-        if ($1 ne ".") { 
+        if ($1 ne ".") {
             $_MyPath = $1;
-            push(@INC, $1); 
+            push(@INC, $1);
         }
         $_MyName = $2;
     } else { $_MyName = $0; }  # No path; only the script name.
@@ -145,7 +145,7 @@ my @_rScript_Header_Bottom
        'Busybox, sash, or other "bundled" shells.',
        '');
 
-my @_rScript_Core 
+my @_rScript_Core
     = ('# Mark this run in the $ERRLOG',
        'echo "" >>$ERRLOG',
        'echo "# `date`" >>$ERRLOG',
@@ -178,7 +178,7 @@ my $_DeleteDefunctScript_Purpose =
     "Remove package files that had been deleted.";
 my @_DeleteDefunctScript_Body
     = ('DEFUNCT_PATH="/tmp/defunct"',
-       '', 
+       '',
        'safe_rm() {',
        '    targ="$1"',
        '    shift',
@@ -368,7 +368,7 @@ sub create_or_update_rscript($$\@) {
         }
         # We now point to the line after this marker.
         seek($ofh, 0, 1);
-    } 
+    }
     else {
         my $fail_log="/tmp/".basename($scriptname,qr{\.sh}).".log";
         print $ofh ("\#", join("\n\# ", @_rScript_Header_Top), "\n");
@@ -396,7 +396,7 @@ sub rscript_print_action(\*$) {
     my $action = shift;
 
     $action =~ s/\'/\\\'/g;
-    print $ofh ($action, "\n", 
+    print $ofh ($action, "\n",
                 "check_op \$? '$action'\n\n");
 }
 
@@ -411,7 +411,7 @@ sub close_rscript(\*) {
                 "\\\"\$ERRLOG\\\"",
                 " for a list of \"\n",
                 "echo \"failed actions (if any).\"\n");
-    print $ofh ("\n\n", 
+    print $ofh ("\n\n",
                 "\#"x20, "\n",
                 "\#\n",
                 "\# End\n",
@@ -425,8 +425,8 @@ sub close_rscript(\*) {
 sub make_deletion_rscript(\@) {
     my $ref_defunctFiles = shift;
 
-    my ($OFH, $trueScriptname) 
-        = create_or_update_rscript($_DeleteDefunctScript, 
+    my ($OFH, $trueScriptname)
+        = create_or_update_rscript($_DeleteDefunctScript,
                                    $_DeleteDefunctScript_Purpose,
                                    @_DeleteDefunctScript_Body);
 
@@ -442,8 +442,8 @@ sub make_deletion_rscript(\@) {
 sub make_perms_rscript(\@) {
     my $ref_permFiles = shift;
 
-    my ($OFH, $trueScriptname) 
-        = create_or_update_rscript($_RestorePermsScript, 
+    my ($OFH, $trueScriptname)
+        = create_or_update_rscript($_RestorePermsScript,
                                    $_RestorePermsScript_Purpose,
                                    @_RestorePermsScript_Body);
 
@@ -462,8 +462,8 @@ sub make_perms_rscript(\@) {
 sub make_owner_rscript(\@) {
     my $ref_permFiles = shift;
 
-    my ($OFH, $trueScriptname) 
-        = create_or_update_rscript($_RestoreOwnerScript, 
+    my ($OFH, $trueScriptname)
+        = create_or_update_rscript($_RestoreOwnerScript,
                                    $_RestoreOwnerScript_Purpose,
                                    @_RestoreOwnerScript_Body);
 
@@ -482,8 +482,8 @@ sub make_owner_rscript(\@) {
 sub make_symlink_rscript(\@) {
     my $ref_symlinks = shift;
 
-    my ($OFH, $trueScriptname) 
-        = create_or_update_rscript($_RestoreSymlinksScript, 
+    my ($OFH, $trueScriptname)
+        = create_or_update_rscript($_RestoreSymlinksScript,
                                    $_RestoreSymlinksScript_Purpose,
                                    @_RestoreSymlinksScript_Body);
 
@@ -492,8 +492,8 @@ sub make_symlink_rscript(\@) {
         my $owns = $linkstats[4].":".$linkstats[5];
         my $src = readlink($symlink);
         next if(!defined($src));
-        my ($symlink_name, 
-            $symlink_path, 
+        my ($symlink_name,
+            $symlink_path,
             $symlink_suf) = fileparse($symlink, qr{\..*});
         rscript_print_action(*$OFH,
                              "make_symlink \"".$src."\" \"".
@@ -580,7 +580,7 @@ sub load_config($) {
     # The installation time delta.
     # Check for correct range.
     my $_InstallTime_Delta_CfgParam = "Flex_Pkg_InstallTime";
-    set_scalar_if_nonempty($_InstallTime_Delta, %params, 
+    set_scalar_if_nonempty($_InstallTime_Delta, %params,
                            $_InstallTime_Delta_CfgParam);
     unless ( (0 <= $_InstallTime_Delta) && ($_InstallTime_Delta <= 300) ) {
         print("Error in config file:  parameter \"",
@@ -589,7 +589,7 @@ sub load_config($) {
         exit 1;
     }
     if ($_InstallTime_Delta > 60) {
-        print("Warning:  parameter \"", $_InstallTime_Delta_CfgParam, 
+        print("Warning:  parameter \"", $_InstallTime_Delta_CfgParam,
               "\" is greater than 1 minute.\n",
               "This is not advisable (but isn't an error).  Continuing...\n");
     }
@@ -660,7 +660,7 @@ sub process_options($\%@) {
     }
 
     # Special Unit Testing Options.  They run their appointed tests, then
-    # exit. 
+    # exit.
     #
     if ($_UnitTest) {
         if (exists $ref_optmap->{'build_master_lists'}) {
@@ -824,7 +824,7 @@ sub main {
                  'read_master_fileset',
                  'restore_scripts',
                  'no_update',
-                 'full', 
+                 'full',
                  'incremental');
 
     # Process options.
@@ -871,19 +871,19 @@ sub main {
     # ACTION:  Master List.
     #
     if ($build_master_list) {
-        # Build a new master list, or 
+        # Build a new master list, or
         build_master_lists(%master_fileset, %master_dirset);
         # Pruning will happen naturally in the next step.
     } elsif ($update_master_list) {
         # Read in an earlier list and update it (maybe).
-        read_master_fileset($_MasterLists_File, 
+        read_master_fileset($_MasterLists_File,
                             %master_fileset, %master_dirset);
-        update_master_lists(%master_fileset, %master_dirset, 
+        update_master_lists(%master_fileset, %master_dirset,
                             $_MasterLists_File);
     }
 
     # ACTION: Scan
-    # 
+    #
     # Scan the disk and the package manifest, building a picture of which
     # package member files have changed (and how they've changed) since the
     # package was installed.
@@ -898,8 +898,8 @@ sub main {
         #
         # N.B.:  The two hashes, %master_fileset and %master_dirset, can be
         # empty; "get_changed_since_install()" will work either way.
-        %changed_pkgfiles 
-            = get_changed_since_install(%distro_pkgs, 
+        %changed_pkgfiles
+            = get_changed_since_install(%distro_pkgs,
                                         %master_fileset, %master_dirset,
                                         $_AlwaysIncludeDirs_re,
                                         $_SkipModifiedPkgfiles_re,
@@ -916,7 +916,7 @@ sub main {
         if ($gotNewPkgs) {
             print "Scanning new packages: ";
             my %newPkgs_changedFiles
-                = get_changed_since_install(%newPkgsSinceDate, 
+                = get_changed_since_install(%newPkgsSinceDate,
                                             %master_fileset, %master_dirset,
                                             $_AlwaysIncludeDirs_re,
                                             $_SkipModifiedPkgfiles_re,
@@ -935,14 +935,14 @@ sub main {
             }
             # If we made changes, save.
             if ($foundChanges) {
-                write_modified_pkgfiles($_ModifiedPkgFLists_File, 
+                write_modified_pkgfiles($_ModifiedPkgFLists_File,
                                         %changed_pkgfiles);
             }
         }
     }
 
     # ACTION: Perform "Master Lists" Operations
-    # 
+    #
     if ($build_master_list || $update_master_list) {
         print_hash_ut(%master_dirset);
         print_hash_ut(%master_fileset);
@@ -950,14 +950,14 @@ sub main {
         # At this point, we save the files.  Note that we only need to save
         # if we've rebuilt the lists or checked for modified package files.
         if ($scan_pkgs || $build_master_list || $update_master_list) {
-            write_master_fileset($_MasterLists_File, 
+            write_master_fileset($_MasterLists_File,
                                  %master_fileset, %master_dirset);
         }
     }#end Master List Ops.
 
 
     # ACTION: Archive Manifest
-    # 
+    #
     if ($write_arManifest || $do_backup) {
         if ($_UnitTest || $_Verbose) {
             print "Creating manifest(s) for archiver...";
@@ -966,7 +966,7 @@ sub main {
         my @restoreScripts = ();
 
         # Create the restoration script for pruning files...
-        if ( isSupportedChangeType("Deleted") && 
+        if ( isSupportedChangeType("Deleted") &&
              scalar(@{$changed_pkgfiles{"Deleted"}}) )
         {
             push(@restoreScripts,
@@ -975,8 +975,8 @@ sub main {
         }
 
         # ...for the file permissions...
-        if ( isSupportedChangeType("Permissions") && 
-             scalar(@{$changed_pkgfiles{"Permissions"}}) ) 
+        if ( isSupportedChangeType("Permissions") &&
+             scalar(@{$changed_pkgfiles{"Permissions"}}) )
         {
             push(@restoreScripts,
                  make_perms_rscript(@{$changed_pkgfiles{"Permissions"}})
@@ -984,8 +984,8 @@ sub main {
         }
 
         # ...for the file ownership...
-        if ( isSupportedChangeType("Ownership") && 
-             scalar(@{$changed_pkgfiles{"Ownership"}}) ) 
+        if ( isSupportedChangeType("Ownership") &&
+             scalar(@{$changed_pkgfiles{"Ownership"}}) )
         {
             push(@restoreScripts,
                  make_owner_rscript(@{$changed_pkgfiles{"Ownership"}})
@@ -993,8 +993,8 @@ sub main {
         }
 
         # ...and for custom symlinks.
-        if ( isSupportedChangeType("Symlink") && 
-             scalar(@{$changed_pkgfiles{"Symlink"}}) ) 
+        if ( isSupportedChangeType("Symlink") &&
+             scalar(@{$changed_pkgfiles{"Symlink"}}) )
         {
             push(@restoreScripts,
                  make_symlink_rscript(@{$changed_pkgfiles{"Symlink"}})
@@ -1003,7 +1003,7 @@ sub main {
 
         # Save the results.
         # Don't forget the directories whose contents we will always archive.
-        write_archive_filelist($_File_ArchiveManifest, 
+        write_archive_filelist($_File_ArchiveManifest,
                                @restoreScripts,
                                @_AlwaysIncludeDirs,
                                @{$changed_pkgfiles{"Contents"}},
@@ -1015,18 +1015,18 @@ sub main {
     }
 
     # ACTION:  Backup
-    # 
+    #
     if ($do_backup) {
         if ($_UnitTest || $_Verbose) {
             print "Starting backup...\n";
         }
 
         if ($new_archive) {
-            do_full_filelist_backup($_Archive_Destination_Dir, 
+            do_full_filelist_backup($_Archive_Destination_Dir,
                                     $_Archive_Prefix,
                                     $_File_ArchiveManifest);
         } else {
-            do_incremental_filelist_backup($_Archive_Destination_Dir, 
+            do_incremental_filelist_backup($_Archive_Destination_Dir,
                                            $_Archive_Prefix,
                                            $_File_ArchiveManifest);
         }
@@ -1039,11 +1039,11 @@ sub main {
     # ACTION:
     # Performs a simple verification of the archive by comparing the archive's
     # list of files to the fileset used to create the backup.
-    # 
+    #
     if ($optmap{'verify'}) {
         my $tarball=$optmap{'verify'};
-        verify_listfile_archive($tarball, 
-                                $_Dir_ArchiveManifest, 
+        verify_listfile_archive($tarball,
+                                $_Dir_ArchiveManifest,
                                 $_File_ArchiveManifest);
     }
     exit 0;
@@ -1058,7 +1058,7 @@ __END__
 
 =head1 NAME
 
-pkgBackup - A Perl script for selectively backing up an 
+pkgBackup - A Perl script for selectively backing up an
     RPM-based or DEB-based system.
 
 =head1 SYNOPSIS
@@ -1089,7 +1089,7 @@ C<--build_package_list --scan_pkgfiles --write_archive_manifest --do_backup
 
 =item B<--incremental>
 
-Shortcut:  has the same effect as specifying the options: 
+Shortcut:  has the same effect as specifying the options:
 C<--update_package_list --write_archive_manifest --do_backup>
 
 =item B<--build_package_list>
