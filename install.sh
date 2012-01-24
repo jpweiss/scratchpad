@@ -24,7 +24,7 @@
 ############
 
 
-MYVERSION='2_0_0'
+MYVERSION='2_0_1'
 
 BIN_DIR=${PWD}
 
