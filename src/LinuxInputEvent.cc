@@ -14,7 +14,7 @@
 // the License John Weiss originally placed this program under.
 //
 static const char* const
-LinuxInputEvent_cc__="$Id: class.cc 2037 2010-10-26 22:27:48Z candide $";
+LinuxInputEvent_cc__="$Id$";
 
 
 // Includes

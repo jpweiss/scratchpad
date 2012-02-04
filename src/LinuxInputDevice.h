@@ -26,12 +26,14 @@
 #include <boost/scoped_array.hpp>
 
 #include <stdint.h>
-#include <unistd.h> // For Unix/POSIX 'read()' fn.
 
 
 // Forward Declarations
 //
 extern "C" {
+// FIXME:  Would it be more efficent to use pselect()?  I came across
+// something that said select() is more responsive, but I don't know if that's
+// true or not.
     struct pollfd;
     typedef struct pollfd C_pollfd_t;
 }
@@ -101,8 +103,33 @@ namespace jpwTools {
       * A positive nonzero timeout value for the call to \c poll.  Don't make
       * this too small when calling from a loop, or your loop will chew up
       * CPU.
+      *
+      * \note
+      * This function \em might use \c poll under the hood ... or it might use
+      * \c pselect.  Don't make assumptions about the function's
+      * implementation based on its name.
       */
      bool poll(int timeout_msecs);
+
+
+     /// Reads an event from this device.
+     /**
+      * \param eventObj
+      * The\c LinuxInputEvent to read the event data into.
+      *
+      * \param nonblocking
+      * If \c true, attempt a nonblocking read.  Otherwise, this function will
+      * block until there's data available to read.
+      *
+      * \return \c true if any data was read, \c false if the read failed
+      * or if '<tt>nonblocking==true</tt>' and the read would've blocked.
+      */
+     bool read(LinuxInputEvent& eventObj, bool nonblocking=false);
+
+
+ private:
+     scoped_array<C_pollfd_t> m__pFds_sca;
+
 
      /// Read an object.
      /**
@@ -115,28 +142,7 @@ namespace jpwTools {
       * by the compiler.
       */
      template<typename T>
-     ssize_t reinterpret_read(T* objPtr)
-     {
-         return read(getFd(), reinterpret_cast<void*>(objPtr), sizeof(T));
-     }
-
- private:
-     scoped_array<C_pollfd_t> m__pFds_sca;
-
-     /// Returns the file descriptor stored in \c 'm__pFds_sca'
-     /**
-      * Exists solely to avoid including "poll.h" in this header file.
-      *
-      * Forward-declaring the C-struct, \c 'struct pollfd' lets one declare
-      * \c 'm__pFds_sca', the member \c boost::scoped_array of \c 'struct
-      * pollfd' without the header.  One cannot, obviously, access its
-      * members.
-      *
-      * Normally, one would just move the definitions of any member functions
-      * needing the filehandle into the source file.  \c reinterpret_read(),
-      * however, doesn't have that option, as it's a template function.
-      */
-     int getFd() const;
+     ssize_t reinterpret_read(T* objPtr);
 
      /// Calls the Unix/POSIX \c open() function for reading, throwing a
      /// std::ios_base::failure on error.

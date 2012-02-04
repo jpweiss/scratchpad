@@ -592,6 +592,108 @@ bool processKbdEvent(const LinuxInputEvent& kbdEvent,
 }
 
 
+void fixLEDsIfNeeded(X11Display& theDisplay, XkbDeviceInfoPtr xkbdDevInf)
+{
+    // FIXME:  ChecK that XkbDeviceInfoPtr is non-NULL.
+    // FIXME:  Correct the last 3 options.
+    Status xkbStat = XkbGetDeviceLedInfo(theDisplay, xkbdDevInf,
+                                         0, //LED class
+                                         0, //LED ID
+                                         // FIXME:  Do I need the State
+                                         // & Maps masks?
+                                         XkbXI_IndicatorStateMask
+                                         | XkbXI_IndicatorMapsMask
+                                         | XkbXI_IndicatorNamesMask);
+
+#if 0
+    // Alternative:
+    unsigned ledStatus;
+    Status xkbStat = XkbGetIndicatorState(theDisplay,
+                                          XkbUseCoreKbd, ledStatus);
+    // Need to use XkbGetNamedIndicator to find out which bits mean what.
+    // Evidently XkbSetNamedIndicator sets the LED.
+#endif
+
+    // Any errors?  Punt.
+    if(xkbStat != Success) {
+        return;
+    }
+
+    // FIXME:  Get the state of each lock key, not just the LED state.
+    // FIXME:  Compare and, if needed, reset.
+    // FIXME:  Below is code copies from "xkbvleds.c"
+/* 
+    if (wantReal || wantNamed || wantAutomatic || wantExplicit || wantVirtual) {
+	register int i,bit;
+	xkb= XkbGetMap(inDpy,0,XkbUseCoreKbd);
+	if (!xkb) {
+	    uFatalError("Couldn't read keymap\n");
+	    return 1;
+	}
+	if (XkbGetIndicatorMap(inDpy,XkbAllIndicatorsMask,xkb)!=Success) {
+	    uFatalError("Couldn't read indicator map\n");
+	    return 1;
+	}
+	if (XkbGetNames(inDpy,XkbAllNamesMask,xkb)!=Success) {
+	    uFatalError("Couldn't read indicator names\n");
+	    return 1;
+	}
+	for (i=0,bit=1;i<XkbNumIndicators;i++,bit<<=1) {
+	    XkbIndicatorMapPtr map= &xkb->indicators->maps[i];
+	    if (xkb->names->indicators[i]!=None)
+		named|= bit;
+	    if (xkb->indicators->phys_indicators&bit)
+		real|= bit;
+	    if ((((map->which_groups!=0)&&(map->groups!=0))||
+		((map->which_mods!=0)&&
+		((map->mods.real_mods!=0)||(map->mods.vmods!=0)))||
+		(map->ctrls!=0))&&
+		((map->flags&XkbIM_NoAutomatic)==0)) {
+		automatic|= bit;
+	    }
+	    else explicit|= bit;
+	}
+	virtual= ~real;
+	if (wantReal==NO)			real= ~real;
+	else if (wantReal==DONT_CARE)		real= (useUnion?0:~0);
+	if (wantVirtual==NO)			virtual= ~virtual;
+	else if (wantVirtual==DONT_CARE)	virtual= (useUnion?0:~0);
+	if (wantNamed==NO)			named= ~named;
+	else if (wantNamed==DONT_CARE)		named= (useUnion?0:~0);
+	if (wantAutomatic==NO)			automatic= ~automatic;
+	else if (wantAutomatic==DONT_CARE)	automatic= (useUnion?0:~0);
+	if (wantExplicit==NO)			explicit= ~explicit;
+	else if (wantExplicit==DONT_CARE)	explicit= (useUnion?0:~0);
+	if (useUnion)
+	     wanted|= real|virtual|named|automatic|explicit;
+	else wanted&= real&virtual&named&automatic&explicit;
+    }
+    else xkb= NULL;
+    if (wanted==0) {
+	uError("No indicator maps match the selected criteria\n");
+	uAction("Exiting\n");
+	return 1;
+    }
+
+    XkbSelectEvents(inDpy,XkbUseCoreKbd,XkbIndicatorStateNotifyMask,
+						XkbIndicatorStateNotifyMask);
+    XkbGetIndicatorState(inDpy,XkbUseCoreKbd,&n);
+    bit= (1<<(XkbNumIndicators-1));
+    for (i=XkbNumIndicators-1;i>=0;i--,bit>>=1) {
+	if (wanted&bit) {
+	    char 	buf[12];
+	    ArgList	list;
+
+	    sprintf(buf,"led%d",i+1);
+	    if (n&bit)	list= onArgs;
+	    else	list= offArgs;
+	    leds[i]= XtCreateManagedWidget(buf,ledWidgetClass,panel,list,1);
+	}
+    }
+*/
+}
+
+
 /////////////////////////
 
 //
@@ -677,8 +779,12 @@ int cxx_main(const string& myName,
     // The Main Loop
     //
 
-    jpwTools::Timer reloadCfgTimer;
+    XkbDeviceInfoPtr xkbdLedInfoBuf(0);
+    XkbAllocDeviceLedInfo(xkbdLedInfoBuf, 0);
+    XkbAddDeviceLedInfo(xkbdLedInfoBuf, 0);
+
     LinuxInputEvent kbdEvent;
+    jpwTools::Timer reloadCfgTimer;
 
     while(true)
     {
@@ -686,7 +792,7 @@ int cxx_main(const string& myName,
         if(kbdDev.poll(pollTimeoutInterval))
         {
             // Get the keyboard event.
-            if(kbdEvent.read(kbdDev)) {
+            if(kbdDev.read(kbdEvent)) {
                 processKbdEvent(kbdEvent, theDisplay, opts);
             }
 
@@ -699,6 +805,12 @@ int cxx_main(const string& myName,
                 reloadCfgTimer.stop();
             }
         }
+
+        // Special value-added feature:  Check that the LEDs are all set
+        // according to the kbd state.  For some reason, the kernel and/or X
+        // get confused and toggle the state of more than one LED when NumLock,
+        // ScrollLock, and/or CapsLock are hit.
+        fixLEDsIfNeeded(theDisplay, xkbdLedInfoBuf);
     }
 }
 

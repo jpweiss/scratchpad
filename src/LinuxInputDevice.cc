@@ -14,7 +14,7 @@
 // the License John Weiss originally placed this program under.
 //
 static const char* const
-LinuxInputDevice_cc__="$Id: class.cc 2037 2010-10-26 22:27:48Z candide $";
+LinuxInputDevice_cc__="$Id$";
 
 
 // Includes
@@ -32,6 +32,7 @@ LinuxInputDevice_cc__="$Id: class.cc 2037 2010-10-26 22:27:48Z candide $";
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <poll.h>
+#include <unistd.h> // For Unix/POSIX 'read()' fn.
 
 #include <linux/input.h>
 
@@ -166,6 +167,15 @@ inline int LinuxInputDevice::openUnixReadFd(const string& filename)
         throw std::ios_base::failure(errmsg);
     } // else
     return the_fd;
+}
+
+
+template<typename T>
+inline ssize_t LinuxInputDevice::reinterpret_read(const string& filename)
+{
+    return read(m__pFds_sca[0].fd,
+                reinterpret_cast<void*>(objPtr),
+                sizeof(T));
 }
 
 
@@ -411,14 +421,49 @@ LinuxInputDevice::LinuxInputDevice(const string& filename,
 }
 
 
-int LinuxInputDevice::getFd() const
+bool LinuxInputDevice::read(LinuxInputEvent& eventObj, bool nonblocking=false);
 {
-    return m__pFds_sca[0].fd;
+// FIXME:  Would it be more efficent to use pselect()?  I came across
+// something that said select() is more responsive, but I don't know if that's
+// true or not.
+    if(nonblocking) {
+        // Check if there's data available on the device.
+        if(!(m__pFds_sca[0].revents & POLLIN)) {
+            // We must've timed out, as there's nothing available to read.
+            // Punt.
+            return false;
+        }
+    }
+
+    // Recall:  LinuxInputEvent is a POD-struct, whose members have no
+    // padding between them.  "Consecutive" member fields all completely
+    // fill a machine word, or occupy an integral number of machine words.
+    //
+    // Reading raw data like this will require one or more
+    // reinterpret_cast<>()'s someplace.  That's unavoidable.
+    ssize_t nRead = ufd.reinterpret_read(&eventObj);
+    return (nRead > 0);
 }
 
 
 bool LinuxInputDevice::poll(int timeout_msecs)
 {
+// FIXME:  Would it be more efficent to use pselect()?  I came across
+// something that said select() is more responsive, but I don't know if that's
+// true or not.
+    int pollStatus = ::poll(m__pFds_sca.get(), 1, timeout_msecs);
+
+    // Check m__pFds_sca for errors?  What should we do if we have one?
+
+    return (pollStatus > 0);
+}
+
+
+bool LinuxInputDevice::poll(int timeout_msecs)
+{
+// FIXME:  Would it be more efficent to use pselect()?  I came across
+// something that said select() is more responsive, but I don't know if that's
+// true or not.
     int pollStatus = ::poll(m__pFds_sca.get(), 1, timeout_msecs);
 
     // Check m__pFds_sca for errors?  What should we do if we have one?

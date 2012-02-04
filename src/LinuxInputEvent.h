@@ -64,19 +64,6 @@ namespace jpwTools {
      static const uint16_t evt_POWER;
      static const uint16_t evt_FORCE_FEEDBACK_STATUS;
      static const uint16_t evt_MAX;
-
-     /// Read an event from the specified device.
-     bool read(LinuxInputDevice& ufd)
-     {
-         // Recall:  LinuxInputEvent is a POD-struct, whose members have no
-         // padding between them.  "Consecutive" member fields all completely
-         // fill a machine word, or occupy an integral number of machine words.
-         //
-         // Reading raw data like this will require one or more
-         // reinterpret_cast<>()'s someplace.  That's unavoidable.
-         ssize_t nRead = ufd.reinterpret_read(this);
-         return (nRead > 0);
-     }
  };
 
 }; //end namespace
