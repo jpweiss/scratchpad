@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# Copyright (C) 2002-2010 by John P. Weiss
+# Copyright (C) 2002-2012 by John P. Weiss
 #
 # This package is free software; you can redistribute it and/or modify
 # it under the terms of the Artistic License, included as the file
@@ -42,6 +42,7 @@ BEGIN {
                  openPipeDie closePipeDie failedOpenDie
                  datestamp datetime_now
                  const_array uniq select_sample
+                 key_not_set push_subarray
                  invert_hash pivot_hash
                  rename_keys transform_keys lc_keys uc_keys
                  asymm_diff circular_shift circular_pop
@@ -102,7 +103,7 @@ $Data::Dumper::Indent = 1;
 ############
 
 
-sub dbgprint($@_) {
+sub dbgprint($@) {
     my $lvl = shift();
 
     # No more args?  Nothing to do.
@@ -141,9 +142,35 @@ sub dbgprint($@_) {
         # Yes, this IS needed
         my $arg = shift();
 
-        if ( (ref($arg) eq 'ARRAY') && (scalar(@$arg) > 1) &&
-             defined($arg->[0]) && defined($arg->[1]) )
-        {
+        # Validation checks for the special array
+        my $isArrayrefArg=0;
+        my $badArg_errmsg=undef;
+        if ((ref($arg) ne '') && (ref($arg) ne 'ARRAY')) {
+            $badArg_errmsg="arg passed with type '".ref($arg)."'";
+        } elsif (ref($arg) eq 'ARRAY') {
+            $isArrayrefArg = 1;
+            if (!(scalar(@$arg) && defined($arg->[0]))) {
+                $badArg_errmsg="arrayref arg empty or missing first element";
+            } elsif (!((scalar(@$arg) > 1) && defined($arg->[1]))) {
+                $badArg_errmsg="arrayref arg missing second element";
+            } elsif ( (ref($arg->[1]) ne 'ARRAY') &&
+                      (ref($arg->[1]) ne 'HASH') ) {
+                $badArg_errmsg="arrayref arg's second element must be ".
+                    "a reference to the hash or array to print";
+            }
+        }
+        if (defined($badArg_errmsg)) {
+            # Declared 'local' so that they return to their original values
+            # outside of this block.  {Not that it matters when we're calling
+            # 'croak()', but it's a good habit to get into.}
+            local %Carp::CarpInternal;
+            local $Carp::Verbose;
+            ++$Carp::CarpInternal{jpwTools};
+            $Carp::Verbose = ($_Verbose || $_UnitTest);
+            croak('dbgprint():  "'.$badArg_errmsg.'"');
+        }
+
+        if ($isArrayrefArg) {
             # We have the special array.  Just invoke print_dump on it (which
             # will figure out whether or not it's an array
             if ($lastOut_startsWithPrefix) {
@@ -184,6 +211,17 @@ sub dbgprint($@_) {
 }
 
 
+## This fails at compile time if 'use constant DEBUG' doesn't precede the
+## 'use'-statement for this package.  So, we disable this.
+##
+#sub ifdbgprint($@) {
+#    if (::DEBUG) {
+#        my $lvl = shift();
+#        dbgprint($lvl, @_);
+#    }
+#}
+
+
 sub check_syscmd_status {
     my $laststat=$?;
     my $lastErrmsg="$!";
@@ -202,7 +240,7 @@ sub check_syscmd_status {
 
     my $ref_ignoreList = undef;
     if (ref($_[0]) eq "ARRAY") {
-        my $ref_ignoreList = shift();
+        $ref_ignoreList = shift();
     }
 
     if (ref($_[0]) eq "HASH") {
@@ -213,7 +251,12 @@ sub check_syscmd_status {
             $laststat = $flags{"laststat"};
             $exitVal = ($laststat >> 8);
             $signal = ($laststat & 0x7F);
+        } elsif (defined($flags{"exitval"})) {
+            $exitVal = $flags{"exitval"};
+            $laststat = $exitVal;
+            $signal = 0;
         }
+
 
         if (defined($flags{"no_stacktrace"})) {
             $noStacktrace = $flags{"no_stacktrace"};
@@ -258,8 +301,11 @@ sub check_syscmd_status {
         my @ones = (1) x scalar(@$ref_ignoreList);
         @ignore{ @$ref_ignoreList } = @ones;
         $ignore{0} = 1;
+        return 0 if (exists($ignore{$exitVal}) && $ignore{$exitVal});
+
+        # FIXME:  This may no longer be needed.
         my $errMsg="";
-        if (!exists($ignore{"$exitVal"})) {
+        if (0) {
             $errMsg .=
                 "WARNING: Command \"@_\" exited with status $exitVal.\n";
             unless ($lastErrmsg eq '') {
@@ -409,6 +455,27 @@ sub uniq {
     # This is also fast AND preserves the original list's order, but is a bit
     # harder to read.
     return grep({ !$seen{$_}++ } @_);
+}
+
+
+sub key_not_set(\%$) {
+    my $ref_hash = shift();
+    my $key = shift();
+
+    return (!exists($ref_hash->{$key}) || !defined($ref_hash->{$key}));
+}
+
+
+sub push_subarray(\%$;@) {
+    my $ref_hash = shift();
+    my $key = shift();
+
+    if (key_not_set(%$ref_hash, $key)) {
+        my @valArray = @_;
+        $ref_hash->{$key} = \@valArray;
+    } elsif (scalar(@_) && (ref($ref_hash->{$key}) eq "ARRAY")) {
+        push(@{$ref_hash->{$key}}, @_);
+    }
 }
 
 
@@ -666,7 +733,6 @@ sub not_empty($) {
              ||
              0);
 }
-
 
 sub set_scalar_if_nonempty(\$\%$) {
     my ($svar_ref,
@@ -943,11 +1009,14 @@ sub get_files_from_dirs(\%$@) {
                 $k = File::Spec->catfile($dir, $f);
             }
             # Format:
+
             # [basename, dirname, extension, basename_stem, type, orig_dir]
+
             # 'basename_stem' is 'basename' with 'extension' removed.  'type'
-            # is 0 for regular files, 1 for dirs.  'orig_dir' is the name of
-            # the original directory passed to this function.
-            $ref_fileMap->{$k} = [$f, $dir, '', $f, 0, $orig_dir];
+            # is "" for regular files, 'd' for dirs, 'L' for symlinks, and
+            # another char for other types (see the POD).  'orig_dir' is the
+            # name of the original directory passed to this function.
+            $ref_fileMap->{$k} = [$f, $dir, '', $f, '', $orig_dir];
 
             # Crude filename decomposition:  recognizes only '.' as the
             # extension separator.
@@ -955,8 +1024,23 @@ sub get_files_from_dirs(\%$@) {
                 $ref_fileMap->{$k}[2] = $2;
                 $ref_fileMap->{$k}[3] = $1;
             }
-            if (-d $f) {
-                $ref_fileMap->{$k}[4] = 1;
+            # Stat once & reuse result via '_' in the file tests.  Note that
+            # we use 'lstat' in case we're looking at a broken symlink.
+            lstat($k);
+            if (-d _) {
+                $ref_fileMap->{$k}[4] = 'd';
+            } elsif (-l _) {
+                $ref_fileMap->{$k}[4] = 'L';
+            } elsif (-b _) {
+                $ref_fileMap->{$k}[4] = 'b';
+            } elsif (-c _) {
+                $ref_fileMap->{$k}[4] = 'c';
+            } elsif (-p _) {
+                $ref_fileMap->{$k}[4] = 'p';
+            } elsif (-S _) {
+                $ref_fileMap->{$k}[4] = 's';
+            } elsif (! -f _) {
+                $ref_fileMap->{$k}[4] = '?';
             }
         }
         closedir DH;
@@ -1536,13 +1620,35 @@ jpwTools - Package containing John's Perl Tools.
 
 =head1 SYNOPSIS
 
-=over 1
+=head2 B<General Tools>
+
+=over 4
 
 =item datestamp
 
 =item datetime_now
 
+=item not_empty(I<var>)
+
+=item set_array_if_nonempty(I<@listvar>, I<%map>, I<key>)
+
+=item set_scalar_if_nonempty(I<$scalarvar>, I<%map>, I<key>)
+
+=item create_regexp_group(I<@words>)
+
+=item non_overlapping(I<@prefixes>)
+
+=item get_files_from_dirs(I<%hash>, I<match_regexp>, I<dir> [, I<dir> ...])
+
+=back
+
+=head2 B<Debugging & Error Handling>
+
+=over 4
+
 =item dbgprint(I<lvl>, I<stringsOrArrayref>...)
+
+=item ifdbgprint(I<lvl>, I<stringsOrArrayref>...)
 
 =item check_syscmd_status([I<ctrlRef>, ] I<cmd>...)
 
@@ -1554,15 +1660,29 @@ jpwTools - Package containing John's Perl Tools.
 
 =item do_error(I<filename>, $!, $@)
 
+=back
+
+=head2 B<Arrays & Lists>
+
+=over 4
+
 =item circular_shift(I<@list> [, I<count>])
 
 =item circular_pop(I<@list> [, I<count>])
 
 =item const_array(I<value>, I<n_elements>)
 
-=item uniq(I<@list>)
-
 =item select_sample(I<nSelected>, I<@list> [, I<keepLast>])
+
+=back
+
+=head2 B<Hashes>
+
+=over 4
+
+=item key_not_set(I<%hash>, I<key2check>)
+
+=item push_subarray(I<%hash>, I<$targKey> [, I<$val> [I<$val> ...]])
 
 =item invert_hash(I<%hash> [, I<%invHash_out>])
 
@@ -1576,6 +1696,14 @@ jpwTools - Package containing John's Perl Tools.
 
 =item uc_keys(I<%hash>)
 
+=back
+
+=head2 B<Set Operations>
+
+=over 4
+
+=item uniq(I<@list>)
+
 =item asymm_diff(I<\@list1, \@list2>)
 
 =item asymm_diff(I<\@list, \%hash>)
@@ -1583,6 +1711,12 @@ jpwTools - Package containing John's Perl Tools.
 =item asymm_diff(I<\%hash, \@list>)
 
 =item asymm_diff(I<\%hash1, \%hash2>)
+
+=back
+
+=head2 B<Statistics & Random Values>
+
+=over 4
 
 =item stats(I<@list> [, I<confidence>])
 
@@ -1596,7 +1730,11 @@ jpwTools - Package containing John's Perl Tools.
 
 =item random_keys(I<%hash>)
 
-=item get_files_from_dirs(I<%hash>, I<match_regexp>, I<dir> [, I<dir> ...])
+=back
+
+=head2 B<Printing Arrays, Hashes, and Objects>
+
+=over 4
 
 =item print_hash(I<name>, I<%hash> [, I<regexp, sub> ...])
 
@@ -1608,15 +1746,11 @@ jpwTools - Package containing John's Perl Tools.
 
 =item print_dump([I<fh_ref>, ]  [I<name>, ] I<$ref> [, I<regexp, sub> ...])
 
-=item create_regexp_group(I<@words>)
+=back
 
-=item not_empty(I<var>)
+=head2 B<Reading Configfiles>
 
-=item set_array_if_nonempty(I<$scalarvar>, I<%map>, I<key>)
-
-=item set_scalar_if_nonempty(I<@listvar>, I<%map>, I<key>)
-
-=item non_overlapping(I<@prefixes>)
+=over 4
 
 =item read_options(I<option_filename> [, I<%validator>])
 
@@ -1626,23 +1760,135 @@ jpwTools - Package containing John's Perl Tools.
 
 =head1 DESCRIPTION
 
+=head2 B<General Tools>
+
 =over 2
 
-=item *
+=item -
 
 datestamp
 
 Returns string containing the current date, in the form 'YYYYMMDD'.  Useful
 for creating date-stamped filenames.
 
-=item *
+=item -
 
 datetime_now
 
 Returns 6 element array containing the date and time.  The array contents are
 of the form: C<(year, month, day, hour24, min, sec)>.
 
+=item -
+
+not_empty(I<var>)
+
+Returns C<true> if I<var> is:
+
+=over 2
+
 =item *
+
+a scalar value with nonzero length;
+
+=item *
+
+a reference to a scalar variable whose value has nonzero length;
+
+=item *
+
+a reference to an array or hash with at least one element.
+
+=back
+
+For any other type of variable or reference, returns C<false>.
+
+=item -
+
+set_array_if_nonempty(I<@listvar>, I<%map>, I<key>)
+
+If C<$I<map>{I<key>}> is non-empty (as determined by C<not_empty()>),
+sets I<@listvar> to C<@{I<$map>{I<key>}}>.
+
+(Thus, the value of I<%map> corresponding to I<key> had better be an array
+reference, or this function will return an error.)
+
+=item -
+
+set_scalar_if_nonempty(I<$scalarvar>, I<%map>, I<key>)
+
+If C<$%I<map>{I<key>}> is non-empty (as determined by C<not_empty()>),
+sets I<$scalarvar> to its value.
+
+=item -
+
+create_regexp_group(I<@words>)
+
+Takes the array I<@words> and groups it into a pattern string for use in a
+regular expression.  The pattern string is compact, with words grouped
+together by common prefix & suffix.
+
+=item -
+
+non_overlapping(I<@words>)
+
+Returns a list of "non-overlapping elements":  elements that are not
+prefixes of any other element, or those that are a minimum-sized prefix.
+
+=item -
+
+get_files_from_dirs(I<%fileMap>, I<match_regexp>, I<dir> [, I<dir> ...])
+
+Searches through the specified list of directories (the I<dir> passed to this
+function) for all files/subdirectories matching I<match_regexp>.  The results
+are stored in I<%fileMap> in the format described below.
+
+If I<match_regexp> is the empty string, C<get_files_from_dirs()> returns all
+files.  (The files "." and ".." are, however, always omitted.)
+
+The I<dir> arguments are normalized and cleaned up using the L<File::Spec>
+package.  Any paths containing "/../" path elements are resolved using the
+L<Cwd> package (which is only loaded, dynamically, at runtime, if necessary).
+Symlinks combined with "/../" subpaths will, therefore, be resolved to the
+actual directory.
+
+The results are returned in I<%fileMap>, which is keyed by the filename's full
+absolute path.  Each value is an array reference containing the following:
+
+=over 4
+
+[I<fileBasename>,
+ I<fileDirnameAbspath>,
+ I<fileExtension>,
+ I<fileBasenameStem>,
+ I<fileType>,
+ I<originalDirectory>]
+
+=back
+
+The names for each element are fairly self-explanatory.  I<fileBasenameStem>
+is basically I<fileBasename> with I<fileExtension> removed.
+I<originalDirectory> contains one of the I<dir> strings passed as an argument,
+specifically the one that resolves to the file's parent.
+
+I<fileType> is a single character string indicating the type of file.  It can
+have any of the following values:
+
+    ''  :== A regular file
+    'd' :== A directory
+    'L' :== A symlink (may or may not be valid)
+    'b' :== A block device file
+    'c' :== A character device file
+    'p' :== A named pipe
+    's' :== A named socket
+    '?' :== An unknown type of file
+
+=back
+
+=head2 B<Debugging & Error Handling>
+
+=over 2
+
+=item -
 
 dbgprint(I<lvl>, I<stringsOrArrayref>...)
 
@@ -1654,12 +1900,12 @@ C<dbgprint> always prints a "\r" followed by the prefix before it starts.
 This way, the first line printed each call will seem to start with the
 prefix.  However, this will also mask any unterminated lines you may have
 printed to C<STDERR> beforehand.  (You can prevent that from happening by
-piping to C<less> run w/o the C<-r> option.)
+piping the output of your script to C<less>,  run w/o the C<-r> option.)
 
 Normally, I<stringsOrArrayref> will just be a list of strings or
 string-expressions, each of which is printed out.  However, if any of the args
 are a reference to an array, it will be handled differently.  The
-array must have at least two elements:
+arrayref arg must have at least two elements:
 
 =over 4
 
@@ -1674,8 +1920,8 @@ Invokes C<print_array(I<arrayname>, I<arrayref>, '^', I<prefix_nextLvl>)>
 =back
 
 ...where I<prefix_nextLvl> is the prefix that (I<lvl>+1) would generate.  If
-the hashref doesn't match either of these specs, it's treated as a
-string-expression.
+an arrayref arg to C<dbgprint> doesn't match either of these specs, it's
+treated as a string-expression.
 
 Lastly, if the last arg ends with a sequence of "\n", they will B<not> be
 prefixed.  Normally, you want this, since the next call to C<dbgprint> will
@@ -1686,7 +1932,41 @@ the prefix.  To do that, remove one of the "\n" and make it the last arg.
 This turns your sequence of "\n" into the second-to-last arg, and terminates
 the last "prefix-only line".
 
-=item *
+=item -
+
+ifdbgprint(I<lvl>, I<stringsOrArrayref>...)
+
+This really isn't a function, but documentation for an optimized code-pattern
+that lets you leave C<dbgprint> in the source.
+
+Here's the code pattern:
+
+    use constant
+        DEBUG => 0 # or 1, depending on what you want to do.
+    ;
+
+    sub ifdbgprint($@) {
+        if (DEBUG) {
+            my $lvl = shift();
+            dbgprint($lvl, @_);
+        }
+    }
+
+Defining the compile-time constant, C<DEBUG>, to '0' not only disables the
+debug printout, the perl compiler will completely optimized away the code
+inside of C<ifdbgprint>.  See L<constant> (using C<perldoc>) for details.
+
+Unfortunately, this pattern can't be defined in this module.  You would have
+to always define C<DEBUG> in the main namespace anytime you wanted to use this
+package.  Otherwise, this package would fail to compile.  Making C<DEBUG> a
+package-member constant obviously won't work (you can't redefine a constant).
+Lastly, Perl will not optimize away the call if you don't use a constant in
+the guard-C<if> block.
+
+You can't use an C<if>-statement to check if a constant has been defined,
+either, since an C<if>-statement is only evaluated at runtime.
+
+=item -
 
 check_syscmd_status([I<ctrlRef>, ] I<cmd>...)
 
@@ -1694,9 +1974,9 @@ Checks $?, the status of the last system command run.  If the status is
 nonzero, it prints out the specified args as part of an error message, then
 aborts the program.
 
-You should call this function immediately after your call to C<system>.  You
-can also use it when opening a file or pipe, and when closing a pipe (see
-below).
+You should call this function immediately after your call to C<system> (or to
+the `` operator.  You can also use it when opening a file or pipe, and when
+closing a pipe (see below).
 
 I<cmd> is one or more strings containing the command you executed with the
 C<system> call.  It will usually be the same args you just passed to
@@ -1718,7 +1998,7 @@ If I<ctrlRef> is a hash, it may contain one of the following keys:
 
 This option lets you specify the list of exit values to ignore when you also
 need to use one of the other options listed below.  The value of this key
-should be an array reference.  Any other value will be silently ignored..
+should be an array reference.  Any other value will be silently ignored.
 
 =item C<laststat>
 
@@ -1727,6 +2007,16 @@ directly.  That doesn't work if you need to call some other function before
 C<check_syscmd_status>, or if you call C<check_syscmd_status> from a
 wrapper-function.  This option solves that problem.  Set its value to your
 previously saved $? value.
+
+Note that the C<system> function returns $?.  So, you can use that return
+value with C<laststat>, too.
+
+=item C<exitval>
+
+An alternative to using C<laststat>, when you don't have access to $? but do
+have the exit value of the subprocess.  Using C<laststat> (or neither of
+these) is preferable, since the $? variable contains both exit status and
+signal information.
 
 =item C<no_stacktrace>
 
@@ -1806,13 +2096,15 @@ aborts on error.  Mutually-exclusive with C<warn>.
 
 =back
 
-=item *
+=item -
 
 openPipeDie(I<pipeCmd>)
 
 Convenience wrapper around:
+
     check_syscmd_status({'open_pipe' => 1,
                          'laststat' => ($? ? $? : 13)}, I<cmd>).
+
 Use it in a statement like this:
 
 =over 4
@@ -1824,13 +2116,15 @@ open(my $pipefh, "someCmd |") or openPipeDie("someCmd |");
 (The reason for using '13' if C<open()> doesn't set C<$?> is that
 C<check_syscmd_status> will report a signal 13 == SIGPIPE.  Appropriate, no?)
 
-=item *
+=item -
 
 closePipeDie(I<pipeCmd>)
 
 Convenience wrapper around:
+
     check_syscmd_status({'close_pipe' => 1,
                          'laststat' => I<valOf_$?>}, I<cmd>).
+
 Use it in a statement like this:
 
 =over 4
@@ -1839,23 +2133,23 @@ close($pipefh) or closePipeDie("someCmd |");
 
 =back
 
-=item *
+=item -
 
 failedOpenDie(I<fname>, I<openAction>)
 
 Convenience wrapper around:
+
     check_syscmd_status({'open_file' => I<openAction>,
                          'laststat' => 1}, I<fname>);
+
 Use it to perform the usual post-C<open()>-error-checking-song-n-dance:
 
-=over 4
+    open(my $rfh, "<somefile.txt")
+        or failedOpenDie("somefile.txt", 'reading');
+    open(my $wfh, ">outfile.txt")
+        or failedOpenDie("outfile.txt", 'writing');
 
-open(my $rfh, "<somefile.txt") or failedOpenDie("somefile.txt", 'reading');
-open(my $wfh, ">outfile.txt") or failedOpenDie("outfile.txt", 'writing');
-
-=back
-
-=item *
+=item -
 
 do_error(I<filename>, $!, $@)
 
@@ -1868,8 +2162,13 @@ do "file.pl" or die(do_error("file.pl", $!, $@));
 
 =back
 
+=back
 
-=item *
+=head2 B<Arrays & Lists>
+
+=over 2
+
+=item -
 
 circular_shift(I<@list> [, I<count>])
 
@@ -1879,7 +2178,7 @@ C<shift>, it takes the shifted elements and immediately C<push>es them onto
 the back of I<@list>.  Thus, I<@list> never loses elements; they merely change
 location.
 
-=item *
+=item -
 
 circular_pop(I<@list> [, I<count>])
 
@@ -1889,7 +2188,7 @@ C<popped>, it takes the popped elements and immediately C<unshift>s them onto
 the front of I<@list>.  Thus, I<@list> never loses elements; they merely
 change location.
 
-=item *
+=item -
 
 const_array(I<value>, I<n_elements>)
 
@@ -1908,18 +2207,7 @@ C<my @set{@members} = ( I<value> ) x I<@members>;>
 I.e.  the C<x> operator works on arrays as well as strings.  Note that the
 thing following the C<x> operator is always evaluated in scalar context.
 
-=item *
-
-uniq(I<@list>)
-
-Like the Unix utility C<uniq>: Returns an array containing only the unique
-members of I<@list>.  The input list does not need to be sorted.  The output
-is in the same order as I<@list>).
-
-Consider using a hash instead of an array if you truly need a set of unique
-values (and if perserving order isn't an issue).
-
-=item *
+=item -
 
 select_sample(I<nSelected>, I<@list> [, I<keepLast>])
 
@@ -1934,7 +2222,33 @@ won't be in the selection.  Set I<keepLast> to any true value in order to
 force inclusion of the last element of I<@list>.  Consequently, the returned
 array may contain (I<nSelected>+1) elements ... or not.
 
-=item *
+=back
+
+=head2 B<Hashes>
+
+=over 2
+
+=item -
+
+key_not_set(I<%hash>, I<key2check>)
+
+Returns true if I<key2check> doesn't exists in I<%hash> or if it exists but
+isn't defined.  Performs this check w/o autovivifying the element
+C<$hash{key2check}>.
+
+=item -
+
+push_subarray(I<$subelement>, I<$val> [, I<$val> ...]])
+
+Pushes the specified values onto the arrayref specified in the first arg.  If
+C<$hash{$targKey}> ...  B<if> the latter is an arrayref.  If it's some other
+type of value, C<push_subarray> does nothing.
+
+If C<$hash{$targKey}> doesn't exist yet, it will be set to an arrayref
+containing the specified values (or an empty arrayref if only 2 args were
+passed to C<push_subarray>).
+
+=item -
 
 invert_hash(I<%hash> [, I<%invHash_out>])
 
@@ -1943,11 +2257,11 @@ key in I<%invHash_out> whose value is the corresponding key from I<%hash>.
 Non-scalar values are ignored (i.e. they do not appear in I<%invHash_out>,
 since you can't really convert them to a string key).  Preserves non-unique
 values by storing the corresonding keys in a single arrayref (in arbitrary
-order).
+order) in I<%invHash_out>.
 
 When called with only one arg, C<invert_hash()> returns the inverse hash.
 
-=item *
+=item -
 
 pivot_hash(I<%hash>, I<idx> [, I<ignoreInvalidElements>])
 
@@ -1965,7 +2279,7 @@ be pivoted, just like new keys that would be non-unique.)  Passing
 I<ignoreInvalidElements>==1 tells C<pivot_hash()> to proceed by ignoring those
 cases where there isn't any new key.
 
-=item *
+=item -
 
 rename_keys(I<%hash>, I<%oldKey2newKey>)
 
@@ -1978,7 +2292,7 @@ I<%hash>.  This is the only way to "rename" a key.  So, if the values of
 I<%hash> are all large strings, this routine will be a performance hit.  For a
 hash of references, however, it shouldn't be too bad.
 
-=item *
+=item -
 
 transform_keys(I<%hash>, I<&operator>)
 
@@ -1990,18 +2304,18 @@ key to the old key's value, then deletes the old key.  So, if the values of
 I<%hash> are all large strings, this routine will be a performance hit.  For a
 hash of references, however, it shouldn't be too bad.
 
-=item *
+=item -
 
 lc_keys(I<%hash>)
 
-=item *
+=item -
 
 uc_keys(I<%hash>)
 
-Both of these functions are akin to calling C<transform_keys(I<%hash>, &lc)>
-and C<transform_keys(I<%hash>, &uc)>, respectively.
+Both of these functions are equivalent to calling C<transform_keys(I<%hash>,
+&lc)> and C<transform_keys(I<%hash>, &uc)>, respectively.
 
-They are not, however, I<equivalent> to the two calls above.  Those two calls
+They are not, however, I<identical> to the two calls above.  Those two calls
 are not legal Perl.
 
 The problem lies with Perl itself.  C<lc()> and C<uc()> are not in the
@@ -2014,7 +2328,24 @@ C<uc()>.
 Bear this in mind whey trying to pass one of the built-in Perl functions to
 C<transform_keys()>.
 
-=item *
+=back
+
+=head2 B<Set Operations>
+
+=over 2
+
+=item -
+
+uniq(I<@list>)
+
+Like the Unix utility C<uniq>: Returns an array containing only the unique
+members of I<@list>.  The input list does not need to be sorted.  The output
+is in the same order as I<@list>).
+
+Consider using a hash instead of an array if you truly need a set of unique
+values (and if perserving order isn't an issue).
+
+=item -
 
 asymm_diff(I<set1>, I<set2>)
 
@@ -2022,11 +2353,17 @@ Performs a "set subtraction", returning all of the elements from I<set1> that
 are not also in I<set2>.  The arguments I<set1> and I<set2> must be references
 to an array or to a hash.  When one or both arguments reference a hash,
 C<asymm_diff()> operates on the hash's keys, ignoring (and preserving) the
-values.  The subroutine returns either an array or hash, maching whatever data
-type I<set1> has.  Note that neither I<set1> nor I<set2> are modified by this
-subroutine.
+values.  The subroutine returns either an array or hash, matching whatever
+data type I<set1> has.  Note that neither I<set1> nor I<set2> are modified by
+this subroutine.
 
-=item *
+=back
+
+=head2 B<Statistics & Random Values>
+
+=over 2
+
+=item -
 
 stats(I<@list> [, I<confidence>])
 
@@ -2090,7 +2427,7 @@ especially if two or more of the peaks in the distributions are of similar
 height.  Multi-modal distributions require more sophisticated techniques for
 computing central tendency and dispersion.
 
-=item *
+=item -
 
 stats_gaussian(I<@list>)
 
@@ -2111,7 +2448,7 @@ If your data's distribution is asymmetric, has large, significant tails, or
 outliers, consider using L<stats()|/"stats"> instead.  For these kinds of
 distributions, the mean and variance will not be meaningful values.
 
-=item *
+=item -
 
 set_seed([I<seed>])
 
@@ -2126,7 +2463,7 @@ terrible for cryptographic uses.  However, when you need/want to autogenerate
 a seed but save that seed for future reuse (e.g. for Monte Carlo simulation),
 it'll do.
 
-=item *
+=item -
 
 randomize_array(I<@list>)
 
@@ -2136,7 +2473,7 @@ NOTE:  Consider using L<shuffle()> from L<List::Util> instead.  Only prefer
 this function if I<@list> is very large (causing L<shuffle()> to be
 inefficient due to copying the the return value).
 
-=item *
+=item -
 
 random_indices(I<nIndices>, [I<@list>])
 
@@ -2148,7 +2485,7 @@ the list of randomly-ordered indices.
 This function invokes either L<shuffle()> from L<List::Util> or
 L<randomize_array()>, depending on whether or not you omitted I<@list>.
 
-=item *
+=item -
 
 random_keys(I<%hash>)
 
@@ -2156,44 +2493,13 @@ Returns the keys of I<%hash> in a random (read: shuffled) order.
 
 This function invokes L<shuffle()> from L<List::Util>.
 
-=item *
-
-get_files_from_dirs(I<%fileMap>, I<match_regexp>, I<dir> [, I<dir> ...])
-
-Searches through the specified list of directories (the I<dir> passed to this
-function) for all files/subdirectories matching I<match_regexp>.  The results
-are stored in I<%fileMap> in the format described below.
-
-If I<match_regexp> is the empty string, C<get_files_from_dirs()> returns all
-files.  (The files "." and ".." are, however, always omitted.)
-
-The I<dir> arguments are normalized and cleaned up using the L<File::Spec>
-package.  Any paths containing "/../" path elements are resolved using the
-L<Cwd> package (which is only loaded, dynamically, at runtime, if necessary).
-Symlinks combined with "/../" subpaths will, therefore, be resolved to the
-actual directory.
-
-The results are returned in I<%fileMap>, which is keyed by the filename's full
-absolute path.  Each value is an array reference containing the following:
-
-=over 4
-
-[I<fileBasename>,
- I<fileDirnameAbspath>,
- I<fileExtension>,
- I<fileBasenameStem>,
- I<isDirectory>,
- I<originalDirectory>]
-
 =back
 
-The names for each element are fairly self-explanatory.  I<isDirectory> is a
-boolean flag.  I<fileBasenameStem> is basically I<fileBasename> with
-I<fileExtension> removed.  I<originalDirectory> contains one of the I<dir>
-strings passed as an argument, specifically the one that resolves to the
-file's parent.
+=head2 B<Printing Arrays, Hashes, and Objects>
 
-=item *
+=over 2
+
+=item -
 
 fprint_hash(I<fh_ref>, I<name>, I<%hash> [, I<regexp, sub> ...])
 
@@ -2201,7 +2507,7 @@ Convenience wrapper around
 C<print_dump(I<fh_ref>, [I<name>,] I<\%hash> [, ...])>.  I<name> can be the
 empty string, in which case L<print_dump()|/"print_dump"> is called without it.
 
-=item *
+=item -
 
 fprint_array(I<fh_ref>, I<name>, I<@list> [, I<regexp, sub> ...])
 
@@ -2209,19 +2515,19 @@ Convenience wrapper around
 C<print_dump(I<fh_ref>, [I<name>,] I<\@list> [, ...])>.  I<name> can be the
 empty string, in which case L<print_dump()|/"print_dump"> is called without it.
 
-=item *
+=item -
 
 print_hash(I<name>, I<%hash> [, I<regexp, sub> ...])
 
 Equivalent to C<fprint_hash(\*STDOUT, I<name>, I<%hash> [, ...])>.
 
-=item *
+=item -
 
 print_array(I<name>, I<@list> [, I<regexp, sub> ...])
 
 Equivalent to C<fprint_array(\*STDOUT, I<name>, I<@list> [, ...])>.
 
-=item *
+=item -
 
 print_dump([I<fh_ref>, ] [I<name>, ] I<$ref> [, I<regexp, sub> ...])
 
@@ -2258,63 +2564,13 @@ C<Data::Dumper::Dumper()>.  Each pair is used to construct the expression:
 C<s/I<regexp>/I<sub>/mg>, which will then be C<eval>'d.  Be sure, therefore,
 to pass each I<regexp> and I<sub> single-quoted.
 
-=item *
+=back
 
-create_regexp_group(I<@words>)
-
-Takes the array I<@words> and groups it into a pattern string for use in a
-regular expression.  The pattern string is compact, with words grouped
-together by common prefix & suffix.
-
-=item *
-
-non_overlapping(I<@words>)
-
-Returns a list of "non-overlapping elements":  elements that are not
-prefixes of any other element, or those that are a minimum-sized prefix.
-
-=item *
-
-not_empty(I<var>)
-
-Returns C<true> if I<var> is:
+=head2 B<Reading Configfiles>
 
 =over 2
 
-=item *
-
-a scalar value with nonzero length;
-
-=item *
-
-a reference to a scalar variable whose value has nonzero length;
-
-=item *
-
-a reference to an array or hash with at least one element.
-
-=back
-
-For any other type of variable or reference, returns C<false>.
-
-=item *
-
-set_array_if_nonempty(I<@array>, I<%map>, I<key>)
-
-If C<$I<map>{I<key>}> is non-empty (as determined by C<not_empty()>),
-sets I<@array> to C<@{I<$map>{I<key>}}>.
-
-(Thus, the value of I<%map> corresponding to I<key> had better be an array
-reference, or this function will return an error.)
-
-=item *
-
-set_scalar_if_nonempty(I<@listvar>, I<%map>, I<key>)
-
-If C<$%I<map>{I<key>}> is non-empty (as determined by C<not_empty()>),
-sets I<$scalarvar> to its value.
-
-=item *
+=item -
 
 read_options(I<option_filename> [, I<%validator>])
 
@@ -2326,37 +2582,37 @@ The option file syntax:
 
 =over 2
 
-=item -
+=item *
 
 Blank lines and whitespace at the beggining or end of a line are
 ignored.
 
-=item -
+=item *
 
 Comments are lines starting with the '#' character.
 
-=item -
+=item *
 
 The first non-whitespace character on a line starts an option name.
 
-=item -
+=item *
 
 Scalar options appear on the same line with their value, separated
 by the one of delimiter characters ':' or '='.
 
-=item -
+=item *
 
 Option names can contain any character except '.', ':' and '='.
 
-=item -
+=item *
 
 Any whitespace surrounding the '=' or ':' delimiter is ignored.
 
-=item -
+=item *
 
 You cannot set a scalar option to the value "(".  [See below.]
 
-=item -
+=item *
 
 Options can contain an array value:
 
@@ -2380,17 +2636,17 @@ The array ends at the next line containing a lone ')' character.
 
 =back
 
-=item -
+=item *
 
 Option names, scalar values, and array elements can neither begin
 nor end with whitespace characters.  They are stripped off.
 
-=item -
+=item *
 
 The options are returned in a hash map, keyed by name.   Array
 options are stored as references to anonymous Perl arrays.
 
-=item -
+=item *
 
 Options can be grouped into sections:
 
@@ -2438,7 +2694,7 @@ the optional hash argument, I<%validator>.  See
 L<validate_options()|DESCRIPTION/"validate_options"> for a description of what
 the I<%validator> argument should look like.
 
-=item *
+=item -
 
 validate_options(I<%option_map>, I<%validator> [, I<filename>])
 

@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# Copyright (C) 2003-2010 by John P. Weiss
+# Copyright (C) 2003-2012 by John P. Weiss
 #
 # This package is free software; you can redistribute it and/or modify
 # it under the terms of the Artistic License, included as the file
@@ -349,16 +349,14 @@ sub create_or_update_rscript($$\@) {
     unless ($scriptExists) {
         # Create the file first, so we can "chmod" it next.
         open($ofh, '>', $scriptname)
-            or die("Unable to create file: \"$scriptname\"\n".
-                   "Reason: \"$!\"\n");
+            or failedOpenDie($scriptname, 'writing');
         close($ofh);
         $how_mesg = "writing";
     }
 
     chmod($mode, $scriptname);
     open($ofh, $how, $scriptname)
-        or die("Unable to open file for $how_mesg: \"$scriptname\"\n".
-               "Reason: \"$!\"\n");
+        or failedOpenDie($scriptname, $how_mesg);
 
     if ($scriptExists) {
         # Scan ahead until we find the marker line for the per-file actions.
@@ -512,8 +510,7 @@ sub write_modified_pkgfiles($\%) {
 
     chmod(0644, $filename);
     open(OFS, ">$filename")
-        or die("Unable to open file for writing: \"$filename\"\n".
-               "Reason: \"$!\"\n");
+        or failedOpenDie($filename, 'writing');
     # File header.
     print OFS ('#'x79, "\n#\n");
     print OFS ("# Modified package files.\n#\n");

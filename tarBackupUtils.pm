@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# Copyright (C) 2003-2010 by John P. Weiss
+# Copyright (C) 2003-2012 by John P. Weiss
 #
 # This package is free software; you can redistribute it and/or modify
 # it under the terms of the Artistic License, included as the file
@@ -134,8 +134,7 @@ sub write_backup_dates($$;@) {
 
     chmod(0664, $statefile);
     open(OFS, ">$statefile")
-        or die("Unable to open file for writing: \"$statefile\"\n".
-               "Reason: \"$!\"\n");
+        or failedOpenDie($statefile, 'writing');
     # File header.
     print OFS ('#'x79, "\n#\n");
     print OFS ("# Backup State File.\n#\n");
@@ -275,8 +274,7 @@ sub write_archive_filelist($@) {
 
     chmod(0660, $filename);
     open(OFS, ">$filename")
-        or die("Unable to open file for writing: \"$filename\"\n".
-               "Reason: \"$!\"\n");
+        or failedOpenDie($filename, 'writing');
     # File has no header/footer.  Tar expects only filenames or typeglobs
     foreach (sort(@speclist)) { print OFS ($_, "\n"); }
     close OFS;
@@ -402,8 +400,7 @@ sub verify_listfile_archive($$$) {
 
     # Begin by reading in the files/dirs originally submitted to "tar".
     open(IFS, "$tar_list_file")
-        or die("Unable to open file for reading: \"$tar_list_file\"\n".
-               "Reason: \"$!\"\n");
+        or failedOpenDie($tar_list_file, 'reading');
     # File has no header/footer.  Tar expects only filenames or typeglobs
     while (<IN_FS>) {
         my $name = $_;
@@ -429,8 +426,7 @@ sub verify_listfile_archive($$$) {
             push(@surplus_list, $file);
         }
     }
-    close TBV_IN;
-    check_syscmd_status("tar -jtf");
+    close TBV_IN or closePipeDie("tar -jtf");
 
     my @omission_list = sort(keys(%omission_set));
     my $n_omissions = scalar(@omission_list);

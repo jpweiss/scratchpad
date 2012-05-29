@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# Copyright (C) 2003-2010 by John P. Weiss
+# Copyright (C) 2003-2012 by John P. Weiss
 #
 # This package is free software; you can redistribute it and/or modify
 # it under the terms of the Artistic License, included as the file
@@ -94,6 +94,9 @@ our $_UnitTest; $_UnitTest = 0;
 ############
 
 
+# Set using 'dpkg --print-architecture'.
+my $_dpkg_arch=undef;
+
 my $_deb_bin="/usr/bin/dpkg-query";
 my $_deb_db_path="/var/lib/dpkg";
 my $_deb_db_info_path=$_deb_db_path."/info";
@@ -101,10 +104,13 @@ my $_deb_simple_version_re=qr/\d+\.\d+(?:\.\d+)*/;
 my $_deb_version_re=qr/((?:\d+:)?${_deb_simple_version_re})(\.?\D+.*)/;
 my $_deb_yr_versioned_re=qr/((?:\d+:)?\d{8,}(?!\.))(\D+.*)/;
 my $_deb_odd_version_re=qr/(\d+)([[:alpha:]]?-.+)/;
-my @_deb_info_filesuffixes = ('.conffiles',
-                              '.config',
-                              '.list',
+
+# Arrange these not in alphabetical order, since not all will exist, but with
+# the ones most likely to exist for all pkgs towards the top.
+my @_deb_info_filesuffixes = ('.list',
                               '.md5sums',
+                              '.conffiles',
+                              '.config',
                               '.postinst',
                               '.postrm',
                               '.preinst',
@@ -113,6 +119,7 @@ my @_deb_info_filesuffixes = ('.conffiles',
                               '.symbols',
                               '.templates',
                               '.triggers');
+
 my %_UnsupportedChangeTypeSet = ("Unknown" => 1,
                                  #"Other" => 1,
                                  );
@@ -126,13 +133,14 @@ my %_UnsupportedChangeTypeSet = ("Unknown" => 1,
 
 
 INIT {
+    my @chkpaths = ("/bin/", "/sbin/",
+                    "/usr/bin/", "/usr/sbin/",
+                    "/usr/local/bin/", "/usr/local/sbin/");
+
     # Find the first executable instance of "dpkg-query" in the list of
     # paths.
     unless (-x $_deb_bin) {
-        foreach my $path ("/bin/", "/sbin/",
-                          "/usr/bin/", "/usr/sbin/",
-                          "/usr/local/bin/", "/usr/local/sbin/")
-        {
+        foreach my $path (@chkpaths) {
             $_deb_bin=$path;
             $_deb_bin.="dpkg-query";
             if (-x $_deb_bin) {
@@ -140,6 +148,73 @@ INIT {
             }
         }
     }
+
+    # Find the first executable instance of "dpkg" in the list of
+    # paths.
+    my $dpkg_bin;
+    foreach my $path (@chkpaths) {
+        $dpkg_bin=$path;
+        $dpkg_bin.="dpkg";
+        if (-x $dpkg_bin) {
+            last;
+        }
+    }
+
+    # Get the architecture:
+    my $arch=`$dpkg_bin --print-architecture 2>/dev/null`;
+    closePipeDie("$dpkg_bin --print-architecture");
+    chomp($arch);
+    if (defined($arch) && ($arch ne "")) {
+        $_dpkg_arch = $arch;
+    }
+}
+
+
+sub get_infoDirBasename($) {
+    my $origPkgName = shift;
+
+    # The name of the path under the dpkg 'DB' might have a "':'.$arch"
+    # suffix.  Using '${PackageSpec}' instead of '${Package}' handles this
+    # case ... partially.  Unforunately, when you have the same package
+    # installed for both a foreign architecture and the native
+    # architecture, '${PackageSpec}'=='${Package}' for the native
+    # architecture.  But in the '$_deb_db_info_path' directory, the files
+    # for the native architecture DO contain the "':'.$arch" suffix on the
+    # name.
+    #
+    # We need to handle this situation.
+
+    my $pkgInfoFileBase = $_deb_db_info_path;
+    $pkgInfoFileBase .= "/";
+    $pkgInfoFileBase .= $origPkgName;
+
+    # Just to make life interesting, there are still some packages that don't
+    # correctly suffix their names (usually 3rd-party pkgs).  Sooo... we need
+    # to check for these, too.  Oh Joy.
+    my $altInfoFileBase = $pkgInfoFileBase;
+    if ($origPkgName =~ m/:/) {
+        $altInfoFileBase =~ s/:.*$//;
+    } else {
+        $altInfoFileBase .= ':';
+        $altInfoFileBase .= $_dpkg_arch;
+    }
+
+    foreach my $suf (@_deb_info_filesuffixes) {
+        my $pkgInfoFile = $pkgInfoFileBase;
+        $pkgInfoFile .= $suf;
+
+        # If it's there using the default, great!  Stop now.
+        return $pkgInfoFileBase if (-e $pkgInfoFile);
+
+        # else:
+        # Build the alternate info-file name and repeat the check.
+        $pkgInfoFile = $altInfoFileBase;
+        $pkgInfoFile .= $suf;
+        return $altInfoFileBase if (-e $pkgInfoFile);
+    }
+
+    # Default:
+    return $pkgInfoFileBase;
 }
 
 
@@ -150,14 +225,15 @@ sub process_pkgspec(\%$;$$) {
     my $hasSize = ((scalar(@_)) ? shift() : 0);
 
     # Split apart the data from the lines retrieved by get_pkglist().
-    # '${Package}\t${Version}\t${Revision}\t${Installed-Size}\t${Status}\n'
+    # '${PackageSpec}\t${Version}\t${Revision}\t${Installed-Size}\t${Status}\n'
     #
     chomp $spec_txt;
     my @dpkg_parts = split("\t", $spec_txt);
 
     # Ignore anything that isn't a completely installed package.
     my $pkgStatus = pop(@dpkg_parts);
-    return unless ($pkgStatus =~ m/\binstalled\b/);
+    return 1
+        unless ($pkgStatus =~ m/\binstalled\b/);
 
     # Our desired pkgspec is a 6 element array containing:
     # [0]: name
@@ -193,14 +269,12 @@ sub process_pkgspec(\%$;$$) {
     # We also need to get the installation time from ... someplace.  "dpkg"
     # doesn't store that information in its "database" (which is just a
     # directory full of information files.)
-    my $pkgInfoFileBase = $_deb_db_info_path;
-    $pkgInfoFileBase .= "/";
-    $pkgInfoFileBase .= $pkgName;
+    my $pkgInfoFileBase = get_infoDirBasename($pkgName);
     foreach my $suf (@_deb_info_filesuffixes) {
         my $pkgInfoFile = $pkgInfoFileBase;
         $pkgInfoFile .= $suf;
-
         next unless (-e $pkgInfoFile);
+
         # Get the "mtime" for this info-file from the DEB package "database".
         # Don't use "ctime", since it won't (might not) be preserved when
         # restoring these filesfrom a backup.
@@ -214,10 +288,9 @@ sub process_pkgspec(\%$;$$) {
     }
 
     unless ($pkgspecs[4]) {
-        print ("Package \"", $pkgName, "\"\n\t",
-               "has no known info files in ", $_deb_db_info_path, ".\n\t",
-               "Ignoring...");
-        return;
+        print ("\n\t- Package \"", $pkgName, "\" has no known\n\t",
+               "  info files in ", $_deb_db_info_path, ".  Ignoring...");
+        return 0;
     }
 
     # Add an approximated "install duration", based on the package size, to
@@ -235,12 +308,14 @@ sub process_pkgspec(\%$;$$) {
 
     if (scalar(@_)) {
         my $updatedSince = shift;
-        return if (($updatedSince > 0) && ($updatedSince > $pkgspecs[4]));
+        return 1
+            if (($updatedSince > 0) && ($updatedSince > $pkgspecs[4]));
     }
 
     # We use a hash of hashes of array-refs to handle multiple versions of the
     # same package installed at the same time.
     $ref_pkgset->{$pkgName}{$pkgFullVer} = \@pkgspecs;
+    return 1;
 }
 
 
@@ -318,22 +393,34 @@ sub get_pkglist(;$) {
     #   mostly-uninstalled packages.  We want to ignore that.
     # - Want ${Installed-Size} instead of ${Size}.  The RPM %{SIZE} field
     #   is the installed size, from what I can tell..
+    # - More recent versions of "dpkg" have a new feature for multi-platform
+    #   and cross-platform support:  ${PackageSpec}.  It includes the
+    #   package's target as part of the package name.  (This is how the same
+    #   package from different architectures are told apart.)
     #
-    my $fmt='${Package}\t${Version}\t${Revision}\t${Installed-Size}'.
+    my $fmt='${PackageSpec}\t${Version}\t${Revision}\t${Installed-Size}'.
         '\t${Status}\n';
     if($_UnitTest || $_Verbose) {
         print "Retrieving DEB package list...";
     }
 
+    my $printedErrmsgs=0;
     open(DEB_IN, "$_deb_bin --showformat='$fmt' --show |");
     while (<DEB_IN>) {
-        process_pkgspec(%pkgset, $_, $updatedSince);
+        process_pkgspec(%pkgset, $_, $updatedSince)
+            or $printedErrmsgs=1;
     }
-    close DEB_IN;
-    check_syscmd_status "dpkg-query --show";
+    close DEB_IN
+        or closePipeDie("dpkg-query --show");
 
     if($_UnitTest || $_Verbose) {
-        print "\t\tDone.\n";
+        # Put this message on a new line if 'process_pkgspec' printed
+        # anything.
+        print ($printedErrmsgs ? "\n" : "\t\t"), "Done.\n";
+    } elsif ($printedErrmsgs) {
+        # Need to print a newline if 'process_pkgspec' printed
+        # anything, verbose or no.
+        print "\n";
     }
     return %pkgset;
 }
@@ -588,7 +675,11 @@ sub get_changed_since_install(\%\%\%$$$) {
             }
         } #end PKGL_IN
         close PKGL_IN;
-        my $exitStat = check_syscmd_status([1], "$deb_cmd $pkg");
+        my $exitStat = check_syscmd_status({'ignore' => [1],
+                                            'warn' => 1,
+                                            'no_stacktrace' => 1,
+                                            'close_pipe' => 1},
+                                           "$deb_cmd $pkg");
         if ($exitStat) {
             print ("Skipping \"$pkg\".  Is it still installed?\n",
                    "Consider updating the package list and rerunning.\n");
@@ -685,8 +776,7 @@ sub write_pkgset($\%;$) {
 
     chmod(0660, $filename);
     open(OFS, ">$filename")
-        or die("Unable to open file for writing: \"$filename\"\n".
-               "Reason: \"$!\"\n");
+        or failedOpenDie($filename, 'writing');
     # File header.
     print OFS ('#'x79, "\n#\n");
     print OFS ("# List of Installed DEB Packages.\n#\n");

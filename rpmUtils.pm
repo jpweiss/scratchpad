@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# Copyright (C) 2003-2010 by John P. Weiss
+# Copyright (C) 2003-2012 by John P. Weiss
 #
 # This package is free software; you can redistribute it and/or modify
 # it under the terms of the Artistic License, included as the file
@@ -203,8 +203,8 @@ sub get_pkglist(;$) {
     while (<RPM_IN>) {
         process_pkgspec(%pkgset, $_, $updatedSince, 1);
     }
-    close RPM_IN;
-    check_syscmd_status "rpm -qa";
+    close RPM_IN
+        or closePipeDie("rpm -qa");
 
     if($_UnitTest || $_Verbose) {
         print "\t\tDone.\n";
@@ -470,7 +470,11 @@ sub get_changed_since_install(\%\%\%$$$) {
             }
         } #end PKGL_IN
         close PKGL_IN;
-        my $exitStat = check_syscmd_status([1], "$rpm_cmd $pkg");
+        my $exitStat = check_syscmd_status({'ignore' => [1],
+                                            'warn' => 1,
+                                            'no_stacktrace' => 1,
+                                            'close_pipe' => 1},
+                                           "$rpm_cmd $pkg");
         if ($exitStat) {
             print ("Skipping \"$pkg\".  Is it still installed?\n",
                    "Consider updating the package list and rerunning.\n");
@@ -561,8 +565,7 @@ sub write_pkgset($\%;$) {
 
     chmod(0660, $filename);
     open(OFS, ">$filename")
-        or die("Unable to open file for writing: \"$filename\"\n".
-               "Reason: \"$!\"\n");
+        or failedOpenDie($filename, 'writing');
     # File header.
     print OFS ('#'x79, "\n#\n");
     print OFS ("# List of Installed RPM Packages.\n#\n");

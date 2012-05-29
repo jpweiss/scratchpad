@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# Copyright (C) 2003-2010 by John P. Weiss
+# Copyright (C) 2003-2012 by John P. Weiss
 #
 # This package is free software; you can redistribute it and/or modify
 # it under the terms of the Artistic License, included as the file
@@ -142,7 +142,7 @@ sub myFinder(\%\%$@) {
     }
     close FIND_IN;
     # FIXME: Spurrious search errors due to recurse of banned fstypes
-    #check_syscmd_status "find";
+    #    or closePipeDie("find");
 
     if ($_UnitTest || $_Verbose) {
         print "Filesystem search complete.\n";
@@ -333,8 +333,7 @@ sub write_master_fileset($\%\%) {
 
     chmod(0660, $filename);
     open(OFS, ">$filename")
-        or die("Unable to open file for writing: \"$filename\"\n".
-               "Reason: \"$!\"\n");
+        or failedOpenDie($filename, 'writing');
     # File header.
     print OFS ('#'x79, "\n#\n");
     print OFS ("# Raw filesystem snapshot.\n#\n");
